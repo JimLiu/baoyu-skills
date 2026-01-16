@@ -5,384 +5,134 @@ description: Knowledge comic creator supporting multiple styles (Logicomix/Ligne
 
 # Knowledge Comic Creator
 
-Create original knowledge comics supporting multiple visual styles: Logicomix-style Ligne Claire, Ohmsha manga guide, and more.
+Create original knowledge comics with multiple visual styles.
 
 ## Usage
 
 ```bash
-# From source material
 /baoyu-comic posts/turing-story/source.md
-
-# Specify style
-/baoyu-comic posts/turing-story/source.md --style dramatic
-
-# Specify layout preference
-/baoyu-comic posts/turing-story/source.md --layout cinematic
-
-# Direct content input
-/baoyu-comic
-[paste story content or topic description]
-
-# Direct input with options
-/baoyu-comic --style warm --layout dense
-[paste content]
+/baoyu-comic posts/turing-story/source.md --style dramatic --layout cinematic
+/baoyu-comic  # then paste content
 ```
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `--style <name>` | Visual style (see Style Gallery) |
-| `--layout <name>` | Panel layout preference (see Layout Gallery) |
+| Option | Values |
+|--------|--------|
+| `--style` | classic (default), dramatic, warm, tech, sepia, vibrant, ohmsha |
+| `--layout` | standard (default), cinematic, dense, splash, mixed, webtoon |
 
-## Two Dimensions
+Style × Layout can be freely combined.
 
-| Dimension | Controls | Options |
-|-----------|----------|---------|
-| **Style** | Color palette, mood, era treatment | classic, dramatic, warm, tech, sepia, vibrant, ohmsha |
-| **Layout** | Panel arrangement, density | standard, cinematic, dense, splash, mixed, webtoon |
+## Auto Selection
 
-Style × Layout can be freely combined. Example: `--style dramatic --layout cinematic` creates high-contrast panels with wide aspect ratios.
+| Content Signals | Style | Layout |
+|-----------------|-------|--------|
+| Tutorial, how-to, beginner | ohmsha | webtoon |
+| Computing, AI, programming | tech | dense |
+| Pre-1950, classical, ancient | sepia | cinematic |
+| Personal story, mentor | warm | standard |
+| Conflict, breakthrough | dramatic | splash |
+| Biography, balanced | classic | mixed |
 
-## Style Gallery
-
-| Style | Description |
-|-------|-------------|
-| `classic` (Default) | Traditional Ligne Claire, balanced and timeless |
-| `dramatic` | High contrast, intense moments |
-| `warm` | Nostalgic, personal storytelling |
-| `tech` | Modern, digital-age narratives |
-| `sepia` | Historical, archival feel |
-| `vibrant` | Energetic, engaging, educational |
-| `ohmsha` | Ohmsha Manga Guide style - educational manga with visual metaphors |
-
-Detailed style definitions: `references/styles/<style>.md`
-
-## Layout Gallery
-
-| Layout | Description |
-|--------|-------------|
-| `standard` (Default) | Classic comic grid, versatile (4-6 panels) |
-| `cinematic` | Wide panels, filmic feel (2-4 panels) |
-| `dense` | Information-rich, educational focus (6-9 panels) |
-| `splash` | Impact-focused, key moments (1-2 large + 2-3 small) |
-| `mixed` | Dynamic, varied rhythm (3-7 panels) |
-| `webtoon` | Vertical scrolling comic (竖版条漫) |
-
-Detailed layout definitions: `references/layouts/<layout>.md`
-
-## Auto Style Selection
-
-When no `--style` is specified, analyze content to select:
-
-| Content Signals | Selected Style |
-|----------------|----------------|
-| Tutorial, how-to, learning guide, beginner | `ohmsha` |
-| Computing, AI, digital, programming | `tech` |
-| Pre-1950, classical, ancient | `sepia` |
-| Personal story, childhood, mentor | `warm` |
-| Conflict, struggle, breakthrough | `dramatic` |
-| Young audience, science basics, wonder | `vibrant` |
-| Balanced narrative, biography | `classic` |
-
-## Auto Layout Selection
-
-When no `--layout` is specified, analyze content to select:
-
-| Content Signals | Selected Layout |
-|----------------|-----------------|
-| Technical explanation, timeline | `dense` |
-| Key discovery, major event | `splash` |
-| Establishing scene, location | `cinematic` |
-| Dialogue, conversation, debate | `standard` |
-| Mixed content, varied pacing | `mixed` |
-| Ohmsha style, tutorial, vertical scroll | `webtoon` |
-
-## Style × Layout Matrix
-
-| | standard | cinematic | dense | splash | mixed | webtoon |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| classic | ✓✓ | ✓✓ | ✓ | ✓✓ | ✓✓ | ✓ |
-| dramatic | ✓ | ✓✓ | ✓ | ✓✓ | ✓✓ | ✓ |
-| warm | ✓✓ | ✓✓ | ✓ | ✓ | ✓ | ✓ |
-| tech | ✓✓ | ✓ | ✓✓ | ✓ | ✓✓ | ✓✓ |
-| sepia | ✓✓ | ✓✓ | ✓ | ✓ | ✓ | ✓ |
-| vibrant | ✓✓ | ✓ | ✓ | ✓✓ | ✓✓ | ✓✓ |
-| ohmsha | ✓ | ✓ | ✓✓ | ✓ | ✓✓ | ✓✓ |
-
-✓✓ = highly recommended, ✓ = works well
-
-## File Management
-
-### With Source Path
-
-Save to `comic/` subdirectory in the same folder as the source:
+## File Structure
 
 ```
-posts/turing-story/
-├── source.md
-└── comic/
-    ├── outline.md
-    ├── prompts/
-    │   ├── 00-cover.md
-    │   ├── 01-page.md
-    │   └── ...
-    ├── 00-cover.png
-    ├── 01-page.png
-    └── ...
+[target]/
+├── outline.md
+├── characters/
+│   ├── characters.md    # Character definitions
+│   └── characters.png   # Character reference sheet
+├── prompts/
+│   ├── 00-cover.md
+│   └── XX-page.md
+├── 00-cover.png
+└── XX-page.png
 ```
 
-### Without Source Path
-
-Save to `comic-outputs/YYYY-MM-DD/[topic-slug]/`:
-
-```
-comic-outputs/
-└── 2026-01-16/
-    └── turing-biography/
-        ├── outline.md
-        ├── prompts/
-        │   ├── 00-cover.md
-        │   └── ...
-        ├── 00-cover.png
-        └── ...
-```
-
-**Directory collision**: If slug exists, generate a different slug (do not overwrite).
+**Target directory**:
+- With source path: `[source-dir]/comic/`
+- Without source: `comic-outputs/YYYY-MM-DD/[topic-slug]/`
 
 ## Workflow
 
-### Step 1: Analyze Content & Determine Scope
+### Step 1: Analyze Content
 
 1. Read source content
-2. If `--style` specified, use it; otherwise auto-select
-3. If `--layout` specified, use it; otherwise auto-select per page
-4. Determine page count based on content complexity:
+2. Select style (from `--style` or auto-detect)
+3. Select layout (from `--layout` or auto-detect per page)
+4. Determine page count:
+   - Short story: 5-8 pages
+   - Medium complexity: 9-15 pages
+   - Full biography: 16-25 pages
 
-| Content Type | Page Count (incl. cover) |
-|-------------|--------------------------|
-| Single event / short story | 5-8 |
-| Medium complexity / mini biography | 9-15 |
-| Full biography / multi-thread | 16-25 |
+### Step 2: Define Characters
 
-### Step 2: Generate Outline
+**Purpose**: Establish visual consistency across all pages.
 
-Plan cover + each page with detailed panel breakdowns:
+1. Extract all characters from content (protagonist, supporting, antagonist, narrator)
+2. Create `characters/characters.md` with visual specs for each character
+3. Generate `characters/characters.png` (character reference sheet)
 
-```markdown
-# [Comic Title] - Knowledge Biography Comic Outline
+**Reference**: `references/character-template.md` for detailed format and examples.
 
-**Topic**: [topic description]
-**Time Span**: [e.g., 1912-1954]
-**Style**: [selected style]
-**Default Layout**: [selected layout or "varies"]
-**Page Count**: Cover + N pages
-**Generated**: YYYY-MM-DD HH:mm
+### Step 3: Generate Outline
 
----
+Create `outline.md` with:
+- Metadata (title, style, layout, page count, character reference path)
+- Cover design
+- Each page: layout, panel breakdown, visual prompts
 
-## Cover
+**Reference**: `references/outline-template.md` for detailed format.
 
-**Filename**: 00-cover.png
-**Core Message**: [one-liner]
+### Step 4: Generate Images
 
-**Visual Design**:
-- Title typography style
-- Main visual composition
-- Color scheme
-- Subtitle / time span notation
+For each page (cover + pages):
 
-**Visual Prompt**:
-[Detailed image generation prompt]
+1. Save prompt to `prompts/XX-page.md`
+2. Call image generation skill with:
+   - Base prompt: `references/base-prompt.md`
+   - Character reference (text or image, depending on skill capability)
+   - Page prompt
+   - Output path
 
----
+**Image Generation Skill Selection**:
+- Check available image generation skills in the environment
+- Adapt parameters based on skill capabilities:
+  - If supports `--promptfiles`: pass prompt files
+  - If supports reference image: pass `characters/characters.png`
+  - If text-only: concatenate prompts into single text
+- If multiple skills available, ask user preference
 
-## Page 1 / N
-
-**Filename**: 01-page.png
-**Layout**: [standard/cinematic/dense/splash/mixed]
-**Narrative Layer**: [Main narrative / Narrator layer / Mixed]
-**Core Message**: [What this page conveys]
-
-### Panel Layout
-
-**Panel Count**: X
-**Layout Type**: [grid/irregular/splash]
-
-#### Panel 1 (Size: 1/3 page, Position: Top)
-
-**Scene**: [Time, location]
-**Image Description**:
-- Camera angle: [bird's eye / low angle / eye level / close-up / wide shot]
-- Characters: [pose, expression, action]
-- Environment: [scene details, period markers]
-- Lighting: [atmosphere description]
-- Color tone: [palette reference]
-
-**Text Elements**:
-- Dialogue bubble (oval): "Character line"
-- Narrator box (rectangular): 「Narrator commentary」
-- Caption bar: [Background info text]
-
-#### Panel 2...
-
-**Page Hook**: [Cliffhanger or transition at page end]
-
-**Visual Prompt**:
-[Full page image generation prompt]
-
----
-
-## Page 2 / N
-...
-```
-
-### Step 3: Save Outline
-
-Save as `outline.md` in target directory.
-
-### Step 4: Generate Images Page by Page
-
-For each page:
-
-1. **Save prompt file** to `prompts/` subdirectory
-2. **Call image generation skill**:
-
-```bash
-npx -y bun skills/baoyu-gemini-web/scripts/main.ts \
-  --promptfiles skills/baoyu-comic/prompts/system.md [target]/prompts/00-cover.md \
-  --image [target]/00-cover.png
-```
-
-After each generation:
-1. Confirm success
-2. Report progress: "Generated X/N pages"
-3. Continue to next
+3. Report progress after each generation
 
 ### Step 5: Completion Report
 
 ```
-Knowledge Biography Comic Complete!
-
-Title: [Comic Title]
-Time Span: [e.g., 1912-1954]
-Style: [style name]
-Layout: [layout name or "varies"]
-Location: [directory path]
-Pages: Cover + N pages
-
-- 00-cover.png ✓ Cover
-- 01-page.png ✓ Opening: [brief]
-- 02-page.png ✓ [brief]
-- ...
-- XX-page.png ✓ Ending: [brief]
-
-Outline: outline.md
+Comic Complete!
+Title: [title] | Style: [style] | Pages: [count]
+Location: [path]
+✓ characters.png
+✓ 00-cover.png ... XX-page.png
 ```
 
-## Narrative Structure Principles
+## Style-Specific Guidelines
 
-### Cover Design
+### Ohmsha Style (`--style ohmsha`)
 
-- Academic gravitas with visual appeal
-- Title typography reflecting knowledge/science theme
-- Composition hinting at core theme (character silhouette, iconic symbol, concept diagram)
-- Subtitle or time span for epic scope
+Additional requirements for educational manga:
+- Default characters: Student (大雄), Mentor (哆啦A梦), Antagonist (胖虎)
+- Custom: `--characters "Student:小明,Mentor:教授"`
+- Must use visual metaphors (gadgets, action scenes) - NO talking heads
+- Page titles: narrative style, not "Page X: Topic"
 
-### Panel Composition Principles
+**Reference**: `references/ohmsha-guide.md` for detailed guidelines.
 
-| Panel Type | Recommended Count | Usage |
-|-----------|-------------------|-------|
-| Main narrative | 3-5 per page | Story progression |
-| Concept diagram | 1-2 per page | Visualize abstractions |
-| Narrator panel | 0-1 per page | Commentary, transition, questions |
-| Splash (full/half) | Occasional | Major moments |
+## References
 
-### Panel Size Reference
-
-- **Full page (Splash)**: Major moments, key breakthroughs
-- **Half page**: Important scenes, turning points
-- **1/3 page**: Standard narrative panels
-- **1/4 or smaller**: Quick progression, sequential action
-
-### Concept Visualization Techniques
-
-Transform abstract concepts into concrete visuals:
-
-| Abstract Concept | Visual Approach |
-|-----------------|-----------------|
-| Neural network | Glowing nodes with connecting lines |
-| Gradient descent | Ball rolling down valley terrain |
-| Data flow | Luminous particles flowing through pipes |
-| Algorithm iteration | Ascending spiral staircase |
-| Breakthrough moment | Shattering barrier, piercing light |
-| Logical proof | Building blocks assembling |
-| Uncertainty | Forking paths, fog, multiple shadows |
-
-### Text Element Design
-
-| Text Type | Style | Usage |
-|-----------|-------|-------|
-| Character dialogue | Oval speech bubble | Main narrative speech |
-| Narrator commentary | Rectangular / hand-drawn box | Explanation, commentary |
-| Caption bar | Edge-mounted rectangle | Time, location info |
-| Thought bubble | Cloud shape | Character inner monologue |
-| Term label | Bold / special color | First appearance of technical terms |
-
-## Ohmsha Style Special Requirements
-
-When using `--style ohmsha`, follow these additional guidelines:
-
-### Character Setup (Required)
-
-Define characters before generating outline:
-
-| Role | Default | Traits |
-|------|---------|--------|
-| Student (Role A) | 大雄 | Confused, asks basic but crucial questions, represents reader |
-| Mentor (Role B) | 哆啦A梦 | Knowledgeable, patient, uses gadgets as technical metaphors |
-| Antagonist (Role C, optional) | 胖虎 | Represents misunderstanding, or "noise" in the data |
-
-User can specify custom characters via `--characters "Student:小明,Mentor:教授,Antagonist:Bug怪"`
-
-### Outline Spec Block (Required)
-
-Every ohmsha outline must start with a spec block:
-
-```markdown
-【漫画规格单】
-- Language: [Same as input content]
-- Style: Ohmsha (Manga Guide), Full Color
-- Layout: Vertical Scrolling Comic (竖版条漫)
-- Characters: [List character names and roles]
-- Page Limit: ≤20 pages
-```
-
-### Visual Metaphor Rules (Critical)
-
-**NEVER** create "talking heads" panels. Every technical concept must become:
-
-1. **A tangible gadget/prop** - Something characters can hold, use, demonstrate
-2. **An action scene** - Characters doing something that illustrates the concept
-3. **A visual environment** - Stepping into a metaphorical space
-
-### Page Title Convention
-
-Avoid AI-style "Title: Subtitle" format. Use narrative descriptions:
-- ❌ "Page 3: Introduction to Neural Networks"
-- ✓ "Page 3: 大雄被海量单词淹没，哆啦A梦拿出'词向量压缩机'"
-
-### Ending Requirements
-
-- NO generic endings ("What will you choose?", "Thanks for reading")
-- End with: Technical summary moment OR character achieving a small goal
-- Final panel: Sense of accomplishment, not open-ended question
-
-## Notes
-
-- Image generation typically takes 30-60 seconds per page
-- Auto-retry once on generation failure
-- Historical figures rendered in portrait/illustration style for recognizability
-- All text in Chinese unless source is in another language
-- Each panel description should be detailed enough to serve as standalone AI art prompt
-- Maintain style consistency across all pages in series
+Detailed templates and guidelines in `references/` directory:
+- `character-template.md` - Character definition format and examples
+- `outline-template.md` - Outline structure and panel breakdown
+- `ohmsha-guide.md` - Ohmsha manga style specifics
+- `styles/` - Detailed style definitions
+- `layouts/` - Detailed layout definitions
