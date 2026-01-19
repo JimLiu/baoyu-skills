@@ -10,6 +10,37 @@ import { parseMarkdown } from './md-to-html.js';
 
 const X_ARTICLES_URL = 'https://x.com/compose/articles';
 
+const I18N_SELECTORS = {
+  titleInput: [
+    'textarea[placeholder="Add a title"]',
+    'textarea[placeholder="添加标题"]',
+    'textarea[placeholder="タイトルを追加"]',
+    'textarea[placeholder="제목 추가"]',
+    'textarea[name="Article Title"]',
+  ],
+  addPhotosButton: [
+    '[aria-label="Add photos or video"]',
+    '[aria-label="添加照片或视频"]',
+    '[aria-label="写真や動画を追加"]',
+    '[aria-label="사진 또는 동영상 추가"]',
+  ],
+  previewButton: [
+    'a[href*="/preview"]',
+    '[data-testid="previewButton"]',
+    'button[aria-label*="preview" i]',
+    'button[aria-label*="预览" i]',
+    'button[aria-label*="プレビュー" i]',
+    'button[aria-label*="미리보기" i]',
+  ],
+  publishButton: [
+    '[data-testid="publishButton"]',
+    'button[aria-label*="publish" i]',
+    'button[aria-label*="发布" i]',
+    'button[aria-label*="公開" i]',
+    'button[aria-label*="게시" i]',
+  ],
+};
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -299,8 +330,9 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
     }
 
     // Wait for editor (title textarea)
+    const titleSelectors = I18N_SELECTORS.titleInput.join(', ');
     console.log('[x-article] Waiting for editor...');
-    const editorFound = await waitForElement('textarea[placeholder="Add a title"], textarea[name="Article Title"]', 30_000);
+    const editorFound = await waitForElement(titleSelectors, 30_000);
     if (!editorFound) {
       console.log('[x-article] Editor not found. Please ensure you have X Premium and are logged in.');
       await sleep(60_000);
@@ -312,8 +344,16 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
       console.log('[x-article] Uploading cover image...');
 
       // Click "Add photos or video" button
+      const addPhotosSelectors = JSON.stringify(I18N_SELECTORS.addPhotosButton);
       await cdp.send('Runtime.evaluate', {
-        expression: `document.querySelector('[aria-label="Add photos or video"]')?.click()`,
+        expression: `(() => {
+          const selectors = ${addPhotosSelectors};
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el) { el.click(); return true; }
+          }
+          return false;
+        })()`,
       }, { sessionId });
       await sleep(500);
 
@@ -351,8 +391,16 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
       console.log('[x-article] Filling title...');
 
       // Focus title input
+      const titleInputSelectors = JSON.stringify(I18N_SELECTORS.titleInput);
       await cdp.send('Runtime.evaluate', {
-        expression: `document.querySelector('textarea[placeholder="Add a title"], textarea[name="Article Title"]')?.focus()`,
+        expression: `(() => {
+          const selectors = ${titleInputSelectors};
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el) { el.focus(); return true; }
+          }
+          return false;
+        })()`,
       }, { sessionId });
       await sleep(200);
 
@@ -633,15 +681,13 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
 
     // Click Preview button
     console.log('[x-article] Opening preview...');
+    const previewSelectors = JSON.stringify(I18N_SELECTORS.previewButton);
     const previewClicked = await cdp.send<{ result: { value: boolean } }>('Runtime.evaluate', {
       expression: `(() => {
-        // Try multiple selectors for preview button
-        const previewLink = document.querySelector('a[href*="/preview"]')
-          || document.querySelector('[data-testid="previewButton"]')
-          || document.querySelector('button[aria-label*="preview" i]');
-        if (previewLink) {
-          previewLink.click();
-          return true;
+        const selectors = ${previewSelectors};
+        for (const sel of selectors) {
+          const el = document.querySelector(sel);
+          if (el) { el.click(); return true; }
         }
         return false;
       })()`,
@@ -658,12 +704,13 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
     // Check for publish button
     if (submit) {
       console.log('[x-article] Publishing...');
+      const publishSelectors = JSON.stringify(I18N_SELECTORS.publishButton);
       await cdp.send('Runtime.evaluate', {
         expression: `(() => {
-          const publishBtn = document.querySelector('[data-testid="publishButton"], button[aria-label*="publish" i], button[aria-label*="发布" i]');
-          if (publishBtn && !publishBtn.disabled) {
-            publishBtn.click();
-            return true;
+          const selectors = ${publishSelectors};
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el && !el.disabled) { el.click(); return true; }
           }
           return false;
         })()`,
