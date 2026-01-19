@@ -2,6 +2,17 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.1.0 - 2026-01-18
+
+### 新功能
+- `baoyu-compress-image`：新增跨平台图片压缩技能。默认转换为 WebP 格式，支持 PNG 转 PNG。自动选择系统工具（sips、cwebp、ImageMagick），Sharp 作为兜底方案。
+
+### 重构
+- Marketplace 结构重组：将插件分为三大类——`content-skills`（内容技能）、`ai-generation-skills`（AI 生成技能）和 `utility-skills`（工具技能），便于管理和发现。
+
+### 文档
+- `CLAUDE.md`、`README.md`、`README.zh.md`：更新技能架构文档，反映新的三类分组结构。
+
 ## 1.0.1 - 2026-01-18
 
 ### 重构

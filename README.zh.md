@@ -61,47 +61,13 @@ npx add-skill jimliu/baoyu-skills
 
 ## 可用技能
 
-### baoyu-danger-gemini-web
+技能分为三大类：
 
-与 Gemini Web 交互，生成文本和图片。
+### 内容技能 (Content Skills)
 
-**文本生成：**
+内容生成和发布技能。
 
-```bash
-/baoyu-danger-gemini-web "你好，Gemini"
-/baoyu-danger-gemini-web --prompt "解释量子计算"
-```
-
-**图片生成：**
-
-```bash
-/baoyu-danger-gemini-web --prompt "一只可爱的猫" --image cat.png
-/baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
-```
-
-### baoyu-danger-x-to-markdown
-
-将 X (Twitter) 内容转换为 markdown 格式。支持推文串和 X 文章。
-
-```bash
-# 将推文转换为 markdown
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456
-
-# 保存到指定文件
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
-
-# JSON 输出
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
-```
-
-**支持的 URL：**
-- `https://x.com/<user>/status/<id>`
-- `https://twitter.com/<user>/status/<id>`
-- `https://x.com/i/article/<id>`
-
-**身份验证：** 使用环境变量（`X_AUTH_TOKEN`、`X_CT0`）或 Chrome 登录进行 cookie 认证。
-
-### baoyu-xhs-images
+#### baoyu-xhs-images
 
 小红书信息图系列生成器。将内容拆解为 1-10 张卡通风格信息图，支持 **风格 × 布局** 二维系统。
 
@@ -134,7 +100,7 @@ npx add-skill jimliu/baoyu-skills
 | `comparison` | 双栏 | 对比、优劣 |
 | `flow` | 3-6 步 | 流程、时间线 |
 
-### baoyu-cover-image
+#### baoyu-cover-image
 
 为文章生成手绘风格封面图，支持多种风格选项。
 
@@ -152,7 +118,7 @@ npx add-skill jimliu/baoyu-skills
 
 可用风格：`elegant`（默认）、`tech`、`warm`、`bold`、`minimal`、`playful`、`nature`、`retro`
 
-### baoyu-slide-deck
+#### baoyu-slide-deck
 
 从内容生成专业的幻灯片图片。先创建包含样式说明的完整大纲，然后逐页生成幻灯片图片。
 
@@ -208,7 +174,7 @@ npx add-skill jimliu/baoyu-skills
 
 生成完成后，所有幻灯片会自动合并为 `.pptx` 文件，方便分享。
 
-### baoyu-comic
+#### baoyu-comic
 
 知识漫画创作器，支持多种风格（Logicomix/清线风格、欧姆社漫画教程风格）。创作带有详细分镜布局的原创教育漫画，逐页生成图片。
 
@@ -265,7 +231,30 @@ npx add-skill jimliu/baoyu-skills
 | `mixed` | 3-7 不等 | 复杂叙事、情感弧线 |
 | `webtoon` | 3-5 竖向 | 欧姆社教程、手机阅读 |
 
-### baoyu-post-to-wechat
+#### baoyu-article-illustrator
+
+智能文章插图技能。分析文章内容，在需要视觉辅助的位置生成插图。
+
+```bash
+/baoyu-article-illustrator path/to/article.md
+```
+
+#### baoyu-post-to-x
+
+发布内容和文章到 X (Twitter)。支持带图片的普通帖子和 X 文章（长篇 Markdown）。使用真实 Chrome + CDP 绕过反自动化检测。
+
+```bash
+# 发布文字
+/baoyu-post-to-x "Hello from Claude Code!"
+
+# 发布带图片
+/baoyu-post-to-x "看看这个" --image photo.png
+
+# 发布 X 文章
+/baoyu-post-to-x --article path/to/article.md
+```
+
+#### baoyu-post-to-wechat
 
 发布内容到微信公众号，支持两种模式：
 
@@ -286,6 +275,63 @@ npx add-skill jimliu/baoyu-skills
 ```
 
 前置要求：已安装 Google Chrome，首次运行需扫码登录（登录状态会保存）
+
+### AI 生成技能 (AI Generation Skills)
+
+AI 驱动的生成后端。
+
+#### baoyu-danger-gemini-web
+
+与 Gemini Web 交互，生成文本和图片。
+
+**文本生成：**
+
+```bash
+/baoyu-danger-gemini-web "你好，Gemini"
+/baoyu-danger-gemini-web --prompt "解释量子计算"
+```
+
+**图片生成：**
+
+```bash
+/baoyu-danger-gemini-web --prompt "一只可爱的猫" --image cat.png
+/baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
+```
+
+### 工具技能 (Utility Skills)
+
+内容处理工具。
+
+#### baoyu-danger-x-to-markdown
+
+将 X (Twitter) 内容转换为 markdown 格式。支持推文串和 X 文章。
+
+```bash
+# 将推文转换为 markdown
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456
+
+# 保存到指定文件
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
+
+# JSON 输出
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
+```
+
+**支持的 URL：**
+- `https://x.com/<user>/status/<id>`
+- `https://twitter.com/<user>/status/<id>`
+- `https://x.com/i/article/<id>`
+
+**身份验证：** 使用环境变量（`X_AUTH_TOKEN`、`X_CT0`）或 Chrome 登录进行 cookie 认证。
+
+#### baoyu-compress-image
+
+压缩图片以减小文件大小，同时保持质量。
+
+```bash
+/baoyu-compress-image path/to/image.png
+/baoyu-compress-image path/to/images/ --quality 80
+```
 
 ## 自定义扩展
 

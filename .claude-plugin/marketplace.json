@@ -6,17 +6,15 @@
   },
   "metadata": {
     "description": "Skills shared by Baoyu for improving daily work efficiency",
-    "version": "1.0.1"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "content-skills",
-      "description": "Skills shared by Baoyu for improving daily work efficiency",
+      "description": "Content generation and publishing skills",
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/baoyu-danger-gemini-web",
-        "./skills/baoyu-danger-x-to-markdown",
         "./skills/baoyu-xhs-images",
         "./skills/baoyu-post-to-x",
         "./skills/baoyu-post-to-wechat",
@@ -24,6 +22,25 @@
         "./skills/baoyu-cover-image",
         "./skills/baoyu-slide-deck",
         "./skills/baoyu-comic"
+      ]
+    },
+    {
+      "name": "ai-generation-skills",
+      "description": "AI-powered generation backends",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/baoyu-danger-gemini-web"
+      ]
+    },
+    {
+      "name": "utility-skills",
+      "description": "Utility tools for content processing",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/baoyu-danger-x-to-markdown",
+        "./skills/baoyu-compress-image"
       ]
     }
   ]

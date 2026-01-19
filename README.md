@@ -61,47 +61,13 @@ You can also **Enable auto-update** to get the latest versions automatically.
 
 ## Available Skills
 
-### baoyu-danger-gemini-web
+Skills are organized into three categories:
 
-Interacts with Gemini Web to generate text and images.
+### Content Skills
 
-**Text Generation:**
+Content generation and publishing skills.
 
-```bash
-/baoyu-danger-gemini-web "Hello, Gemini"
-/baoyu-danger-gemini-web --prompt "Explain quantum computing"
-```
-
-**Image Generation:**
-
-```bash
-/baoyu-danger-gemini-web --prompt "A cute cat" --image cat.png
-/baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
-```
-
-### baoyu-danger-x-to-markdown
-
-Converts X (Twitter) content to markdown format. Supports tweet threads and X Articles.
-
-```bash
-# Convert tweet to markdown
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456
-
-# Save to specific file
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
-
-# JSON output
-/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
-```
-
-**Supported URLs:**
-- `https://x.com/<user>/status/<id>`
-- `https://twitter.com/<user>/status/<id>`
-- `https://x.com/i/article/<id>`
-
-**Authentication:** Uses environment variables (`X_AUTH_TOKEN`, `X_CT0`) or Chrome login for cookie-based auth.
-
-### baoyu-xhs-images
+#### baoyu-xhs-images
 
 Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-10 cartoon-style infographics with **Style × Layout** two-dimensional system.
 
@@ -134,7 +100,7 @@ Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-1
 | `comparison` | 2 sides | Before/after, pros/cons |
 | `flow` | 3-6 steps | Processes, timelines |
 
-### baoyu-cover-image
+#### baoyu-cover-image
 
 Generate hand-drawn style cover images for articles with multiple style options.
 
@@ -152,7 +118,7 @@ Generate hand-drawn style cover images for articles with multiple style options.
 
 Available styles: `elegant` (default), `tech`, `warm`, `bold`, `minimal`, `playful`, `nature`, `retro`
 
-### baoyu-slide-deck
+#### baoyu-slide-deck
 
 Generate professional slide deck images from content. Creates comprehensive outlines with style instructions, then generates individual slide images.
 
@@ -208,7 +174,7 @@ Generate professional slide deck images from content. Creates comprehensive outl
 
 After generation, slides are automatically merged into a `.pptx` file for easy sharing.
 
-### baoyu-comic
+#### baoyu-comic
 
 Knowledge comic creator supporting multiple styles (Logicomix/Ligne Claire, Ohmsha manga guide). Creates original educational comics with detailed panel layouts and sequential image generation.
 
@@ -265,7 +231,30 @@ Knowledge comic creator supporting multiple styles (Logicomix/Ligne Claire, Ohms
 | `mixed` | 3-7 varies | Complex narratives, emotional arcs |
 | `webtoon` | 3-5 vertical | Ohmsha tutorials, mobile reading |
 
-### baoyu-post-to-wechat
+#### baoyu-article-illustrator
+
+Smart article illustration skill. Analyzes article content and generates illustrations at positions requiring visual aids.
+
+```bash
+/baoyu-article-illustrator path/to/article.md
+```
+
+#### baoyu-post-to-x
+
+Post content and articles to X (Twitter). Supports regular posts with images and X Articles (long-form Markdown). Uses real Chrome with CDP to bypass anti-automation.
+
+```bash
+# Post with text
+/baoyu-post-to-x "Hello from Claude Code!"
+
+# Post with images
+/baoyu-post-to-x "Check this out" --image photo.png
+
+# Post X Article
+/baoyu-post-to-x --article path/to/article.md
+```
+
+#### baoyu-post-to-wechat
 
 Post content to WeChat Official Account (微信公众号). Two modes available:
 
@@ -286,6 +275,63 @@ Post content to WeChat Official Account (微信公众号). Two modes available:
 ```
 
 Prerequisites: Google Chrome installed. First run requires QR code login (session preserved).
+
+### AI Generation Skills
+
+AI-powered generation backends.
+
+#### baoyu-danger-gemini-web
+
+Interacts with Gemini Web to generate text and images.
+
+**Text Generation:**
+
+```bash
+/baoyu-danger-gemini-web "Hello, Gemini"
+/baoyu-danger-gemini-web --prompt "Explain quantum computing"
+```
+
+**Image Generation:**
+
+```bash
+/baoyu-danger-gemini-web --prompt "A cute cat" --image cat.png
+/baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
+```
+
+### Utility Skills
+
+Utility tools for content processing.
+
+#### baoyu-danger-x-to-markdown
+
+Converts X (Twitter) content to markdown format. Supports tweet threads and X Articles.
+
+```bash
+# Convert tweet to markdown
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456
+
+# Save to specific file
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
+
+# JSON output
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
+```
+
+**Supported URLs:**
+- `https://x.com/<user>/status/<id>`
+- `https://twitter.com/<user>/status/<id>`
+- `https://x.com/i/article/<id>`
+
+**Authentication:** Uses environment variables (`X_AUTH_TOKEN`, `X_CT0`) or Chrome login for cookie-based auth.
+
+#### baoyu-compress-image
+
+Compress images to reduce file size while maintaining quality.
+
+```bash
+/baoyu-compress-image path/to/image.png
+/baoyu-compress-image path/to/images/ --quality 80
+```
 
 ## Customization
 

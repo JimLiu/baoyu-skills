@@ -2,6 +2,17 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.1.0 - 2026-01-18
+
+### Features
+- `baoyu-compress-image`: new utility skill for cross-platform image compression. Converts to WebP by default with PNG-to-PNG support. Uses system tools (sips, cwebp, ImageMagick) with Sharp fallback.
+
+### Refactor
+- Marketplace structure: reorganizes plugins into three categories—`content-skills`, `ai-generation-skills`, and `utility-skills`—for better organization.
+
+### Documentation
+- `CLAUDE.md`, `README.md`, `README.zh.md`: updates skill architecture documentation to reflect the new three-category structure.
+
 ## 1.0.1 - 2026-01-18
 
 ### Refactor

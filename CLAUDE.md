@@ -8,16 +8,33 @@ Claude Code marketplace plugin providing AI-powered content generation skills. S
 
 ## Architecture
 
+Skills are organized into three plugin categories in `marketplace.json`:
+
 ```
 skills/
-├── baoyu-danger-gemini-web/   # Core: Gemini API wrapper (text + image gen)
-├── baoyu-xhs-images/          # Xiaohongshu infographic series (1-10 images)
-├── baoyu-cover-image/         # Article cover images (2.35:1 aspect)
-├── baoyu-slide-deck/          # Presentation slides with outlines
-├── baoyu-article-illustrator/ # Smart illustration placement
-├── baoyu-post-to-x/           # X/Twitter posting automation
-└── baoyu-post-to-wechat/      # WeChat Official Account posting
+├── [content-skills]           # Content generation and publishing
+│   ├── baoyu-xhs-images/          # Xiaohongshu infographic series (1-10 images)
+│   ├── baoyu-cover-image/         # Article cover images (2.35:1 aspect)
+│   ├── baoyu-slide-deck/          # Presentation slides with outlines
+│   ├── baoyu-article-illustrator/ # Smart illustration placement
+│   ├── baoyu-comic/               # Knowledge comics (Logicomix/Ohmsha style)
+│   ├── baoyu-post-to-x/           # X/Twitter posting automation
+│   └── baoyu-post-to-wechat/      # WeChat Official Account posting
+│
+├── [ai-generation-skills]     # AI-powered generation backends
+│   └── baoyu-danger-gemini-web/   # Gemini API wrapper (text + image gen)
+│
+└── [utility-skills]           # Utility tools for content processing
+    ├── baoyu-danger-x-to-markdown/ # X/Twitter content to markdown
+    └── baoyu-compress-image/      # Image compression
 ```
+
+**Plugin Categories**:
+| Category | Description |
+|----------|-------------|
+| `content-skills` | Skills that generate or publish content (images, slides, comics, posts) |
+| `ai-generation-skills` | Backend skills providing AI generation capabilities |
+| `utility-skills` | Helper tools for content processing (conversion, compression) |
 
 Each skill contains:
 - `SKILL.md` - YAML front matter (name, description) + documentation
@@ -70,8 +87,27 @@ npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.m
    - SKILL.md `name` field: `baoyu-<name>`
 2. Add TypeScript in `skills/baoyu-<name>/scripts/`
 3. Add prompt templates in `skills/baoyu-<name>/prompts/` if needed
-4. Register in `marketplace.json` plugins[0].skills array as `./skills/baoyu-<name>`
+4. **Choose the appropriate category** and register in `marketplace.json`:
+   - `content-skills`: For content generation/publishing (images, slides, posts)
+   - `ai-generation-skills`: For AI backend capabilities
+   - `utility-skills`: For helper tools (conversion, compression)
+   - If none fit, create a new category with descriptive name
 5. **Add Script Directory section** to SKILL.md (see template below)
+
+### Choosing a Category
+
+| If your skill... | Use category |
+|------------------|--------------|
+| Generates visual content (images, slides, comics) | `content-skills` |
+| Publishes to platforms (X, WeChat, etc.) | `content-skills` |
+| Provides AI generation backend | `ai-generation-skills` |
+| Converts or processes content | `utility-skills` |
+| Compresses or optimizes files | `utility-skills` |
+
+**Creating a new category**: If the skill doesn't fit existing categories, add a new plugin object to `marketplace.json` with:
+- `name`: Descriptive kebab-case name (e.g., `analytics-skills`)
+- `description`: Brief description of the category
+- `skills`: Array with the skill path
 
 ### Script Directory Template
 
