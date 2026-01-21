@@ -310,15 +310,14 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
     // Type the comment if provided
     if (comment) {
       console.log('[x-quote] Typing comment...');
-      const commentJson = JSON.stringify(comment);
+      // Use CDP Input.insertText for more reliable text insertion
       await cdp.send('Runtime.evaluate', {
-        expression: `
-          const editor = document.querySelector('[data-testid="tweetTextarea_0"]');
-          if (editor) {
-            editor.focus();
-            document.execCommand('insertText', false, ${commentJson});
-          }
-        `,
+        expression: `document.querySelector('[data-testid="tweetTextarea_0"]')?.focus()`,
+      }, { sessionId });
+      await sleep(200);
+
+      await cdp.send('Input.insertText', {
+        text: comment,
       }, { sessionId });
       await sleep(500);
     }
