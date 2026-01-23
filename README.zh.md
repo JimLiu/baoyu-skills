@@ -245,19 +245,24 @@ npx skills add jimliu/baoyu-skills
 
 #### baoyu-cover-image
 
-为文章生成手绘风格封面图，支持多种风格选项。
+为文章生成封面图，支持类型 × 风格二维系统。
 
 ```bash
-# 从 markdown 文件生成（自动选择风格）
+# 根据内容自动选择类型和风格
 /baoyu-cover-image path/to/article.md
 
-# 指定风格
-/baoyu-cover-image path/to/article.md --style tech
+# 指定类型和/或风格
+/baoyu-cover-image path/to/article.md --type conceptual --style blueprint
 /baoyu-cover-image path/to/article.md --style warm
+
+# 指定宽高比（默认：2.35:1）
+/baoyu-cover-image path/to/article.md --aspect 16:9
 
 # 不包含标题文字
 /baoyu-cover-image path/to/article.md --no-title
 ```
+
+可用类型：`hero`、`conceptual`、`typography`、`metaphor`、`scene`、`minimal`
 
 可用风格：`elegant`（默认）、`blueprint`、`bold-editorial`、`chalkboard`、`dark-atmospheric`、`editorial-infographic`、`fantasy-animation`、`flat-doodle`、`intuition-machine`、`minimal`、`nature`、`notion`、`pixel-art`、`playful`、`retro`、`sketch-notes`、`vector-illustration`、`vintage`、`warm`、`watercolor`
 

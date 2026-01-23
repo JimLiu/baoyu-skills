@@ -245,19 +245,24 @@ Generate professional infographics with 20 layout types and 17 visual styles. An
 
 #### baoyu-cover-image
 
-Generate hand-drawn style cover images for articles with multiple style options.
+Generate cover images for articles with Type × Style two-dimension system.
 
 ```bash
-# From markdown file (auto-select style)
+# Auto-select type and style based on content
 /baoyu-cover-image path/to/article.md
 
-# Specify a style
-/baoyu-cover-image path/to/article.md --style tech
+# Specify type and/or style
+/baoyu-cover-image path/to/article.md --type conceptual --style blueprint
 /baoyu-cover-image path/to/article.md --style warm
+
+# Specify aspect ratio (default: 2.35:1)
+/baoyu-cover-image path/to/article.md --aspect 16:9
 
 # Without title text
 /baoyu-cover-image path/to/article.md --no-title
 ```
+
+Available types: `hero`, `conceptual`, `typography`, `metaphor`, `scene`, `minimal`
 
 Available styles: `elegant` (default), `blueprint`, `bold-editorial`, `chalkboard`, `dark-atmospheric`, `editorial-infographic`, `fantasy-animation`, `flat-doodle`, `intuition-machine`, `minimal`, `nature`, `notion`, `pixel-art`, `playful`, `retro`, `sketch-notes`, `vector-illustration`, `vintage`, `warm`, `watercolor`
 

@@ -2,6 +2,18 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.17.0 - 2026-01-23
+
+### Features
+- `baoyu-cover-image`: adds user preferences support via EXTEND.md—configure watermark (content, position, opacity), preferred type/style, default aspect ratio, and custom styles. New Step 0 checks for preferences at project (`.baoyu-skills/`) or user (`~/.baoyu-skills/`) level with first-time setup flow.
+
+### Refactor
+- `baoyu-cover-image`: restructures to Type × Style two-dimension system—adds 6 types (`hero`, `conceptual`, `typography`, `metaphor`, `scene`, `minimal`) that control visual composition, while 20 styles control aesthetics. New `--type` and `--aspect` options, Type × Style compatibility matrix, and structured workflow with progress checklist.
+
+### Documentation
+- `baoyu-cover-image`: adds three reference documents—`references/config/preferences-schema.md` (EXTEND.md YAML schema), `references/config/first-time-setup.md` (setup flow), `references/config/watermark-guide.md` (watermark configuration).
+- `README.md`, `README.zh.md`: updates baoyu-cover-image documentation to reflect new Type × Style system with `--type` and `--aspect` options.
+
 ## 1.16.0 - 2026-01-23
 
 ### Features

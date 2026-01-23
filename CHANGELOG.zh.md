@@ -2,6 +2,18 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.17.0 - 2026-01-23
+
+### 新功能
+- `baoyu-cover-image`：新增用户偏好设置支持（通过 EXTEND.md 配置）——可设置水印（内容、位置、透明度）、首选类型/风格、默认宽高比和自定义风格。新增 Step 0 检查项目级（`.baoyu-skills/`）或用户级（`~/.baoyu-skills/`）偏好设置，首次使用时引导设置。
+
+### 重构
+- `baoyu-cover-image`：重构为类型 × 风格二维系统——新增 6 种类型（`hero` 主视觉、`conceptual` 概念、`typography` 文字、`metaphor` 隐喻、`scene` 场景、`minimal` 极简）控制视觉构图，20 种风格控制美学表现。新增 `--type` 和 `--aspect` 选项、类型 × 风格兼容性矩阵，以及带进度清单的结构化工作流。
+
+### 文档
+- `baoyu-cover-image`：新增三个参考文档——`references/config/preferences-schema.md`（EXTEND.md YAML 配置模式）、`references/config/first-time-setup.md`（首次设置流程）、`references/config/watermark-guide.md`（水印配置指南）。
+- `README.md`、`README.zh.md`：更新 baoyu-cover-image 文档，反映新的类型 × 风格系统及 `--type` 和 `--aspect` 选项。
+
 ## 1.16.0 - 2026-01-23
 
 ### 新功能
