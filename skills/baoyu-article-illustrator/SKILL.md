@@ -85,12 +85,14 @@ Check `default_output_dir` in preferences:
 | Preference Value | Action |
 |------------------|--------|
 | `same-dir` | Use `{article-dir}/`, display "Output: {path}" |
+| `imgs-subdir` | Use `{article-dir}/imgs/`, display "Output: {path}" |
 | `illustrations-subdir` | Use `{article-dir}/illustrations/`, display "Output: {path}" |
 | `independent` | Use `illustrations/{topic-slug}/`, display "Output: {path}" |
 | Not configured | **MUST** ask with AskUserQuestion ↓ |
 
 **AskUserQuestion** (when no preference):
 - `{article-dir}/` - Same directory as article
+- `{article-dir}/imgs/` - Images subdirectory
 - `{article-dir}/illustrations/` - Illustrations subdirectory (Recommended)
 - `illustrations/{topic-slug}/` - Independent directory
 - Save as default - Remember this choice for future runs
@@ -175,11 +177,22 @@ test -f "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "user"
 - balanced (3-5) (Recommended) - Major sections
 - rich (6+) - Comprehensive support
 
-**Q3: Style**
-Based on Type, suggest compatible styles from matrix:
-- [Best compatible] (Recommended)
-- [Other ✓✓ styles]
-- [Other ✓ styles]
+**Q3: Style** (ALWAYS ask, even with preferred_style in EXTEND.md)
+
+If EXTEND.md has `preferred_style`:
+- [Custom style name + brief description] (Recommended)
+- [Top compatible built-in style 1]
+- [Top compatible built-in style 2]
+- [Top compatible built-in style 3]
+
+If no `preferred_style`:
+- [Best compatible from matrix] (Recommended)
+- [Other ✓✓ style 1]
+- [Other ✓✓ style 2]
+- [Other ✓ style]
+
+Style selection based on Type × Style compatibility matrix (references/styles.md).
+Full specs: `references/styles/<style>.md`
 
 **Q4** (only if source ≠ user language):
 - Language: Source / User language
