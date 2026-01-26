@@ -14,7 +14,7 @@ Options:
   -p, --prompt <text>       Prompt text
   --promptfiles <files...>  Read prompt from files (concatenated)
   --image <path>            Output image path (required)
-  --provider google|openai  Force provider (auto-detect by default)
+  --provider google|openai|dashscope  Force provider (auto-detect by default)
   -m, --model <id>          Model ID
   --ar <ratio>              Aspect ratio (e.g., 16:9, 1:1, 4:3)
   --size <WxH>              Size (e.g., 1024x1024)
@@ -29,10 +29,13 @@ Environment variables:
   OPENAI_API_KEY            OpenAI API key
   GOOGLE_API_KEY            Google API key
   GEMINI_API_KEY            Gemini API key (alias for GOOGLE_API_KEY)
+  DASHSCOPE_API_KEY         DashScope API key (阿里云通义万象)
   OPENAI_IMAGE_MODEL        Default OpenAI model (gpt-image-1.5)
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
+  DASHSCOPE_IMAGE_MODEL     Default DashScope model (z-image-turbo)
   OPENAI_BASE_URL           Custom OpenAI endpoint
   GOOGLE_BASE_URL           Custom Google endpoint
+  DASHSCOPE_BASE_URL        Custom DashScope endpoint
 
 Env file load order: CLI args > process.env > <cwd>/.baoyu-skills/.env > ~/.baoyu-skills/.env`);
 }
@@ -105,7 +108,7 @@ function parseArgs(argv: string[]): CliArgs {
 
     if (a === "--provider") {
       const v = argv[++i];
-      if (v !== "google" && v !== "openai") throw new Error(`Invalid provider: ${v}`);
+      if (v !== "google" && v !== "openai" && v !== "dashscope") throw new Error(`Invalid provider: ${v}`);
       out.provider = v;
       continue;
     }
@@ -243,13 +246,15 @@ function detectProvider(args: CliArgs): Provider {
 
   const hasGoogle = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
   const hasOpenai = !!process.env.OPENAI_API_KEY;
+  const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
 
-  if (hasGoogle && !hasOpenai) return "google";
-  if (hasOpenai && !hasGoogle) return "openai";
-  if (hasGoogle && hasOpenai) return "google";
+  const available = [hasGoogle && "google", hasOpenai && "openai", hasDashscope && "dashscope"].filter(Boolean) as Provider[];
+
+  if (available.length === 1) return available[0]!;
+  if (available.length > 1) return available[0]!;
 
   throw new Error(
-    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY.\n" +
+    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, or DASHSCOPE_API_KEY.\n" +
       "Create ~/.baoyu-skills/.env or <cwd>/.baoyu-skills/.env with your keys."
   );
 }
@@ -262,6 +267,9 @@ type ProviderModule = {
 async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
   if (provider === "google") {
     return (await import("./providers/google")) as ProviderModule;
+  }
+  if (provider === "dashscope") {
+    return (await import("./providers/dashscope")) as ProviderModule;
   }
   return (await import("./providers/openai")) as ProviderModule;
 }
