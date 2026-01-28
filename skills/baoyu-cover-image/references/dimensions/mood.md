@@ -102,15 +102,29 @@ Dynamic, high-impact visual presence.
 
 ✓✓ = highly recommended | ✓ = compatible | ✗ = not recommended
 
-## Style Interaction
+## Palette Interaction
 
-Mood modifies the base style characteristics:
+Mood modifies the base palette characteristics:
 
-| Style Category | subtle | balanced | bold |
-|----------------|--------|----------|------|
-| Technical (blueprint, notion) | Lighter lines, softer colors | Standard rendering | Stronger contrast, sharper edges |
-| Artistic (watercolor, sketch-notes) | More whitespace, lighter strokes | Standard rendering | Deeper colors, heavier strokes |
-| Editorial (bold-editorial, dark-atmospheric) | Reduced contrast, softer tones | Standard rendering | Maximum impact, vivid colors |
+| Palette Category | subtle | balanced | bold |
+|------------------|--------|----------|------|
+| Warm palettes (warm, earth, pastel) | More whitespace, softer tones | Standard colors | Deeper, richer warm tones |
+| Cool palettes (cool, mono, elegant) | Lighter lines, muted colors | Standard colors | Stronger contrast, sharper definition |
+| Dark palettes (dark, vivid) | Reduced contrast, softer glow | Standard colors | Maximum impact, vivid saturation |
+| Vintage palettes (retro) | More faded, sepia-heavy | Standard colors | Bolder retro contrasts |
+
+## Rendering Interaction
+
+Mood adjusts rendering characteristics:
+
+| Rendering | subtle | balanced | bold |
+|-----------|--------|----------|------|
+| flat-vector | Thinner strokes, lighter fills | Standard weight | Thicker strokes, stronger fills |
+| hand-drawn | Lighter pencil pressure, more space | Standard strokes | Heavier marker strokes, denser elements |
+| painterly | Diluted washes, more white | Standard brush | Thicker paint, saturated strokes |
+| digital | Reduced shadows, lower contrast | Standard rendering | Stronger shadows, sharper edges |
+| pixel | Fewer colors, simpler shapes | Standard palette | More colors, denser pixel detail |
+| chalk | Lighter chalk, more board showing | Standard chalk | Heavy chalk, vivid colors, dense marks |
 
 ## Auto Selection
 

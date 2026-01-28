@@ -49,8 +49,18 @@ Single headline, maximum impact.
 
 **Title Guidelines**:
 - Punchy, action-oriented
-- Numbers, questions, contrasts work well
 - Match content language
+- Use engagement hooks (see below)
+
+**Engagement Hooks**:
+
+| Hook Type | Examples (EN) | Examples (ZH) |
+|-----------|---------------|---------------|
+| Numbers | "3 Traps", "5 Keys" | "3个陷阱", "5个关键" |
+| Questions | "Why X?", "How?" | "为什么X?", "怎么做?" |
+| Contrasts | "A vs B", "Old→New" | "A还是B", "旧→新" |
+| Pain Points | "Stop X", "Never Do" | "别再X了", "千万别" |
+| Suspense | "Hidden X", "Secret" | "隐藏的X", "秘密" |
 
 ### title-subtitle
 
@@ -66,6 +76,10 @@ Title with supporting context.
 - Subtitle: ≤15 characters, secondary
 - Reserved zone: 25%
 - Clear hierarchy between title/subtitle
+
+**Title Guidelines**:
+- Use engagement hooks: numbers, questions, contrasts, pain points, suspense
+- Punchy, action-oriented
 
 **Subtitle Guidelines**:
 - Clarify or contextualize title
@@ -88,6 +102,10 @@ Information-dense cover with multiple text elements.
 - Tags: 2-4 keyword labels
 - Reserved zone: 40%
 - Clear visual hierarchy
+
+**Title Guidelines**:
+- Use engagement hooks: numbers, questions, contrasts, pain points, suspense
+- Punchy, action-oriented
 
 **Tag Guidelines**:
 - 2-4 tags maximum

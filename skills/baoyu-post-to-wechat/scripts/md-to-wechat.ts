@@ -121,8 +121,14 @@ export async function convertMarkdown(markdownPath: string, options?: { title?: 
 
   let title = options?.title ?? frontmatter.title ?? '';
   if (!title) {
-    const h1Match = body.match(/^#\s+(.+)$/m);
-    if (h1Match) title = h1Match[1]!;
+    const lines = body.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const headingMatch = trimmed.match(/^#{1,2}\s+(.+)$/);
+      if (headingMatch) title = headingMatch[1]!;
+      break;
+    }
   }
   if (!title) title = path.basename(markdownPath, path.extname(markdownPath));
   const author = frontmatter.author || '';

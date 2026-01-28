@@ -9,7 +9,7 @@ description: EXTEND.md YAML schema for baoyu-cover-image user preferences
 
 ```yaml
 ---
-version: 2
+version: 3
 
 watermark:
   enabled: false
@@ -18,7 +18,9 @@ watermark:
 
 preferred_type: null      # hero|conceptual|typography|metaphor|scene|minimal or null for auto-select
 
-preferred_style: null     # Built-in style name or null for auto-select
+preferred_palette: null   # warm|elegant|cool|dark|earth|vivid|pastel|mono|retro or null for auto-select
+
+preferred_rendering: null # flat-vector|hand-drawn|painterly|digital|pixel|chalk or null for auto-select
 
 preferred_text: title-only  # none|title-only|title-subtitle|text-rich
 
@@ -30,15 +32,14 @@ quick_mode: false         # Skip confirmation when true
 
 language: null            # zh|en|ja|ko|auto (null = auto-detect)
 
-custom_styles:
-  - name: my-style
-    description: "Style description"
-    color_palette:
+custom_palettes:
+  - name: my-palette
+    description: "Palette description"
+    colors:
       primary: ["#1E3A5F", "#4A90D9"]
       background: "#F5F7FA"
       accents: ["#00B4D8"]
-    visual_elements: "Clean lines, geometric shapes"
-    typography: "Modern sans-serif"
+    decorative_hints: "Clean lines, geometric shapes"
     best_for: "Business, tech content"
 ---
 ```
@@ -47,18 +48,19 @@ custom_styles:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `version` | int | 2 | Schema version |
+| `version` | int | 3 | Schema version |
 | `watermark.enabled` | bool | false | Enable watermark |
 | `watermark.content` | string | "" | Watermark text (@username or custom) |
 | `watermark.position` | enum | bottom-right | Position on image |
 | `preferred_type` | string | null | Type name or null for auto |
-| `preferred_style` | string | null | Style name or null for auto |
+| `preferred_palette` | string | null | Palette name or null for auto |
+| `preferred_rendering` | string | null | Rendering name or null for auto |
 | `preferred_text` | string | title-only | Text density level |
 | `preferred_mood` | string | balanced | Mood intensity level |
 | `default_aspect` | string | "2.35:1" | Default aspect ratio |
 | `quick_mode` | bool | false | Skip confirmation step |
 | `language` | string | null | Output language (null = auto-detect) |
-| `custom_styles` | array | [] | User-defined styles |
+| `custom_palettes` | array | [] | User-defined palettes |
 
 ## Type Options
 
@@ -70,6 +72,31 @@ custom_styles:
 | `metaphor` | Visual metaphor, concrete expressing abstract |
 | `scene` | Atmospheric scene, narrative feel |
 | `minimal` | Minimalist composition, generous whitespace |
+
+## Palette Options
+
+| Value | Description |
+|-------|-------------|
+| `warm` | Friendly, approachable — orange, golden yellow, terracotta |
+| `elegant` | Sophisticated, refined — soft coral, muted teal, dusty rose |
+| `cool` | Technical, professional — engineering blue, navy, cyan |
+| `dark` | Cinematic, premium — electric purple, cyan, magenta |
+| `earth` | Natural, organic — forest green, sage, earth brown |
+| `vivid` | Energetic, bold — bright red, neon green, electric blue |
+| `pastel` | Gentle, whimsical — soft pink, mint, lavender |
+| `mono` | Clean, focused — black, near-black, white |
+| `retro` | Nostalgic, vintage — muted orange, dusty pink, maroon |
+
+## Rendering Options
+
+| Value | Description |
+|-------|-------------|
+| `flat-vector` | Clean outlines, uniform fills, geometric icons |
+| `hand-drawn` | Sketchy, organic, imperfect strokes, paper texture |
+| `painterly` | Soft brush strokes, color bleeds, watercolor feel |
+| `digital` | Polished, precise edges, subtle gradients, UI components |
+| `pixel` | Pixel grid, dithering, chunky 8-bit shapes |
+| `chalk` | Chalk strokes, dust effects, blackboard texture |
 
 ## Text Options
 
@@ -105,29 +132,29 @@ custom_styles:
 | `16:9` | Standard widescreen | Presentations, video thumbnails |
 | `1:1` | Square | Social media, profile images |
 
-## Custom Style Fields
+## Custom Palette Fields
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `name` | Yes | Unique style identifier (kebab-case) |
-| `description` | Yes | What the style conveys |
-| `color_palette.primary` | No | Main colors (array) |
-| `color_palette.background` | No | Background color |
-| `color_palette.accents` | No | Accent colors (array) |
-| `visual_elements` | No | Decorative elements |
-| `typography` | No | Font/lettering style |
+| `name` | Yes | Unique palette identifier (kebab-case) |
+| `description` | Yes | What the palette conveys |
+| `colors.primary` | No | Main colors (array of hex) |
+| `colors.background` | No | Background color (hex) |
+| `colors.accents` | No | Accent colors (array of hex) |
+| `decorative_hints` | No | Decorative elements and patterns |
 | `best_for` | No | Recommended content types |
 
 ## Example: Minimal Preferences
 
 ```yaml
 ---
-version: 2
+version: 3
 watermark:
   enabled: true
   content: "@myhandle"
 preferred_type: null
-preferred_style: elegant
+preferred_palette: elegant
+preferred_rendering: hand-drawn
 preferred_text: title-only
 preferred_mood: balanced
 quick_mode: false
@@ -138,7 +165,7 @@ quick_mode: false
 
 ```yaml
 ---
-version: 2
+version: 3
 watermark:
   enabled: true
   content: "myblog.com"
@@ -146,7 +173,9 @@ watermark:
 
 preferred_type: conceptual
 
-preferred_style: blueprint
+preferred_palette: cool
+
+preferred_rendering: digital
 
 preferred_text: title-subtitle
 
@@ -158,26 +187,73 @@ quick_mode: true
 
 language: en
 
-custom_styles:
+custom_palettes:
   - name: corporate-tech
-    description: "Professional B2B tech style"
-    color_palette:
+    description: "Professional B2B tech palette"
+    colors:
       primary: ["#1E3A5F", "#4A90D9"]
       background: "#F5F7FA"
       accents: ["#00B4D8", "#48CAE4"]
-    visual_elements: "Clean lines, subtle gradients, circuit patterns"
-    typography: "Modern sans-serif, professional"
+    decorative_hints: "Clean lines, subtle gradients, circuit patterns"
     best_for: "SaaS, enterprise, technical"
 ---
 ```
 
+## Migration from v2
+
+When loading v2 schema, auto-upgrade:
+
+| v2 Field | v3 Field | Migration |
+|----------|----------|-----------|
+| `version: 2` | `version: 3` | Update |
+| `preferred_style` | `preferred_palette` + `preferred_rendering` | Use preset mapping table |
+| `custom_styles` | `custom_palettes` | Rename, restructure fields |
+
+**Style → Palette + Rendering mapping**:
+
+| v2 `preferred_style` | v3 `preferred_palette` | v3 `preferred_rendering` |
+|----------------------|----------------------|-------------------------|
+| `elegant` | `elegant` | `hand-drawn` |
+| `blueprint` | `cool` | `digital` |
+| `chalkboard` | `dark` | `chalk` |
+| `dark-atmospheric` | `dark` | `digital` |
+| `editorial-infographic` | `cool` | `digital` |
+| `fantasy-animation` | `pastel` | `painterly` |
+| `flat-doodle` | `pastel` | `flat-vector` |
+| `intuition-machine` | `retro` | `digital` |
+| `minimal` | `mono` | `flat-vector` |
+| `nature` | `earth` | `hand-drawn` |
+| `notion` | `mono` | `digital` |
+| `pixel-art` | `vivid` | `pixel` |
+| `playful` | `pastel` | `hand-drawn` |
+| `retro` | `retro` | `digital` |
+| `sketch-notes` | `warm` | `hand-drawn` |
+| `vector-illustration` | `retro` | `flat-vector` |
+| `vintage` | `retro` | `hand-drawn` |
+| `warm` | `warm` | `hand-drawn` |
+| `watercolor` | `earth` | `painterly` |
+| null (auto) | null | null |
+
+**Custom style migration**:
+
+| v2 Field | v3 Field |
+|----------|----------|
+| `custom_styles[].name` | `custom_palettes[].name` |
+| `custom_styles[].description` | `custom_palettes[].description` |
+| `custom_styles[].color_palette` | `custom_palettes[].colors` |
+| `custom_styles[].visual_elements` | `custom_palettes[].decorative_hints` |
+| `custom_styles[].typography` | (removed — determined by rendering) |
+| `custom_styles[].best_for` | `custom_palettes[].best_for` |
+
 ## Migration from v1
 
-When loading v1 schema, auto-upgrade:
+When loading v1 schema, auto-upgrade to v3:
 
-| v1 Field | v2 Field | Default Value |
+| v1 Field | v3 Field | Default Value |
 |----------|----------|---------------|
-| (missing) | `version` | 2 |
+| (missing) | `version` | 3 |
+| (missing) | `preferred_palette` | null |
+| (missing) | `preferred_rendering` | null |
 | (missing) | `preferred_text` | title-only |
 | (missing) | `preferred_mood` | balanced |
 | (missing) | `quick_mode` | false |

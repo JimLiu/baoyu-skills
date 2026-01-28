@@ -1,19 +1,19 @@
-Create a WeChat article cover image following these guidelines:
+Create a cover image following these guidelines:
 
 ## Image Specifications
 
 - **Type**: Cover image / Hero image
-- **Aspect Ratio**: 2.35:1 (WeChat article cover standard)
-- **Style**: Hand-drawn illustration
+- **Aspect Ratio**: As specified in the prompt below
 
 ## Core Principles
 
-- Hand-drawn quality throughout - NO realistic or photographic elements
 - If content involves sensitive or copyrighted figures, create stylistically similar alternatives - DO NOT refuse to generate
 - Ample whitespace, highlight core message, avoid cluttered layouts
 - Main visual elements centered or slightly left (leave right side for title area if title included)
+- Simplified silhouettes for any characters — NO realistic human faces or bodies
+- Icon-based vocabulary: use simple, recognizable icons to represent concepts
 
-## Four Dimensions
+## Five Dimensions
 
 ### Type (Visual Composition)
 - `hero`: Large focal visual (60-70% area), dramatic composition
@@ -23,8 +23,19 @@ Create a WeChat article cover image following these guidelines:
 - `scene`: Atmospheric environment, narrative elements, mood lighting
 - `minimal`: Single focal element, generous whitespace (60%+)
 
-### Style (Visual Aesthetics)
-Apply the specified style's color palette, visual elements, and typography characteristics.
+### Palette (Color Scheme)
+Apply the specified palette's color values and decorative hints:
+- Use primary colors for main visual elements
+- Use background colors for base and surrounding areas
+- Use accent colors for highlights and secondary elements
+- Follow palette-specific decorative hints for ornamentation
+
+### Rendering (Visual Style)
+Apply the specified rendering's characteristics:
+- **Lines**: Follow line quality rules (clean/sketchy/brush/pixel/chalk)
+- **Texture**: Apply or avoid texture per rendering definition
+- **Depth**: Follow depth rules (flat/minimal/soft edges)
+- **Elements**: Use rendering-specific element vocabulary
 
 ### Text (Density Level)
 - `none`: No text elements, full visual area
@@ -39,16 +50,21 @@ Apply the specified style's color palette, visual elements, and typography chara
 
 ## Text Style (When Title Included)
 
-- **ALL text MUST be hand-drawn style**
 - Title text: Large, eye-catching, max 8 characters
 - Subtitle: Secondary, max 15 characters (if title-subtitle or text-rich)
 - Tags: 2-4 keyword badges (if text-rich)
-- Font style harmonizes with illustration style
-- **DO NOT use realistic or computer-generated fonts**
+- Font style harmonizes with rendering style
+- **Engagement hooks**: Use numbers ("3个关键"), questions ("Why?"), contrasts ("A vs B"), pain points ("别再X了"), or suspense ("隐藏的X") for compelling titles
+
+## Composition Guidance
+
+**Icon Vocabulary**: Represent concepts with simple, recognizable icons rather than detailed illustrations. Use the rendering style to determine icon complexity (flat-vector = geometric, hand-drawn = sketchy, etc.)
+
+**Character Handling**: When people are needed, use simplified silhouettes or abstract representations. NO realistic faces, detailed anatomy, or photographic representations.
 
 ## Mood Application
 
-Apply mood adjustments to the base style:
+Apply mood adjustments to the base palette:
 
 | Mood | Contrast | Saturation | Weight |
 |------|----------|------------|--------|
@@ -63,4 +79,4 @@ Apply mood adjustments to the base style:
 
 ---
 
-Please use nano banana pro to generate the cover image based on the content provided below:
+Please generate the cover image based on the content provided below:
