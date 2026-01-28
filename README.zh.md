@@ -245,7 +245,7 @@ npx skills add jimliu/baoyu-skills
 
 #### baoyu-cover-image
 
-为文章生成封面图，支持四维定制系统：类型 × 风格 × 文字 × 氛围。
+为文章生成封面图，支持五维定制系统：类型 × 配色 × 渲染 × 文字 × 氛围。9 种配色方案与 6 种渲染风格组合，提供 54 种独特效果。
 
 ```bash
 # 根据内容自动选择所有维度
@@ -254,43 +254,26 @@ npx skills add jimliu/baoyu-skills
 # 快速模式：跳过确认，使用自动选择
 /baoyu-cover-image path/to/article.md --quick
 
-# 指定维度
-/baoyu-cover-image path/to/article.md --type conceptual --style blueprint
+# 指定维度（5D 系统）
+/baoyu-cover-image path/to/article.md --type conceptual --palette cool --rendering digital
 /baoyu-cover-image path/to/article.md --text title-subtitle --mood bold
 
-# 指定宽高比（默认：2.35:1）
-/baoyu-cover-image path/to/article.md --aspect 16:9
+# 风格预设（向后兼容的简写方式）
+/baoyu-cover-image path/to/article.md --style blueprint
+
+# 指定宽高比（默认：16:9）
+/baoyu-cover-image path/to/article.md --aspect 2.35:1
 
 # 纯视觉（不含标题文字）
 /baoyu-cover-image path/to/article.md --no-title
 ```
 
-**四个维度**：
+**五个维度**：
 - **类型 (Type)**：`hero`、`conceptual`、`typography`、`metaphor`、`scene`、`minimal`
-- **风格 (Style)**：20 种内置风格（见下方预览）
+- **配色 (Palette)**：`warm`、`elegant`、`cool`、`dark`、`earth`、`vivid`、`pastel`、`mono`、`retro`
+- **渲染 (Rendering)**：`flat-vector`、`hand-drawn`、`painterly`、`digital`、`pixel`、`chalk`
 - **文字 (Text)**：`none`、`title-only`（默认）、`title-subtitle`、`text-rich`
 - **氛围 (Mood)**：`subtle`、`balanced`（默认）、`bold`
-
-可用风格：`elegant`（默认）、`blueprint`、`bold-editorial`、`chalkboard`、`dark-atmospheric`、`editorial-infographic`、`fantasy-animation`、`flat-doodle`、`intuition-machine`、`minimal`、`nature`、`notion`、`pixel-art`、`playful`、`retro`、`sketch-notes`、`vector-illustration`、`vintage`、`warm`、`watercolor`
-
-**风格预览**：
-
-| | | |
-|:---:|:---:|:---:|
-| ![elegant](./screenshots/cover-image-styles/elegant.webp) | ![blueprint](./screenshots/cover-image-styles/blueprint.webp) | ![bold-editorial](./screenshots/cover-image-styles/bold-editorial.webp) |
-| elegant | blueprint | bold-editorial |
-| ![chalkboard](./screenshots/cover-image-styles/chalkboard.webp) | ![dark-atmospheric](./screenshots/cover-image-styles/dark-atmospheric.webp) | ![editorial-infographic](./screenshots/cover-image-styles/editorial-infographic.webp) |
-| chalkboard | dark-atmospheric | editorial-infographic |
-| ![fantasy-animation](./screenshots/cover-image-styles/fantasy-animation.webp) | ![intuition-machine](./screenshots/cover-image-styles/intuition-machine.webp) | ![minimal](./screenshots/cover-image-styles/minimal.webp) |
-| fantasy-animation | intuition-machine | minimal |
-| ![nature](./screenshots/cover-image-styles/nature.webp) | ![notion](./screenshots/cover-image-styles/notion.webp) | ![pixel-art](./screenshots/cover-image-styles/pixel-art.webp) |
-| nature | notion | pixel-art |
-| ![playful](./screenshots/cover-image-styles/playful.webp) | ![retro](./screenshots/cover-image-styles/retro.webp) | ![sketch-notes](./screenshots/cover-image-styles/sketch-notes.webp) |
-| playful | retro | sketch-notes |
-| ![vector-illustration](./screenshots/cover-image-styles/vector-illustration.webp) | ![vintage](./screenshots/cover-image-styles/vintage.webp) | ![warm](./screenshots/cover-image-styles/warm.webp) |
-| vector-illustration | vintage | warm |
-| ![watercolor](./screenshots/cover-image-styles/watercolor.webp) | ![flat-doodle](./screenshots/cover-image-styles/flat-doodle.webp) | |
-| watercolor | flat-doodle | |
 
 #### baoyu-slide-deck
 
@@ -744,13 +727,14 @@ mkdir -p .baoyu-skills/baoyu-cover-image
 然后创建 `.baoyu-skills/baoyu-cover-image/EXTEND.md`：
 
 ```markdown
-## 自定义风格
+## 自定义配色
 
-### brand
-- 主色：#1a73e8
-- 辅色：#34a853
-- 字体风格：现代无衬线
-- 始终包含公司 logo 水印
+### corporate-tech
+- 主色：#1a73e8、#4A90D9
+- 背景色：#F5F7FA
+- 强调色：#00B4D8、#48CAE4
+- 装饰提示：简洁线条、渐变效果
+- 适用于：SaaS、企业、技术内容
 ```
 
 扩展内容会在技能执行前加载，并覆盖默认设置。

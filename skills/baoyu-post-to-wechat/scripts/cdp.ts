@@ -171,6 +171,37 @@ export interface ChromeSession {
   targetId: string;
 }
 
+export async function tryConnectExisting(port: number): Promise<CdpConnection | null> {
+  try {
+    const version = await fetchJson<{ webSocketDebuggerUrl?: string }>(`http://127.0.0.1:${port}/json/version`);
+    if (version.webSocketDebuggerUrl) {
+      const cdp = await CdpConnection.connect(version.webSocketDebuggerUrl, 5_000);
+      return cdp;
+    }
+  } catch {}
+  return null;
+}
+
+export async function findExistingChromeDebugPort(): Promise<number | null> {
+  if (process.platform !== 'darwin' && process.platform !== 'linux') return null;
+  try {
+    const { execSync } = await import('node:child_process');
+    const cmd = process.platform === 'darwin'
+      ? `lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -i 'google\\|chrome' | awk '{print $9}' | sed 's/.*://'`
+      : `ss -tlnp 2>/dev/null | grep -i chrome | awk '{print $4}' | sed 's/.*://'`;
+    const output = execSync(cmd, { encoding: 'utf-8', timeout: 5_000 }).trim();
+    if (!output) return null;
+    const ports = output.split('\n').map(p => parseInt(p, 10)).filter(p => !isNaN(p) && p > 0);
+    for (const port of ports) {
+      try {
+        const version = await fetchJson<{ webSocketDebuggerUrl?: string }>(`http://127.0.0.1:${port}/json/version`);
+        if (version.webSocketDebuggerUrl) return port;
+      } catch {}
+    }
+  } catch {}
+  return null;
+}
+
 export async function launchChrome(url: string, profileDir?: string): Promise<{ cdp: CdpConnection; chrome: ReturnType<typeof spawn> }> {
   const chromePath = findChromeExecutable();
   if (!chromePath) throw new Error('Chrome not found. Set WECHAT_BROWSER_CHROME_PATH env var.');

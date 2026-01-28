@@ -2,6 +2,28 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.24.0 - 2026-01-27
+
+### 新功能
+- `baoyu-post-to-wechat`：复用已打开的 Chrome 浏览器，无需关闭所有窗口 (by @AliceLJY)。
+
+### 修复
+- `baoyu-post-to-wechat`：改进标题提取，支持 h1/h2 标题；新增摘要自动填充和粘贴/输入后内容验证；支持 HTML meta 标签属性顺序灵活匹配。
+
+### 文档
+- `release-skills`：在发布流程中新增第三方贡献者署名规则。
+- 补全历史 changelog 中缺失的第三方贡献者署名。
+
+## 1.23.1 - 2026-01-27
+
+### 修复
+- `baoyu-compress-image`：压缩后将原始文件重命名为 `_original` 备份，不再删除。
+
+## 1.23.0 - 2026-01-26
+
+### 重构
+- `baoyu-cover-image`：将 20 种固定风格替换为五维系统（类型 × 配色 × 渲染 × 文字 × 氛围）。9 种配色方案 × 6 种渲染风格 = 54 种组合。新增风格预设实现向后兼容，v2→v3 配置迁移，以及新的引用文件结构（`palettes/`、`renderings/`、`workflow/`）。
+
 ## 1.22.0 - 2026-01-25
 
 ### 新功能
@@ -15,7 +37,7 @@
 ## 1.21.4 - 2026-01-25
 
 ### 修复
-- `baoyu-post-to-wechat`：新增 Windows 兼容性——使用 `fileURLToPath` 正确解析路径，将系统依赖的复制粘贴工具（osascript/xdotool）替换为 CDP 键盘事件，实现跨平台支持。
+- `baoyu-post-to-wechat`：新增 Windows 兼容性——使用 `fileURLToPath` 正确解析路径，将系统依赖的复制粘贴工具（osascript/xdotool）替换为 CDP 键盘事件，实现跨平台支持 (by @JadeLiang003)。
 - `baoyu-post-to-wechat`：修复 Windows 兼容性 PR 引入的回退问题——修正错误的 `-fixed` 文件名引用、恢复 frontmatter 引号剥离、恢复 `--title` CLI 参数、修复摘要提取逻辑以正确跳过标题/引用/列表、修复单横线参数解析、移除调试日志。
 - `baoyu-article-illustrator`、`baoyu-cover-image`、`baoyu-xhs-images`：移除水印配置中的透明度选项。
 
@@ -165,7 +187,7 @@
 ## 1.14.0 - 2026-01-22
 
 ### 修复
-- `baoyu-post-to-x`：改进视频就绪检测，提升视频发布稳定性。
+- `baoyu-post-to-x`：改进视频就绪检测，提升视频发布稳定性 (by @fkysly)。
 
 ### 文档
 - `baoyu-slide-deck`：SKILL.md 全面增强——新增幻灯片数量指南（推荐 8-25 张，最多 30 张）、受众指南表格及各受众特定原则、风格选择原则与内容类型推荐、布局选择技巧与常见错误提示、视觉层次原则、内容密度指南（麦肯锡风格高密度原则）、配色选择指南、字体排版原则与字体推荐（中英文字体及多语言搭配方案）、视觉元素参考（背景处理、字体处理、几何装饰）。
@@ -179,6 +201,9 @@
 - `baoyu-xhs-images`：更新风格推荐——将 `tech` 风格引用替换为 `notion` 和 `chalkboard`，用于技术和教育内容。
 
 ## 1.12.0 - 2026-01-21
+
+### 新功能
+- `baoyu-post-to-x`：新增引用推文（Quote Tweet）支持 (by @threehotpot-bot)。
 
 ### 重构
 - `baoyu-post-to-x`：提取公共工具函数到 `x-utils.ts`——将 `x-article.ts`、`x-browser.ts`、`x-quote.ts`、`x-video.ts` 中重复的 Chrome 检测、CDP 连接、剪贴板操作等功能整合为统一的可复用模块。
@@ -195,7 +220,7 @@
 ## 1.10.0 - 2026-01-21
 
 ### 新功能
-- `baoyu-post-to-x`：新增视频发布支持——新增 `x-video.ts` 脚本，支持发布带视频的推文（MP4、MOV、WebM 格式）。支持预览模式，自动处理视频上传等待。
+- `baoyu-post-to-x`：新增视频发布支持——新增 `x-video.ts` 脚本，支持发布带视频的推文（MP4、MOV、WebM 格式）。支持预览模式，自动处理视频上传等待 (by @fkysly)。
 
 ## 1.9.0 - 2026-01-20
 
@@ -251,7 +276,7 @@
 ## 1.4.1 - 2026-01-18
 
 ### 修复
-- `baoyu-post-to-x`：支持 X Articles 多语言 UI 选择器（感谢 [@ianchenx](https://github.com/ianchenx) 贡献）。
+- `baoyu-post-to-x`：支持 X Articles 多语言 UI 选择器 (by @ianchenx)。
 
 ## 1.4.0 - 2026-01-18
 

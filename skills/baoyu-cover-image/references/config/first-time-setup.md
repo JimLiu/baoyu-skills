@@ -33,69 +33,99 @@ No EXTEND.md found
 
 **Language**: Use user's input language or saved language preference.
 
-Use single AskUserQuestion with multiple questions (AskUserQuestion auto-adds "Other" option):
+Use AskUserQuestion with ALL questions in ONE call:
 
 ### Question 1: Watermark
 
-```
+```yaml
 header: "Watermark"
-question: "Watermark text for generated cover images? Type your watermark content (e.g., name, @handle)"
+question: "Watermark text for generated cover images?"
 options:
   - label: "No watermark (Recommended)"
-    description: "No watermark, can enable later in EXTEND.md"
+    description: "Clean covers, can enable later in EXTEND.md"
 ```
-
-Position defaults to bottom-right.
 
 ### Question 2: Preferred Type
 
-```
+```yaml
 header: "Type"
 question: "Default cover type preference?"
 options:
-  - label: "None (Recommended)"
-    description: "Auto-select based on content analysis"
+  - label: "Auto-select (Recommended)"
+    description: "Choose based on content analysis each time"
   - label: "hero"
     description: "Large visual impact - product launch, announcements"
   - label: "conceptual"
     description: "Concept visualization - technical, architecture"
-  - label: "typography"
-    description: "Text-focused layout - opinions, quotes"
 ```
 
-### Question 3: Preferred Style
+### Question 3: Preferred Palette
 
-```
-header: "Style"
-question: "Default cover style preference? Or type another style name"
+```yaml
+header: "Palette"
+question: "Default color palette preference?"
 options:
-  - label: "None (Recommended)"
-    description: "Auto-select based on content analysis"
+  - label: "Auto-select (Recommended)"
+    description: "Choose based on content analysis each time"
   - label: "elegant"
-    description: "Refined, sophisticated - professional business"
-  - label: "blueprint"
-    description: "Technical schematics - architecture/system design"
-  - label: "notion"
-    description: "SaaS dashboard - productivity/tech content"
+    description: "Sophisticated - soft coral, muted teal, dusty rose"
+  - label: "warm"
+    description: "Friendly - orange, golden yellow, terracotta"
+  - label: "cool"
+    description: "Technical - engineering blue, navy, cyan"
 ```
 
-### Question 4: Default Aspect Ratio
+### Question 4: Preferred Rendering
 
+```yaml
+header: "Rendering"
+question: "Default rendering style preference?"
+options:
+  - label: "Auto-select (Recommended)"
+    description: "Choose based on content analysis each time"
+  - label: "hand-drawn"
+    description: "Sketchy organic illustration with personal touch"
+  - label: "flat-vector"
+    description: "Clean modern vector with geometric shapes"
+  - label: "digital"
+    description: "Polished precise digital illustration"
 ```
+
+### Question 5: Default Aspect Ratio
+
+```yaml
 header: "Aspect"
 question: "Default aspect ratio for cover images?"
 options:
-  - label: "2.35:1 (Recommended)"
-    description: "Cinematic widescreen, best for article headers"
-  - label: "16:9"
-    description: "Standard widescreen, versatile"
+  - label: "16:9 (Recommended)"
+    description: "Standard widescreen - YouTube, presentations, versatile"
+  - label: "2.35:1"
+    description: "Cinematic widescreen - article headers, blog posts"
   - label: "1:1"
-    description: "Square, social media friendly"
+    description: "Square - Instagram, WeChat, social cards"
+  - label: "3:4"
+    description: "Portrait - Xiaohongshu, Pinterest, mobile content"
 ```
 
-### Question 5: Quick Mode
+Note: More ratios (4:3, 3:2) available during generation. This sets the default recommendation.
 
+### Question 6: Default Output Directory
+
+```yaml
+header: "Output"
+question: "Default output directory for cover images?"
+options:
+  - label: "Independent (Recommended)"
+    description: "cover-image/{topic-slug}/ - separate from article"
+  - label: "Same directory"
+    description: "{article-dir}/ - alongside the article file"
+  - label: "imgs subdirectory"
+    description: "{article-dir}/imgs/ - images folder near article"
 ```
+
+### Question 7: Quick Mode
+
+```yaml
 header: "Quick"
 question: "Enable quick mode by default?"
 options:
@@ -105,13 +135,13 @@ options:
     description: "Skip confirmation, use auto-selection"
 ```
 
-### Question 6: Save Location
+### Question 8: Save Location
 
-```
+```yaml
 header: "Save"
 question: "Where to save preferences?"
 options:
-  - label: "Project"
+  - label: "Project (Recommended)"
     description: ".baoyu-skills/ (this project only)"
   - label: "User"
     description: "~/.baoyu-skills/ (all projects)"
@@ -135,36 +165,30 @@ options:
 
 ```yaml
 ---
-version: 2
+version: 3
 watermark:
   enabled: [true/false]
   content: "[user input or empty]"
   position: bottom-right
   opacity: 0.7
 preferred_type: [selected type or null]
-preferred_style: [selected style or null]
+preferred_palette: [selected palette or null]
+preferred_rendering: [selected rendering or null]
 preferred_text: title-only
 preferred_mood: balanced
-default_aspect: [2.35:1/16:9/1:1]
+default_aspect: [16:9/2.35:1/1:1/3:4]
+default_output_dir: [independent/same-dir/imgs-subdir]
 quick_mode: [true/false]
 language: null
-custom_styles: []
+custom_palettes: []
 ---
 ```
-
-## New Fields in v2
-
-| Field | Default | Description |
-|-------|---------|-------------|
-| `preferred_text` | title-only | Text density (none, title-only, title-subtitle, text-rich) |
-| `preferred_mood` | balanced | Mood intensity (subtle, balanced, bold) |
-| `quick_mode` | false | Skip confirmation step when true |
-
-Note: Text and Mood preferences use sensible defaults (title-only, balanced) and don't require setup questions. Users can modify these in EXTEND.md directly.
 
 ## Modifying Preferences Later
 
 Users can edit EXTEND.md directly or run setup again:
 - Delete EXTEND.md to trigger setup
 - Edit YAML frontmatter for quick changes
-- Full schema: `config/preferences-schema.md`
+- Full schema: `preferences-schema.md`
+
+**EXTEND.md Supports**: Watermark | Preferred type | Preferred palette | Preferred rendering | Preferred text | Preferred mood | Default aspect ratio | Default output directory | Quick mode | Custom palette definitions | Language preference

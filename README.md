@@ -245,7 +245,7 @@ Generate professional infographics with 20 layout types and 17 visual styles. An
 
 #### baoyu-cover-image
 
-Generate cover images for articles with 4 dimensions: Type × Style × Text × Mood.
+Generate cover images for articles with 5 dimensions: Type × Palette × Rendering × Text × Mood. Combines 9 color palettes with 6 rendering styles for 54 unique combinations.
 
 ```bash
 # Auto-select all dimensions based on content
@@ -254,43 +254,26 @@ Generate cover images for articles with 4 dimensions: Type × Style × Text × M
 # Quick mode: skip confirmation, use auto-selection
 /baoyu-cover-image path/to/article.md --quick
 
-# Specify dimensions
-/baoyu-cover-image path/to/article.md --type conceptual --style blueprint
+# Specify dimensions (5D system)
+/baoyu-cover-image path/to/article.md --type conceptual --palette cool --rendering digital
 /baoyu-cover-image path/to/article.md --text title-subtitle --mood bold
 
-# Specify aspect ratio (default: 2.35:1)
-/baoyu-cover-image path/to/article.md --aspect 16:9
+# Style presets (backward-compatible shorthand)
+/baoyu-cover-image path/to/article.md --style blueprint
+
+# Specify aspect ratio (default: 16:9)
+/baoyu-cover-image path/to/article.md --aspect 2.35:1
 
 # Visual only (no title text)
 /baoyu-cover-image path/to/article.md --no-title
 ```
 
-**Four Dimensions**:
+**Five Dimensions**:
 - **Type**: `hero`, `conceptual`, `typography`, `metaphor`, `scene`, `minimal`
-- **Style**: 20 built-in styles (see previews below)
+- **Palette**: `warm`, `elegant`, `cool`, `dark`, `earth`, `vivid`, `pastel`, `mono`, `retro`
+- **Rendering**: `flat-vector`, `hand-drawn`, `painterly`, `digital`, `pixel`, `chalk`
 - **Text**: `none`, `title-only` (default), `title-subtitle`, `text-rich`
 - **Mood**: `subtle`, `balanced` (default), `bold`
-
-Available styles: `elegant` (default), `blueprint`, `bold-editorial`, `chalkboard`, `dark-atmospheric`, `editorial-infographic`, `fantasy-animation`, `flat-doodle`, `intuition-machine`, `minimal`, `nature`, `notion`, `pixel-art`, `playful`, `retro`, `sketch-notes`, `vector-illustration`, `vintage`, `warm`, `watercolor`
-
-**Style Previews**:
-
-| | | |
-|:---:|:---:|:---:|
-| ![elegant](./screenshots/cover-image-styles/elegant.webp) | ![blueprint](./screenshots/cover-image-styles/blueprint.webp) | ![bold-editorial](./screenshots/cover-image-styles/bold-editorial.webp) |
-| elegant | blueprint | bold-editorial |
-| ![chalkboard](./screenshots/cover-image-styles/chalkboard.webp) | ![dark-atmospheric](./screenshots/cover-image-styles/dark-atmospheric.webp) | ![editorial-infographic](./screenshots/cover-image-styles/editorial-infographic.webp) |
-| chalkboard | dark-atmospheric | editorial-infographic |
-| ![fantasy-animation](./screenshots/cover-image-styles/fantasy-animation.webp) | ![intuition-machine](./screenshots/cover-image-styles/intuition-machine.webp) | ![minimal](./screenshots/cover-image-styles/minimal.webp) |
-| fantasy-animation | intuition-machine | minimal |
-| ![nature](./screenshots/cover-image-styles/nature.webp) | ![notion](./screenshots/cover-image-styles/notion.webp) | ![pixel-art](./screenshots/cover-image-styles/pixel-art.webp) |
-| nature | notion | pixel-art |
-| ![playful](./screenshots/cover-image-styles/playful.webp) | ![retro](./screenshots/cover-image-styles/retro.webp) | ![sketch-notes](./screenshots/cover-image-styles/sketch-notes.webp) |
-| playful | retro | sketch-notes |
-| ![vector-illustration](./screenshots/cover-image-styles/vector-illustration.webp) | ![vintage](./screenshots/cover-image-styles/vintage.webp) | ![warm](./screenshots/cover-image-styles/warm.webp) |
-| vector-illustration | vintage | warm |
-| ![watercolor](./screenshots/cover-image-styles/watercolor.webp) | ![flat-doodle](./screenshots/cover-image-styles/flat-doodle.webp) | |
-| watercolor | flat-doodle | |
 
 #### baoyu-slide-deck
 
@@ -744,13 +727,14 @@ mkdir -p .baoyu-skills/baoyu-cover-image
 Then create `.baoyu-skills/baoyu-cover-image/EXTEND.md`:
 
 ```markdown
-## Custom Styles
+## Custom Palettes
 
-### brand
-- Primary color: #1a73e8
-- Secondary color: #34a853
-- Font style: Modern sans-serif
-- Always include company logo watermark
+### corporate-tech
+- Primary colors: #1a73e8, #4A90D9
+- Background: #F5F7FA
+- Accent colors: #00B4D8, #48CAE4
+- Decorative hints: Clean lines, subtle gradients
+- Best for: SaaS, enterprise, technical
 ```
 
 The extension content will be loaded before skill execution and override defaults.
