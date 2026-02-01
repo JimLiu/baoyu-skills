@@ -28,11 +28,39 @@ interface ArticleOptions {
   cdpPort?: number;
 }
 
-async function waitForLogin(session: ChromeSession, timeoutMs = 120_000): Promise<boolean> {
+async function captureAndNotify(cdp: CdpConnection, sessionId: string, reason: string): Promise<string> {
+  console.log(`[wechat] Capturing screenshot: ${reason}`);
+  try {
+    const screenshot = await cdp.send<{ data: string }>('Page.captureScreenshot',
+      { format: 'png' },
+      { sessionId }
+    );
+    const screenshotPath = `/tmp/wechat-${reason}-${Date.now()}.png`;
+    fs.writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
+
+    console.log(`PLEASE_UPLOAD_TO_DISCORD: ${screenshotPath}`);
+    return screenshotPath;
+  } catch (err) {
+    console.error(`[wechat] Screenshot failed: ${err instanceof Error ? err.message : String(err)}`);
+    return '';
+  }
+}
+
+async function waitForLogin(session: ChromeSession, timeoutMs = 600_000): Promise<boolean> {
   const start = Date.now();
+  console.log(`[wechat] Waiting for login (timeout: ${timeoutMs / 1000}s)...`);
+
   while (Date.now() - start < timeoutMs) {
     const url = await evaluate<string>(session, 'window.location.href');
-    if (url.includes('/cgi-bin/home')) return true;
+    if (url.includes('/cgi-bin/home')) {
+      console.log('[wechat] Login detected!');
+      return true;
+    }
+
+    if ((Date.now() - start) % 30000 < 2000) {
+      console.log(`[wechat] Still waiting... (${Math.floor((Date.now() - start) / 1000)}s elapsed)`);
+    }
+
     await sleep(2000);
   }
   return false;
@@ -329,6 +357,26 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
           await evaluate(session, `window.location.href = '${WECHAT_URL}cgi-bin/home?t=home/index'`);
           await sleep(5000);
         }
+
+        // Verify login is still valid by checking for menu element
+        const menuExists = await waitForElement(session, '.new-creation__menu', 5000);
+        if (!menuExists && currentUrl.includes('/cgi-bin/')) {
+          console.log('[wechat] Tab appears logged in but menu not found, session may be expired...');
+          await evaluate(session, 'window.location.reload()');
+          await sleep(5000);
+
+          const stillNoMenu = !(await waitForElement(session, '.new-creation__menu', 5000));
+          if (stillNoMenu) {
+            console.log('[wechat] Session expired, capturing login screen...');
+            await captureAndNotify(cdp, session.sessionId, 'session-expired');
+
+            const loggedIn = await waitForLogin(session, 600_000);
+            if (!loggedIn) {
+              await captureAndNotify(cdp, session.sessionId, 'login-timeout');
+              throw new Error('Login timeout after session expiration');
+            }
+          }
+        }
       } else {
         // No WeChat tab found, create one
         console.log('[wechat] No WeChat tab found, opening...');
@@ -342,9 +390,18 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
 
     const url = await evaluate<string>(session, 'window.location.href');
     if (!url.includes('/cgi-bin/')) {
-      console.log('[wechat] Not logged in. Please scan QR code...');
-      const loggedIn = await waitForLogin(session);
-      if (!loggedIn) throw new Error('Login timeout');
+      console.log('[wechat] Not logged in, capturing login screen...');
+
+      await captureAndNotify(cdp, session.sessionId, 'login-required');
+
+      console.log('[wechat] Please scan QR code in the Chrome window...');
+      console.log('[wechat] Will wait up to 10 minutes for login...');
+
+      const loggedIn = await waitForLogin(session, 600_000);
+      if (!loggedIn) {
+        await captureAndNotify(cdp, session.sessionId, 'login-timeout');
+        throw new Error('Login timeout after 10 minutes');
+      }
     }
     console.log('[wechat] Logged in.');
     await sleep(2000);
