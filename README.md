@@ -842,3 +842,11 @@ This skill uses a reverse-engineered X (Twitter) API.
 ## License
 
 MIT
+
+## Compatible Agents
+
+These skills work with:
+
+- [Claude Code](https://claude.ai/code) - Anthropic's official CLI
+- [AdaL](https://sylph.ai/adal) - Self-evolving AI coding agent with MCP support
+
