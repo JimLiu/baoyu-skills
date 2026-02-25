@@ -17,33 +17,19 @@ Scripts in `scripts/` subdirectory. Replace `${SKILL_DIR}` with this SKILL.md's 
 
 ## Preferences (EXTEND.md)
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (project-level `.baoyu-skills/baoyu-compress-image/EXTEND.md`, then user-level `$HOME/.baoyu-skills/baoyu-compress-image/EXTEND.md`):
 
 ```bash
-# Check project-level first
 test -f .baoyu-skills/baoyu-compress-image/EXTEND.md && echo "project"
-
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
 test -f "$HOME/.baoyu-skills/baoyu-compress-image/EXTEND.md" && echo "user"
 ```
 
-┌────────────────────────────────────────────────────────┬───────────────────┐
-│                          Path                          │     Location      │
-├────────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-compress-image/EXTEND.md           │ Project directory │
-├────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-compress-image/EXTEND.md     │ User home         │
-└────────────────────────────────────────────────────────┴───────────────────┘
+| Result | Action |
+|--------|--------|
+| Found | Read, parse, apply settings. If parsing fails, warn user and use defaults |
+| Not found | Use defaults (webp format, quality 80) |
 
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default format | Default quality | Keep original preference
+**Supports**: Default format | Default quality | Keep original preference
 
 ## Usage
 
@@ -83,6 +69,17 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts image.png --json
 ```
 image.png → image.webp (245KB → 89KB, 64% reduction)
 ```
+
+## Post-Compression Verification
+
+After compression, verify the output:
+
+```bash
+# Verify output exists and is non-empty
+test -s output.webp && echo "OK" || echo "FAIL: output missing or empty"
+```
+
+When using `--json`, parse the JSON output to confirm success and check reported file size reduction. If output is missing, check for error messages and retry. **Tip**: Use `--keep` flag to preserve originals when compressing important files.
 
 ## Extension Support
 

@@ -38,46 +38,13 @@ Break down complex content into eye-catching infographic series for Xiaohongshu 
 | `--style <name>` | Visual style (see Style Gallery) |
 | `--layout <name>` | Information layout (see Layout Gallery) |
 
-## Two Dimensions
+## Style & Layout
 
-| Dimension | Controls | Options |
-|-----------|----------|---------|
-| **Style** | Visual aesthetics: colors, lines, decorations | cute, fresh, warm, bold, minimal, retro, pop, notion, chalkboard, study-notes |
-| **Layout** | Information structure: density, arrangement | sparse, balanced, dense, list, comparison, flow, mindmap, quadrant |
+Two independently combinable dimensions. Example: `--style notion --layout dense`.
 
-Style × Layout can be freely combined. Example: `--style notion --layout dense` creates an intellectual-looking knowledge card with high information density.
+**Styles** (10): cute (default), fresh, warm, bold, minimal, retro, pop, notion, chalkboard, study-notes. Detailed definitions: `references/presets/<style>.md`
 
-## Style Gallery
-
-| Style | Description |
-|-------|-------------|
-| `cute` (Default) | Sweet, adorable, girly - classic Xiaohongshu aesthetic |
-| `fresh` | Clean, refreshing, natural |
-| `warm` | Cozy, friendly, approachable |
-| `bold` | High impact, attention-grabbing |
-| `minimal` | Ultra-clean, sophisticated |
-| `retro` | Vintage, nostalgic, trendy |
-| `pop` | Vibrant, energetic, eye-catching |
-| `notion` | Minimalist hand-drawn line art, intellectual |
-| `chalkboard` | Colorful chalk on black board, educational |
-| `study-notes` | Realistic handwritten photo style, blue pen + red annotations + yellow highlighter |
-
-Detailed style definitions: `references/presets/<style>.md`
-
-## Layout Gallery
-
-| Layout | Description |
-|--------|-------------|
-| `sparse` (Default) | Minimal information, maximum impact (1-2 points) |
-| `balanced` | Standard content layout (3-4 points) |
-| `dense` | High information density, knowledge card style (5-8 points) |
-| `list` | Enumeration and ranking format (4-7 items) |
-| `comparison` | Side-by-side contrast layout |
-| `flow` | Process and timeline layout (3-6 steps) |
-| `mindmap` | Center radial mind map layout (4-8 branches) |
-| `quadrant` | Four-quadrant / circular section layout |
-
-Detailed layout definitions: `references/elements/canvas.md`
+**Layouts** (8): sparse (default, 1-2 points), balanced (3-4), dense (5-8), list (4-7 items), comparison, flow (3-6 steps), mindmap (4-8 branches), quadrant. Detailed definitions: `references/elements/canvas.md`
 
 ## Auto Selection
 
@@ -127,113 +94,23 @@ Three differentiated outline strategies for different content goals:
 
 ## File Structure
 
-Each session creates an independent directory named by content slug:
+Output directory: `xhs-images/{topic-slug}/` containing `source-*.{ext}`, `analysis.md`, `outline-strategy-{a,b,c}.md`, `outline.md`, `prompts/NN-{type}-[slug].md`, and `NN-{type}-[slug].png`.
 
-```
-xhs-images/{topic-slug}/
-├── source-{slug}.{ext}             # Source files (text, images, etc.)
-├── analysis.md                     # Deep analysis + questions asked
-├── outline-strategy-a.md           # Strategy A: Story-driven
-├── outline-strategy-b.md           # Strategy B: Information-dense
-├── outline-strategy-c.md           # Strategy C: Visual-first
-├── outline.md                      # Final selected/merged outline
-├── prompts/
-│   ├── 01-cover-[slug].md
-│   ├── 02-content-[slug].md
-│   └── ...
-├── 01-cover-[slug].png
-├── 02-content-[slug].png
-└── NN-ending-[slug].png
-```
-
-**Slug Generation**:
-1. Extract main topic from content (2-4 words, kebab-case)
-2. Example: "AI工具推荐" → `ai-tools-recommend`
-
-**Conflict Resolution**:
-If `xhs-images/{topic-slug}/` already exists:
-- Append timestamp: `{topic-slug}-YYYYMMDD-HHMMSS`
-- Example: `ai-tools` exists → `ai-tools-20260118-143052`
-
-**Source Files**:
-Copy all sources with naming `source-{slug}.{ext}`:
-- `source-article.md`, `source-photo.jpg`, etc.
-- Multiple sources supported: text, images, files from conversation
+**Slug**: 2-4 words kebab-case from topic (e.g., "AI工具推荐" → `ai-tools-recommend`). If directory exists, append timestamp.
 
 ## Workflow
 
-### Progress Checklist
-
-Copy and track progress:
-
 ```
-XHS Infographic Progress:
-- [ ] Step 0: Check preferences (EXTEND.md) ⛔ BLOCKING
-  - [ ] Found → load preferences → continue
-  - [ ] Not found → run first-time setup → MUST complete before Step 1
-- [ ] Step 1: Analyze content → analysis.md
-- [ ] Step 2: Confirmation 1 - Content understanding ⚠️ REQUIRED
-- [ ] Step 3: Generate 3 outline + style variants
-- [ ] Step 4: Confirmation 2 - Outline & style & elements selection ⚠️ REQUIRED
-- [ ] Step 5: Generate images (sequential)
-- [ ] Step 6: Completion report
-```
-
-### Flow
-
-```
-Input → [Step 0: Preferences] ─┬─ Found → Continue
-                               │
-                               └─ Not found → First-Time Setup ⛔ BLOCKING
-                                              │
-                                              └─ Complete setup → Save EXTEND.md → Continue
-                                                                                      │
-        ┌───────────────────────────────────────────────────────────────────────────┘
-        ↓
-Analyze → [Confirm 1] → 3 Outlines → [Confirm 2: Outline + Style + Elements] → Generate → Complete
+0. Preferences (⛔ BLOCKING) → 1. Analyze → 2. Confirm content (⚠️ REQUIRED) → 3. Generate 3 outline variants → 4. Confirm outline + style (⚠️ REQUIRED) → 5. Generate images → 6. Report
 ```
 
 ### Step 0: Load Preferences (EXTEND.md) ⛔ BLOCKING
 
-**Purpose**: Load user preferences or run first-time setup.
+Check EXTEND.md existence (project-level `.baoyu-skills/baoyu-xhs-images/EXTEND.md`, then user-level `$HOME/.baoyu-skills/baoyu-xhs-images/EXTEND.md`). If found, read and display summary. If not found, MUST complete first-time setup before ANY other steps — do NOT proceed to content analysis.
 
-**CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to content analysis, do NOT ask about style, do NOT ask about layout — ONLY complete the preferences setup first.
+**First-Time Setup**: Use AskUserQuestion with ALL questions in ONE call. See `references/config/first-time-setup.md`.
 
-Use Bash to check EXTEND.md existence (priority order):
-
-```bash
-# Check project-level first
-test -f .baoyu-skills/baoyu-xhs-images/EXTEND.md && echo "project"
-
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.baoyu-skills/baoyu-xhs-images/EXTEND.md" && echo "user"
-```
-
-┌────────────────────────────────────────────────────┬───────────────────┐
-│                        Path                        │     Location      │
-├────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-xhs-images/EXTEND.md           │ Project directory │
-├────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-xhs-images/EXTEND.md     │ User home         │
-└────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                              Action                                              │
-├───────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, display summary → Continue to Step 1                                                 │
-├───────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Not found │ ⛔ BLOCKING: Run first-time setup ONLY (see below) → Complete and save EXTEND.md → Then Step 1    │
-└───────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────┘
-
-**First-Time Setup** (when EXTEND.md not found):
-
-**Language**: Use user's input language or saved language preference.
-
-Use AskUserQuestion with ALL questions in ONE call. See `references/config/first-time-setup.md` for question details.
-
-**EXTEND.md Supports**: Watermark | Preferred style/layout | Custom style definitions | Language preference
-
-Schema: `references/config/preferences-schema.md`
+**Supports**: Watermark | Preferred style/layout | Custom style definitions | Language preference. Schema: `references/config/preferences-schema.md`
 
 ### Step 1: Analyze Content → `analysis.md`
 
@@ -366,43 +243,13 @@ Display the selected style's default elements from preset, then ask:
 
 ### Step 5: Generate Images
 
-With confirmed outline + style + layout:
+With confirmed outline + style + layout. **Backup rule** (applies to all files): If file exists, rename to `{name}-backup-YYYYMMDD-HHMMSS.{ext}` before writing.
 
-**Visual Consistency — Reference Image Chain**:
-To ensure character/style consistency across all images in a series:
-1. **Generate image 1 (cover) FIRST** — without `--ref`
-2. **Use image 1 as `--ref` for ALL remaining images** (2, 3, ..., N)
-   - This anchors the character design, color rendering, and illustration style
-   - Command pattern: `--ref <path-to-image-01.png>` added to every subsequent generation
+**Visual Consistency**: Generate image 1 (cover) first without `--ref`, then use image 1 as `--ref` for ALL subsequent images to anchor character/style consistency.
 
-This is critical for styles that use recurring characters, mascots, or illustration elements. Image 1 becomes the visual anchor for the entire series.
+**For each image**: Save prompt to `prompts/NN-{type}-[slug].md` → Generate image → Report progress. Apply watermark if enabled in preferences (see `references/config/watermark-guide.md`).
 
-**For each image (cover + content + ending)**:
-1. Save prompt to `prompts/NN-{type}-[slug].md` (in user's preferred language)
-   - **Backup rule**: If prompt file exists, rename to `prompts/NN-{type}-[slug]-backup-YYYYMMDD-HHMMSS.md`
-2. Generate image:
-   - **Image 1**: Generate without `--ref` (this establishes the visual anchor)
-   - **Images 2+**: Generate with `--ref <image-01-path>` for consistency
-   - **Backup rule**: If image file exists, rename to `NN-{type}-[slug]-backup-YYYYMMDD-HHMMSS.png`
-3. Report progress after each generation
-
-**Watermark Application** (if enabled in preferences):
-Add to each image generation prompt:
-```
-Include a subtle watermark "[content]" positioned at [position].
-The watermark should be legible but not distracting from the main content.
-```
-Reference: `references/config/watermark-guide.md`
-
-**Image Generation Skill Selection**:
-- Check available image generation skills
-- If multiple skills available, ask user preference
-
-**Session Management**:
-If image generation skill supports `--sessionId`:
-1. Generate unique session ID: `xhs-{topic-slug}-{timestamp}`
-2. Use same session ID for all images
-3. Combined with reference image chain, ensures maximum visual consistency
+**Session Management**: Use same session ID (`xhs-{topic-slug}-{timestamp}`) for all images to maintain consistency.
 
 ### Step 6: Completion Report
 
@@ -441,47 +288,16 @@ Files:
 
 ## Content Breakdown Principles
 
-1. **Cover (Image 1)**: Hook + visual impact → `sparse` layout
-2. **Content (Middle)**: Core value per image → `balanced`/`dense`/`list`/`comparison`/`flow`
-3. **Ending (Last)**: CTA / summary → `sparse` or `balanced`
-
-**Style × Layout Matrix** (✓✓ = highly recommended, ✓ = works well):
-
-| | sparse | balanced | dense | list | comparison | flow | mindmap | quadrant |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| cute | ✓✓ | ✓✓ | ✓ | ✓✓ | ✓ | ✓ | ✓ | ✓ |
-| fresh | ✓✓ | ✓✓ | ✓ | ✓ | ✓ | ✓✓ | ✓ | ✓ |
-| warm | ✓✓ | ✓✓ | ✓ | ✓ | ✓✓ | ✓ | ✓ | ✓ |
-| bold | ✓✓ | ✓ | ✓ | ✓✓ | ✓✓ | ✓ | ✓ | ✓✓ |
-| minimal | ✓✓ | ✓✓ | ✓✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| retro | ✓✓ | ✓✓ | ✓ | ✓✓ | ✓ | ✓ | ✓ | ✓ |
-| pop | ✓✓ | ✓✓ | ✓ | ✓✓ | ✓✓ | ✓ | ✓ | ✓ |
-| notion | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ |
-| chalkboard | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓ | ✓✓ | ✓✓ | ✓ |
-| study-notes | ✗ | ✓ | ✓✓ | ✓✓ | ✓ | ✓ | ✓✓ | ✓ |
+Cover (image 1): hook + visual impact → `sparse`. Content (middle): core value per image → `balanced`/`dense`/`list`/`comparison`/`flow`. Ending (last): CTA/summary → `sparse` or `balanced`. All style × layout combinations work; `notion` is the most versatile across all layouts.
 
 ## References
 
-Detailed templates in `references/` directory:
-
-**Elements** (Visual building blocks):
-- `elements/canvas.md` - Aspect ratios, safe zones, grid layouts
-- `elements/image-effects.md` - Cutout, stroke, filters
-- `elements/typography.md` - Decorated text (花字), tags, text direction
-- `elements/decorations.md` - Emphasis marks, backgrounds, doodles, frames
-
-**Presets** (Style presets):
-- `presets/<name>.md` - Element combination definitions (cute, notion, warm...)
-
-**Workflows** (Process guides):
-- `workflows/analysis-framework.md` - Content analysis framework
-- `workflows/outline-template.md` - Outline template with layout guide
-- `workflows/prompt-assembly.md` - Prompt assembly guide
-
-**Config** (Settings):
-- `config/preferences-schema.md` - EXTEND.md schema
-- `config/first-time-setup.md` - First-time setup flow
-- `config/watermark-guide.md` - Watermark configuration
+| Category | Files |
+|----------|-------|
+| Elements | `elements/canvas.md`, `elements/image-effects.md`, `elements/typography.md`, `elements/decorations.md` |
+| Presets | `presets/<name>.md` — style definitions |
+| Workflows | `workflows/analysis-framework.md`, `workflows/outline-template.md`, `workflows/prompt-assembly.md` |
+| Config | `config/preferences-schema.md`, `config/first-time-setup.md`, `config/watermark-guide.md` |
 
 ## Notes
 

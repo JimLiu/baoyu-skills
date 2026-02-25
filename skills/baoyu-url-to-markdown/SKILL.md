@@ -1,6 +1,6 @@
 ---
 name: baoyu-url-to-markdown
-description: Fetch any URL and convert to markdown using Chrome CDP. Supports two modes - auto-capture on page load, or wait for user signal (for pages requiring login). Use when user wants to save a webpage as markdown.
+description: Fetches any URL and converts HTML to clean markdown using Chrome CDP with full JavaScript rendering. Supports auto-capture and wait-for-user modes for login-required pages. Use when user asks to "save webpage", "scrape page", "download page as markdown", "capture website", "web page to markdown", or "convert URL to markdown".
 ---
 
 # URL to Markdown
@@ -23,33 +23,9 @@ Fetches any URL via Chrome CDP and converts HTML to clean markdown.
 
 ## Preferences (EXTEND.md)
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (project-level `.baoyu-skills/baoyu-url-to-markdown/EXTEND.md`, then user-level `$HOME/.baoyu-skills/baoyu-url-to-markdown/EXTEND.md`). If found, read and apply settings. If not found, use defaults.
 
-```bash
-# Check project-level first
-test -f .baoyu-skills/baoyu-url-to-markdown/EXTEND.md && echo "project"
-
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.baoyu-skills/baoyu-url-to-markdown/EXTEND.md" && echo "user"
-```
-
-┌────────────────────────────────────────────────────────┬───────────────────┐
-│                          Path                          │     Location      │
-├────────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-url-to-markdown/EXTEND.md          │ Project directory │
-├────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-url-to-markdown/EXTEND.md    │ User home         │
-└────────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default output directory | Default capture mode | Timeout settings
+**Supports**: Default output directory | Default capture mode | Timeout settings
 
 ## Features
 
@@ -113,7 +89,22 @@ url-to-markdown/<domain>/<slug>.md
 | `URL_DATA_DIR` | Custom data directory |
 | `URL_CHROME_PROFILE_DIR` | Custom Chrome profile directory |
 
-**Troubleshooting**: Chrome not found → set `URL_CHROME_PATH`. Timeout → increase `--timeout`. Complex pages → try `--wait` mode.
+## Workflow
+
+1. Check EXTEND.md preferences (see Preferences section)
+2. Run script with URL and options
+3. **Verify output**: Check that output file exists and contains valid markdown with YAML front matter
+4. If capture fails or output is empty, retry with `--wait` mode for dynamic content
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Chrome not found | Set `URL_CHROME_PATH` to Chrome executable path |
+| Timeout on slow pages | Increase `--timeout` value (e.g., `--timeout 60000`) |
+| Dynamic/JS-heavy content | Use `--wait` mode to control capture timing |
+| Login-required page | Use `--wait`, log in manually, then signal capture |
+| Empty output | Page may need longer load time; try `--wait` or increase `--timeout` |
 
 ## Extension Support
 

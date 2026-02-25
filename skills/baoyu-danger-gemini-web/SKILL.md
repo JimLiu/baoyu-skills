@@ -142,6 +142,29 @@ Session files stored in data directory under `sessions/<id>.json`.
 
 Contains: `id`, `metadata` (Gemini chat state), `messages` array, timestamps.
 
+## Post-Generation Validation
+
+After image generation:
+1. Verify output file exists: `test -f <output-path>`
+2. Check file is non-empty: `test -s <output-path>`
+3. If missing or empty, auto-retry once before reporting error
+
+## Error Handling
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| Authentication failed | Cookies expired or invalid | Run with `--login` to refresh browser auth |
+| No image output | Generation blocked or failed | Check prompt content; retry once automatically |
+| Connection error | Network or proxy issue | Verify `HTTP_PROXY`/`HTTPS_PROXY` settings |
+| Model not available | Invalid model name | Use `gemini-3-pro` (default), `gemini-2.5-pro`, or `gemini-2.5-flash` |
+
+## EXTEND.md Example
+
+```md
+default_model: gemini-3-pro
+data_dir: /custom/path/to/data
+```
+
 ## Extension Support
 
 Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.

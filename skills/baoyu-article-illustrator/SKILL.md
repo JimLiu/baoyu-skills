@@ -111,6 +111,20 @@ Full template: [references/workflow.md](references/workflow.md#step-4-generate-o
 7. Apply watermark if EXTEND.md enabled
 8. Generate from saved prompt files; retry once on failure
 
+**Example prompt file** (`prompts/01-infographic-performance-gains.md`):
+```yaml
+---
+type: infographic
+style: blueprint
+aspect: 16:9
+---
+ZONES: Header banner top 15% | Data grid center 60% | Source footer bottom 10%
+LABELS: "Response Time: 120ms → 45ms" | "Throughput: 1.2K → 4.8K req/s" | "Memory: 512MB → 128MB"
+COLORS: Deep navy #1a1a3e background, electric blue #00d4ff data highlights, white text
+STYLE: Technical blueprint with subtle grid overlay, clean sans-serif typography
+ASPECT: 16:9 landscape
+```
+
 Full procedures: [references/workflow.md](references/workflow.md#step-5-generate-images)
 
 ### Step 6: Finalize

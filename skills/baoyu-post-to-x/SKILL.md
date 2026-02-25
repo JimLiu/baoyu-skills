@@ -30,33 +30,9 @@ Posts text, images, videos, and long-form articles to X via real Chrome browser 
 
 ## Preferences (EXTEND.md)
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (project-level `.baoyu-skills/baoyu-post-to-x/EXTEND.md`, then user-level `$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md`). If found, read and apply settings. If not found, use defaults.
 
-```bash
-# Check project-level first
-test -f .baoyu-skills/baoyu-post-to-x/EXTEND.md && echo "project"
-
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md" && echo "user"
-```
-
-┌──────────────────────────────────────────────────┬───────────────────┐
-│                       Path                       │     Location      │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-post-to-x/EXTEND.md          │ Project directory │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md    │ User home         │
-└──────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default Chrome profile
+**Supports**: Default Chrome profile
 
 ## Prerequisites
 
@@ -108,7 +84,7 @@ npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello!" --image ./photo.png
 | `--image <path>` | Image file (repeatable, max 4) |
 | `--profile <dir>` | Custom Chrome profile |
 
-**Note**: Script opens browser with content filled in. User reviews and publishes manually.
+**Verify**: After script completes, confirm browser opens with compose dialog showing your content. User reviews and publishes manually.
 
 ---
 
@@ -127,9 +103,9 @@ npx -y bun ${SKILL_DIR}/scripts/x-video.ts "Check this out!" --video ./clip.mp4
 | `--video <path>` | Video file (MP4, MOV, WebM) |
 | `--profile <dir>` | Custom Chrome profile |
 
-**Note**: Script opens browser with content filled in. User reviews and publishes manually.
-
 **Limits**: Regular 140s max, Premium 60min. Processing: 30-60s.
+
+**Verify**: Confirm browser opens with video attached in compose dialog.
 
 ---
 
@@ -148,7 +124,7 @@ npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123 "Great 
 | `<comment>` | Comment text (positional, optional) |
 | `--profile <dir>` | Custom Chrome profile |
 
-**Note**: Script opens browser with content filled in. User reviews and publishes manually.
+**Verify**: Confirm browser opens with quoted tweet and comment in compose dialog.
 
 ---
 
@@ -170,7 +146,7 @@ npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md --cover ./cover.jpg
 
 **Frontmatter**: `title`, `cover_image` supported in YAML front matter.
 
-**Note**: Script opens browser with article filled in. User reviews and publishes manually.
+**Verify**: Confirm article editor opens with content and cover image loaded.
 
 ---
 
@@ -189,9 +165,5 @@ pkill -f "Chrome.*remote-debugging-port" 2>/dev/null; pkill -f "Chromium.*remote
 ## Notes
 
 - First run: manual login required (session persists)
-- All scripts only fill content into the browser, user must review and publish manually
+- All scripts fill content into browser — user reviews and publishes manually
 - Cross-platform: macOS, Linux, Windows
-
-## Extension Support
-
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.

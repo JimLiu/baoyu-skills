@@ -117,27 +117,9 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provi
 
 ## Replicate Model Configuration
 
-When using `--provider replicate`, the model can be configured in the following ways (highest priority first):
+Model priority: CLI `--model` > EXTEND.md `default_model.replicate` > env `REPLICATE_IMAGE_MODEL` > default `google/nano-banana-pro`.
 
-1. CLI flag: `--model <owner/name>`
-2. EXTEND.md: `default_model.replicate`
-3. Env var: `REPLICATE_IMAGE_MODEL`
-4. Built-in default: `google/nano-banana-pro`
-
-Supported model formats:
-
-- `owner/name` (recommended for official models), e.g. `google/nano-banana-pro`
-- `owner/name:version` (community models by version), e.g. `stability-ai/sdxl:<version>`
-
-Examples:
-
-```bash
-# Use Replicate default model
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
-
-# Override model explicitly
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate --model google/nano-banana
-```
+Model formats: `owner/name` (official) or `owner/name:version` (community).
 
 ## Provider Selection
 
@@ -189,12 +171,21 @@ Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`
 # Collect results via TaskOutput when all complete
 ```
 
+## Post-Generation Validation
+
+After each image generation:
+1. Verify output file exists: `test -f <output-path>`
+2. Check file is non-empty: `test -s <output-path>`
+3. If missing or empty, auto-retry once before reporting error
+
 ## Error Handling
 
-- Missing API key → error with setup instructions
-- Generation failure → auto-retry once
-- Invalid aspect ratio → warning, proceed with default
-- Reference images with unsupported provider/model → error with fix hint (switch to Google multimodal or OpenAI GPT Image edits)
+| Error | Cause | Fix |
+|-------|-------|-----|
+| Missing API key | No key for selected provider | Set the appropriate env var (e.g., `GOOGLE_API_KEY`) |
+| Generation failure | API error or timeout | Auto-retries once; if persistent, try different provider |
+| Invalid aspect ratio | Unsupported ratio for provider | Falls back to default; use supported ratios |
+| Reference image error | Provider doesn't support `--ref` | Switch to Google multimodal or OpenAI GPT Image edits |
 
 ## Extension Support
 
