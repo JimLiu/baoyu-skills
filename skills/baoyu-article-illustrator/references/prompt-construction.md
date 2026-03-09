@@ -95,6 +95,32 @@ When depicting people:
 **Add to prompts with text**:
 > Text should be large and prominent with handwritten-style fonts. Keep minimal, focus on keywords.
 
+### Text Localization Rules
+
+When a prompt is meant to translate or localize an existing text-heavy image:
+
+1. Pass the original image as a real reference image instead of relying on text-only description
+2. Extract the authoritative terminology from the article first
+3. Write the target text explicitly into the prompt instead of saying only "translate this image"
+4. State what must remain unchanged: layout, structure, colors, icons, arrows, spacing, and non-text elements
+5. If the image is a framework, acronym, mnemonic, or labeled methodology, require the translated labels to preserve the original letter mapping exactly
+
+Examples of tasks that need this treatment:
+- acronym frameworks such as `D.E.E.P`, `SOLVER`, `AARRR`
+- process diagrams where each step name has a fixed canonical translation
+- charts or cards with short labels that must align with the article wording
+
+Recommended wording pattern:
+```text
+This is a faithful localization task, not a redesign task.
+Use these exact English labels:
+- ...
+Requirements:
+- Preserve layout, structure, icons, colors, spacing, and composition
+- Replace only the text language
+- Do not invent new step names
+```
+
 ---
 
 ## Principles
@@ -107,6 +133,9 @@ Good prompts must include:
 4. **Semantic Colors**: Meaning-based color choices (red=warning, green=efficient)
 5. **Style Characteristics**: Line treatment, texture, mood
 6. **Aspect Ratio**: End with ratio and complexity level
+
+For localization prompts, add one more rule:
+7. **Exact Target Text List**: For any acronym, framework, or named methodology, include the exact target labels and sublabels to prevent semantic drift
 
 ## Type-Specific Templates
 
@@ -235,38 +264,6 @@ MARKERS: [visual indicators]
 STYLE: [style characteristics]
 ASPECT: 16:9
 ```
-
-### Screen-Print Style Override
-
-When `style: screen-print`, replace standard style instructions with:
-
-```
-Screen print / silkscreen poster art. Flat color blocks, NO gradients.
-COLORS: 2-5 colors maximum. [Choose from style palette or duotone pair]
-TEXTURE: Halftone dot patterns, slight color layer misregistration, paper grain
-COMPOSITION: Bold silhouettes, geometric framing, negative space as storytelling element
-FIGURES: Silhouettes only, no detailed faces, stencil-cut edges
-TYPOGRAPHY: Bold condensed sans-serif integrated into composition (not overlaid)
-```
-
-**Scene + screen-print**:
-```
-Conceptual poster scene. Single symbolic focal point, NOT literal illustration.
-COLORS: Duotone pair (e.g., Burnt Orange #E8751A + Deep Teal #0A6E6E) on Off-Black #121212
-COMPOSITION: Centered silhouette or geometric frame, 60%+ negative space
-TEXTURE: Halftone dots, paper grain, slight print misregistration
-```
-
-**Comparison + screen-print**:
-```
-Split poster composition. Each side dominated by one color from duotone pair.
-LEFT: [Color A] side with silhouette/icon for [Option A]
-RIGHT: [Color B] side with silhouette/icon for [Option B]
-DIVIDER: Geometric shape or negative space boundary
-TEXTURE: Halftone transitions between sides
-```
-
----
 
 ## What to Avoid
 

@@ -68,7 +68,11 @@ export async function generateImage(
   const baseURL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required");
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is required. Codex/ChatGPT desktop login does not automatically grant OpenAI Images API access to this script."
+    );
+  }
 
   if (process.env.OPENAI_IMAGE_USE_CHAT === "true") {
     return generateWithChatCompletions(baseURL, apiKey, prompt, model);

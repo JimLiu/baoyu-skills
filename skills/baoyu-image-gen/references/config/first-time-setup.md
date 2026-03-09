@@ -8,34 +8,12 @@ description: First-time setup and default model selection flow for baoyu-image-g
 ## Overview
 
 Triggered when:
-1. No EXTEND.md found → full setup (provider + model + preferences)
-2. EXTEND.md found but `default_model.[provider]` is null → model selection only
-
-## Setup Flow
-
-```
-No EXTEND.md found          EXTEND.md found, model null
-        │                            │
-        ▼                            ▼
-┌─────────────────────┐    ┌──────────────────────┐
-│ AskUserQuestion     │    │ AskUserQuestion      │
-│ (full setup)        │    │ (model only)         │
-└─────────────────────┘    └──────────────────────┘
-        │                            │
-        ▼                            ▼
-┌─────────────────────┐    ┌──────────────────────┐
-│ Create EXTEND.md    │    │ Update EXTEND.md     │
-└─────────────────────┘    └──────────────────────┘
-        │                            │
-        ▼                            ▼
-    Continue                     Continue
-```
+1. No EXTEND.md found -> full setup (provider + model + preferences)
+2. EXTEND.md found but `default_model.[provider]` is null -> model selection only
 
 ## Flow 1: No EXTEND.md (Full Setup)
 
-**Language**: Use user's input language or saved language preference.
-
-Use AskUserQuestion with ALL questions in ONE call:
+Use AskUserQuestion with all questions in one call.
 
 ### Question 1: Default Provider
 
@@ -43,31 +21,24 @@ Use AskUserQuestion with ALL questions in ONE call:
 header: "Provider"
 question: "Default image generation provider?"
 options:
-  - label: "Google (Recommended)"
-    description: "Gemini multimodal - high quality, reference images, flexible sizes"
+  - label: "Replicate (Recommended)"
+    description: "Default to google/nano-banana-pro, flexible model selection, strong general-purpose generation"
+  - label: "Google"
+    description: "Gemini multimodal, good for reference-image workflows"
   - label: "OpenAI"
-    description: "GPT Image - consistent quality, reliable output"
+    description: "GPT Image via OPENAI_API_KEY, strong text rendering and edits"
   - label: "DashScope"
-    description: "Alibaba Cloud - z-image-turbo, good for Chinese content"
-  - label: "Replicate"
-    description: "Community models - nano-banana-pro, flexible model selection"
+    description: "Alibaba Cloud image generation"
 ```
 
-### Question 2: Default Google Model
+### Question 2: Provider Model
 
-Only show if user selected Google or auto-detect (no explicit provider).
+Ask the model question that matches the chosen provider:
 
-```yaml
-header: "Google Model"
-question: "Default Google image generation model?"
-options:
-  - label: "gemini-3-pro-image-preview (Recommended)"
-    description: "Highest quality, best for production use"
-  - label: "gemini-3.1-flash-image-preview"
-    description: "Fast generation, good quality, lower cost"
-  - label: "gemini-3-flash-preview"
-    description: "Fast generation, balanced quality and speed"
-```
+- Replicate -> use the Replicate model question, recommend `google/nano-banana-pro`
+- Google -> use the Google model question
+- OpenAI -> use the OpenAI model question, recommend `gpt-image-1.5`
+- DashScope -> use the DashScope model question
 
 ### Question 3: Default Quality
 
@@ -76,9 +47,9 @@ header: "Quality"
 question: "Default image quality?"
 options:
   - label: "2k (Recommended)"
-    description: "2048px - covers, illustrations, infographics"
+    description: "2048px, suitable for covers and production use"
   - label: "normal"
-    description: "1024px - quick previews, drafts"
+    description: "1024px, suitable for previews and drafts"
 ```
 
 ### Question 4: Save Location
@@ -88,9 +59,9 @@ header: "Save"
 question: "Where to save preferences?"
 options:
   - label: "Project (Recommended)"
-    description: ".baoyu-skills/ (this project only)"
+    description: ".baoyu-skills/ for this project"
   - label: "User"
-    description: "~/.baoyu-skills/ (all projects)"
+    description: "~/.baoyu-skills/ for all projects"
 ```
 
 ### Save Locations
@@ -111,15 +82,15 @@ default_aspect_ratio: null
 default_image_size: null
 default_model:
   google: [selected google model or null]
-  openai: null
-  dashscope: null
-  replicate: null
+  openai: [selected openai model or null]
+  dashscope: [selected dashscope model or null]
+  replicate: [selected replicate model or null]
 ---
 ```
 
 ## Flow 2: EXTEND.md Exists, Model Null
 
-When EXTEND.md exists but `default_model.[current_provider]` is null, ask ONLY the model question for the current provider.
+When EXTEND.md exists but `default_model.[current_provider]` is null, ask only the model question for the current provider.
 
 ### Google Model Selection
 
@@ -142,7 +113,7 @@ header: "OpenAI Model"
 question: "Choose a default OpenAI image generation model?"
 options:
   - label: "gpt-image-1.5 (Recommended)"
-    description: "Latest GPT Image model, high quality"
+    description: "Latest GPT Image model, best default for OpenAI"
   - label: "gpt-image-1"
     description: "Previous generation GPT Image model"
 ```
@@ -166,32 +137,14 @@ header: "Replicate Model"
 question: "Choose a default Replicate image generation model?"
 options:
   - label: "google/nano-banana-pro (Recommended)"
-    description: "Google's fast image model on Replicate"
+    description: "Default recommended model for this skill"
   - label: "google/nano-banana"
-    description: "Google's base image model on Replicate"
+    description: "Base nano-banana model on Replicate"
 ```
-
-### Update EXTEND.md
-
-After user selects a model:
-
-1. Read existing EXTEND.md
-2. If `default_model:` section exists → update the provider-specific key
-3. If `default_model:` section missing → add the full section:
-
-```yaml
-default_model:
-  google: [value or null]
-  openai: [value or null]
-  dashscope: [value or null]
-  replicate: [value or null]
-```
-
-Only set the selected provider's model; leave others as their current value or null.
 
 ## After Setup
 
 1. Create directory if needed
-2. Write/update EXTEND.md with frontmatter
-3. Confirm: "Preferences saved to [path]"
+2. Write or update EXTEND.md
+3. Confirm the save path
 4. Continue with image generation

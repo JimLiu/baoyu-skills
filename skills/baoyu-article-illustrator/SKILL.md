@@ -1,26 +1,22 @@
 ---
 name: baoyu-article-illustrator
-description: Analyzes article structure, identifies positions requiring visual aids, generates illustrations with Type × Style two-dimension approach. Use when user asks to "illustrate article", "add images", "generate images for article", or "为文章配图".
-version: 1.56.1
-metadata:
-  openclaw:
-    homepage: https://github.com/JimLiu/baoyu-skills#baoyu-article-illustrator
+description: Analyzes article structure, identifies positions requiring visual aids, and generates illustrations with Type × Style consistency. Defaults illustration text to the article's main language, and supports reference-image translation/localization by passing the original image to the generation model. Use when user asks to illustrate an article, add images, or generate images for article sections.
 ---
 
 # Article Illustrator
 
-Analyze articles, identify illustration positions, generate images with Type × Style consistency.
+Analyze articles, identify illustration positions, and generate images with Type × Style consistency.
+
+For multi-image jobs, prefer building a `batch.json` and calling `baoyu-image-gen --batchfile` so image generation can run in parallel with retries and a final status summary.
 
 ## Two Dimensions
 
 | Dimension | Controls | Examples |
 |-----------|----------|----------|
 | **Type** | Information structure | infographic, scene, flowchart, comparison, framework, timeline |
-| **Style** | Visual aesthetics | notion, warm, minimal, blueprint, watercolor, elegant |
+| **Style** | Visual aesthetics | vector-illustration, notion, warm, blueprint, editorial |
 
 Combine freely: `--type infographic --style blueprint`
-
-Or use presets: `--preset tech-explainer` → type + style in one flag. See [Style Presets](references/style-presets.md).
 
 ## Types
 
@@ -32,138 +28,105 @@ Or use presets: `--preset tech-explainer` → type + style in one flag. See [Sty
 | `comparison` | Side-by-side, options |
 | `framework` | Models, architecture |
 | `timeline` | History, evolution |
+| `mixed` | Per-section optimization across multiple types |
 
 ## Styles
 
-See [references/styles.md](references/styles.md) for Core Styles, full gallery, and Type × Style compatibility.
+See [references/styles.md](references/styles.md) for the core style gallery and compatibility guidance.
 
 ## Workflow
 
-```
+```text
 - [ ] Step 1: Pre-check (EXTEND.md, references, config)
 - [ ] Step 2: Analyze content
-- [ ] Step 3: Confirm settings (AskUserQuestion)
+- [ ] Step 3: Confirm settings
 - [ ] Step 4: Generate outline
-- [ ] Step 5: Generate images
+- [ ] Step 5: Generate prompts and images
 - [ ] Step 6: Finalize
 ```
 
 ### Step 1: Pre-check
 
-**1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING**
+- Load `EXTEND.md`
+- Confirm output location
+- Save reference images if provided
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-article-illustrator/EXTEND.md && echo "project"
-test -f "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "user"
-```
-
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-article-illustrator/EXTEND.md) { "project" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user" }
-```
-
-| Result | Action |
-|--------|--------|
-| Found | Read, parse, display summary |
-| Not found | ⛔ Run [first-time-setup](references/config/first-time-setup.md) |
-
-Full procedures: [references/workflow.md](references/workflow.md#step-1-pre-check)
+Full procedures: [references/workflow.md](references/workflow.md)
 
 ### Step 2: Analyze
 
-| Analysis | Output |
-|----------|--------|
-| Content type | Technical / Tutorial / Methodology / Narrative |
-| Purpose | information / visualization / imagination |
-| Core arguments | 2-5 main points |
-| Positions | Where illustrations add value |
+- Determine article type: technical / tutorial / methodology / narrative
+- Identify sections where visuals materially improve understanding
+- Recommend illustration type, density, and style
+- Detect the article's main language and use it as the default language for visible text in generated illustrations unless the user explicitly requests otherwise
+- Visualize the underlying concept, not literal metaphors
 
-**CRITICAL**: Metaphors → visualize underlying concept, NOT literal image.
+### Step 3: Confirm Settings
 
-Full procedures: [references/workflow.md](references/workflow.md#step-2-setup--analyze)
+Use one confirmation round for:
 
-### Step 3: Confirm Settings ⚠️
-
-**ONE AskUserQuestion, max 4 Qs. Q1-Q2 REQUIRED. Q3 required unless preset chosen.**
-
-| Q | Options |
-|---|---------|
-| **Q1: Preset or Type** | [Recommended preset], [alt preset], or manual: infographic, scene, flowchart, comparison, framework, timeline, mixed |
-| **Q2: Density** | minimal (1-2), balanced (3-5), per-section (Recommended), rich (6+) |
-| **Q3: Style** | [Recommended], minimal-flat, sci-fi, hand-drawn, editorial, scene, poster, Other — **skip if preset chosen** |
-| Q4: Language | When article language ≠ EXTEND.md setting |
-
-Full procedures: [references/workflow.md](references/workflow.md#step-3-confirm-settings-)
+- Type
+- Density
+- Style
+- Image text language only when the user explicitly wants to override the article's main language or the article is genuinely mixed-language
 
 ### Step 4: Generate Outline
 
-Save `outline.md` with frontmatter (type, density, style, image_count) and entries:
+Save `outline.md` with frontmatter and entries like:
 
 ```yaml
 ## Illustration 1
 **Position**: [section/paragraph]
 **Purpose**: [why]
 **Visual Content**: [what]
-**Filename**: 01-infographic-concept-name.png
+**Filename**: 01-infographic-topic.png
 ```
 
-Full template: [references/workflow.md](references/workflow.md#step-4-generate-outline)
+### Step 5: Generate Prompts and Images
 
-### Step 5: Generate Images
+1. Create one saved prompt file per illustration in `prompts/`
+2. Use type-specific templates with structured sections such as `ZONES`, `LABELS`, `COLORS`, `STYLE`, `ASPECT`
+3. If the user did not specify a language, all visible text in the illustration must default to the article's main language
+4. Labels must include article-specific numbers, terms, metrics, or quotes
+5. When translating or localizing an existing image, pass the original image to the image model as a real reference image instead of describing it only in text
+6. For acronym frameworks, named methodologies, mnemonics, and fixed step diagrams, extract the canonical wording from the article and include the exact target labels in the prompt
+7. Do not generate from ad-hoc inline prompts when prompt files are expected
 
-⛔ **BLOCKING: Prompt files MUST be saved before ANY image generation.**
+When pending illustrations >= 2:
 
-1. For each illustration, create a prompt file per [references/prompt-construction.md](references/prompt-construction.md)
-2. Save to `prompts/NN-{type}-{slug}.md` with YAML frontmatter
-3. Prompts **MUST** use type-specific templates with structured sections (ZONES / LABELS / COLORS / STYLE / ASPECT)
-4. LABELS **MUST** include article-specific data: actual numbers, terms, metrics, quotes
-5. **DO NOT** pass ad-hoc inline prompts to `--prompt` without saving prompt files first
-6. Select generation skill, process references (`direct`/`style`/`palette`)
-7. Apply watermark if EXTEND.md enabled
-8. Generate from saved prompt files; retry once on failure
-
-Full procedures: [references/workflow.md](references/workflow.md#step-5-generate-images)
+1. Build `batch.json` from `outline.md + prompts/`
+2. Call `baoyu-image-gen --batchfile`
+3. Let `baoyu-image-gen` handle:
+   - parallel generation
+   - per-image retries up to 3 attempts
+   - tuned provider throttling
+   - final success/failure summary
 
 ### Step 6: Finalize
 
-Insert `![description](path/NN-{type}-{slug}.png)` after paragraphs.
-
-```
-Article Illustration Complete!
-Article: [path] | Type: [type] | Density: [level] | Style: [style]
-Images: X/N generated
-```
+- Insert image references back into the article
+- Prefer preserving the user's markdown conventions
+- Report total generated images and any failures
 
 ## Output Directory
 
-```
+Typical structure:
+
+```text
 illustrations/{topic-slug}/
-├── source-{slug}.{ext}
-├── references/           # if provided
-├── outline.md
-├── prompts/
-└── NN-{type}-{slug}.png
+|- source-{slug}.md
+|- outline.md
+|- prompts/
+|- batch.json
+\- NN-{type}-{slug}.png
 ```
-
-**Slug**: 2-4 words, kebab-case. **Conflict**: append `-YYYYMMDD-HHMMSS`.
-
-## Modification
-
-| Action | Steps |
-|--------|-------|
-| Edit | Update prompt → Regenerate → Update reference |
-| Add | Position → Prompt → Generate → Update outline → Insert |
-| Delete | Delete files → Remove reference → Update outline |
 
 ## References
 
 | File | Content |
 |------|---------|
-| [references/workflow.md](references/workflow.md) | Detailed procedures |
+| [references/workflow.md](references/workflow.md) | Detailed workflow |
 | [references/usage.md](references/usage.md) | Command syntax |
 | [references/styles.md](references/styles.md) | Style gallery |
-| [references/style-presets.md](references/style-presets.md) | Preset shortcuts (type + style) |
 | [references/prompt-construction.md](references/prompt-construction.md) | Prompt templates |
 | [references/config/first-time-setup.md](references/config/first-time-setup.md) | First-time setup |

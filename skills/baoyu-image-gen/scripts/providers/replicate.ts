@@ -36,22 +36,26 @@ function buildInput(prompt: string, args: CliArgs, referenceImages: string[]): R
 
   if (args.aspectRatio) {
     input.aspect_ratio = args.aspectRatio;
+  } else if (referenceImages.length > 0) {
+    // Replicate nano-banana-pro supports matching the original image ratio for edit/localization tasks.
+    input.aspect_ratio = "match_input_image";
   }
 
   if (args.n > 1) {
     input.number_of_images = args.n;
   }
 
+  if (args.quality === "normal") {
+    input.resolution = "1K";
+  } else if (args.quality === "2k") {
+    input.resolution = "2K";
+  }
+
   input.output_format = "png";
 
   if (referenceImages.length > 0) {
-    if (referenceImages.length === 1) {
-      input.image = referenceImages[0];
-    } else {
-      for (let i = 0; i < referenceImages.length; i++) {
-        input[`image${i > 0 ? i + 1 : ""}`] = referenceImages[i];
-      }
-    }
+    // Official nano-banana-pro schema uses image_input: array
+    input.image_input = referenceImages;
   }
 
   return input;
