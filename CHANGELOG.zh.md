@@ -2,6 +2,21 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.58.0 - 2026-03-08
+
+### 新功能
+- 新增 EXTEND.md 的 XDG 配置路径支持 (by @liby)
+
+### 修复
+- `baoyu-post-to-wechat`：暴露 agent-browser 启动错误信息
+- `baoyu-post-to-wechat`：加固 agent-browser 命令和 eval 处理 (by @luojiyin1987)
+- `baoyu-image-gen`：使用 execFileSync 替代 shell 执行 Google curl 请求 (by @luojiyin1987)
+- `baoyu-format-markdown`：使用 spawnSync 替代 shell 执行 autocorrect 命令 (by @luojiyin1987)
+
+### 文档
+- 修正 CLAUDE 依赖说明 (by @luojiyin1987)
+- 将 markdown-to-html 添加到 README 工具技能列表 (by @luojiyin1987)
+
 ## 1.57.0 - 2026-03-08
 
 ### 新功能

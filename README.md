@@ -76,7 +76,7 @@ Simply tell Claude Code:
 |--------|-------------|--------|
 | **content-skills** | Content generation and publishing | [xhs-images](#baoyu-xhs-images), [infographic](#baoyu-infographic), [cover-image](#baoyu-cover-image), [slide-deck](#baoyu-slide-deck), [comic](#baoyu-comic), [article-illustrator](#baoyu-article-illustrator), [post-to-x](#baoyu-post-to-x), [post-to-wechat](#baoyu-post-to-wechat), [post-to-weibo](#baoyu-post-to-weibo) |
 | **ai-generation-skills** | AI-powered generation backends | [image-gen](#baoyu-image-gen), [danger-gemini-web](#baoyu-danger-gemini-web) |
-| **utility-skills** | Utility tools for content processing | [url-to-markdown](#baoyu-url-to-markdown), [danger-x-to-markdown](#baoyu-danger-x-to-markdown), [compress-image](#baoyu-compress-image), [format-markdown](#baoyu-format-markdown), [translate](#baoyu-translate) |
+| **utility-skills** | Utility tools for content processing | [url-to-markdown](#baoyu-url-to-markdown), [danger-x-to-markdown](#baoyu-danger-x-to-markdown), [compress-image](#baoyu-compress-image), [format-markdown](#baoyu-format-markdown), [markdown-to-html](#baoyu-markdown-to-html), [translate](#baoyu-translate) |
 
 ## Update Skills
 
@@ -797,6 +797,21 @@ Format plain text or markdown files with proper frontmatter, titles, summaries, 
 | Parallel items | `-` unordered or `1.` ordered lists |
 | Code/commands | `` `inline` `` or ` ```block``` ` |
 | Quotes | `>` blockquote |
+
+#### baoyu-markdown-to-html
+
+Convert markdown files into styled HTML with WeChat-compatible themes, syntax highlighting, and optional bottom citations for external links.
+
+```bash
+# Basic conversion
+/baoyu-markdown-to-html article.md
+
+# Theme + color
+/baoyu-markdown-to-html article.md --theme grace --color red
+
+# Convert ordinary external links to bottom citations
+/baoyu-markdown-to-html article.md --cite
+```
 
 #### baoyu-translate
 

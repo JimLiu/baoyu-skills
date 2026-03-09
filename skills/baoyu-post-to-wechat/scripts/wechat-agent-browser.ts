@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -10,28 +10,49 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function ab(cmd: string, json = false): string {
-  const fullCmd = `agent-browser --session ${SESSION} ${cmd}${json ? ' --json' : ''}`;
-  console.log(`[ab] ${fullCmd}`);
-  try {
-    const result = execSync(fullCmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-    return result.trim();
-  } catch (e: unknown) {
-    const err = e as { stdout?: string; stderr?: string; message?: string };
-    console.error(`[ab] Error: ${err.stderr || err.message}`);
-    return err.stdout || '';
-  }
+function quoteForLog(arg: string): string {
+  return /[\s"'\\]/.test(arg) ? JSON.stringify(arg) : arg;
 }
 
-function abRaw(args: string[]): { success: boolean; output: string } {
+function toSafeJsStringLiteral(value: string): string {
+  return JSON.stringify(value)
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+function runAgentBrowser(args: string[]): {
+  success: boolean;
+  output: string;
+  spawnError?: string;
+} {
   const result = spawnSync('agent-browser', ['--session', SESSION, ...args], {
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe']
   });
+  const spawnError = result.error?.message?.trim();
+  const output = result.stdout || result.stderr || '';
   return {
     success: result.status === 0,
-    output: result.stdout || result.stderr || ''
+    output: output || spawnError || '',
+    spawnError
   };
+}
+
+function ab(args: string[], json = false): string {
+  const fullArgs = json ? [...args, '--json'] : args;
+  console.log(`[ab] agent-browser --session ${SESSION} ${fullArgs.map(quoteForLog).join(' ')}`);
+  const result = runAgentBrowser(fullArgs);
+  if (result.spawnError) {
+    throw new Error(`agent-browser failed to start: ${result.spawnError}`);
+  }
+  if (!result.success) {
+    console.error(`[ab] Error: ${result.output.trim()}`);
+  }
+  return result.output.trim();
+}
+
+function abRaw(args: string[]): { success: boolean; output: string } {
+  return runAgentBrowser(args);
 }
 
 interface SnapshotElement {
@@ -99,17 +120,17 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
   }
 
   console.log('[wechat] Opening WeChat Official Account...');
-  ab(`open ${WECHAT_URL} --headed`);
+  ab(['open', WECHAT_URL, '--headed']);
   await sleep(5000);
 
   console.log('[wechat] Checking login status...');
-  let url = ab('get url');
+  let url = ab(['get', 'url']);
   console.log(`[wechat] Current URL: ${url}`);
 
   const waitForLogin = async (timeoutMs = 120_000): Promise<boolean> => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      url = ab('get url');
+      url = ab(['get', 'url']);
       if (url.includes('/cgi-bin/home')) return true;
       console.log('[wechat] Waiting for login...');
       await sleep(3000);
@@ -126,7 +147,7 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
   await sleep(2000);
 
   console.log('[wechat] Getting page snapshot...');
-  let snapshot = ab('snapshot');
+  let snapshot = ab(['snapshot']);
   console.log(snapshot);
 
   console.log('[wechat] Looking for "图文" menu...');
@@ -134,16 +155,16 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
 
   if (!tuWenRef) {
     console.log('[wechat] Using eval to find and click menu...');
-    ab(`eval "document.querySelectorAll('.new-creation__menu .new-creation__menu-item')[2].click()"`);
+    ab(['eval', "document.querySelectorAll('.new-creation__menu .new-creation__menu-item')[2].click()"]);
   } else {
     console.log(`[wechat] Clicking menu ref: ${tuWenRef}`);
-    ab(`click ${tuWenRef}`);
+    ab(['click', tuWenRef]);
   }
 
   await sleep(4000);
 
   console.log('[wechat] Checking for new tab...');
-  const tabsOutput = ab('tab');
+  const tabsOutput = ab(['tab']);
   console.log(`[wechat] Tabs: ${tabsOutput}`);
 
   const tabLines = tabsOutput.split('\n');
@@ -153,14 +174,14 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
     const tabMatch = tabsOutput.match(/\[(\d+)\].*(?:appmsg|edit)/i);
     if (tabMatch) {
       console.log(`[wechat] Switching to editor tab ${tabMatch[1]}...`);
-      ab(`tab ${tabMatch[1]}`);
+      ab(['tab', tabMatch[1]]);
     } else {
       const lastTabMatch = tabsOutput.match(/\[(\d+)\]/g);
       if (lastTabMatch && lastTabMatch.length > 1) {
         const lastTab = lastTabMatch[lastTabMatch.length - 1].match(/\d+/)?.[0];
         if (lastTab) {
           console.log(`[wechat] Switching to last tab ${lastTab}...`);
-          ab(`tab ${lastTab}`);
+          ab(['tab', lastTab]);
         }
       }
     }
@@ -168,38 +189,44 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
 
   await sleep(3000);
 
-  url = ab('get url');
+  url = ab(['get', 'url']);
   console.log(`[wechat] Editor URL: ${url}`);
 
   console.log('[wechat] Getting editor snapshot...');
-  snapshot = ab('snapshot');
+  snapshot = ab(['snapshot']);
   console.log(snapshot.substring(0, 2000));
 
   console.log('[wechat] Uploading images...');
   const fileInputSelector = '.js_upload_btn_container input[type=file]';
+  const fileInputSelectorJs = toSafeJsStringLiteral(fileInputSelector);
 
-  ab(`eval "document.querySelector('${fileInputSelector}').style.display = 'block'"`);
+  ab(['eval', `{
+    const input = document.querySelector(${fileInputSelectorJs});
+    if (input) input.style.display = 'block';
+  }`]);
   await sleep(500);
 
-  const uploadResult = abRaw(['upload', `"${fileInputSelector}"`, ...absoluteImages]);
+  const uploadResult = abRaw(['upload', fileInputSelector, ...absoluteImages]);
   console.log(`[wechat] Upload result: ${uploadResult.output}`);
 
   if (!uploadResult.success) {
     console.log('[wechat] Using alternative upload method...');
     for (const img of absoluteImages) {
       console.log(`[wechat] Uploading: ${img}`);
-      ab(`eval "
-        const input = document.querySelector('${fileInputSelector}');
+      const imgUrlJs = toSafeJsStringLiteral(`file://${img}`);
+      const imgFileNameJs = toSafeJsStringLiteral(path.basename(img));
+      ab(['eval', `
+        const input = document.querySelector(${fileInputSelectorJs});
         if (input) {
           const dt = new DataTransfer();
-          fetch('file://${img}').then(r => r.blob()).then(b => {
-            const file = new File([b], '${path.basename(img)}', { type: 'image/png' });
+          fetch(${imgUrlJs}).then(r => r.blob()).then(b => {
+            const file = new File([b], ${imgFileNameJs}, { type: 'image/png' });
             dt.items.add(file);
             input.files = dt.files;
             input.dispatchEvent(new Event('change', { bubbles: true }));
           });
         }
-      "`);
+      `]);
       await sleep(2000);
     }
   }
@@ -208,13 +235,14 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
   await sleep(10000);
 
   console.log('[wechat] Filling title...');
-  snapshot = ab('snapshot -i');
+  snapshot = ab(['snapshot', '-i']);
   const titleRef = findElementByText(snapshot, 'title') || findElementByText(snapshot, '标题');
 
   if (titleRef) {
-    ab(`fill ${titleRef} "${title.replace(/"/g, '\\"')}"`);
+    ab(['fill', titleRef, title]);
   } else {
-    ab(`eval "const t = document.querySelector('#title'); if(t) { t.value = '${title.replace(/'/g, "\\'")}'; t.dispatchEvent(new Event('input', {bubbles: true})); }"`);
+    const titleJs = toSafeJsStringLiteral(title);
+    ab(['eval', `const t = document.querySelector('#title'); if(t) { t.value = ${titleJs}; t.dispatchEvent(new Event('input', {bubbles: true})); }`]);
   }
   await sleep(500);
 
@@ -222,9 +250,9 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
   const editorRef = findElementByText(snapshot, 'js_pmEditorArea') || findElementByText(snapshot, 'textbox');
 
   if (editorRef) {
-    ab(`click ${editorRef}`);
+    ab(['click', editorRef]);
   } else {
-    ab(`eval "document.querySelector('.js_pmEditorArea')?.click()"`);
+    ab(['eval', "document.querySelector('.js_pmEditorArea')?.click()"]);
   }
   await sleep(500);
 
@@ -233,11 +261,11 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.length > 0) {
-      const escapedLine = line.replace(/"/g, '\\"').replace(/'/g, "\\'");
-      ab(`eval "document.execCommand('insertText', false, '${escapedLine}')"`);
+      const lineJs = toSafeJsStringLiteral(line);
+      ab(['eval', `document.execCommand('insertText', false, ${lineJs})`]);
     }
     if (i < lines.length - 1) {
-      ab('press Enter');
+      ab(['press', 'Enter']);
     }
     await sleep(100);
   }
@@ -249,9 +277,9 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
     console.log('[wechat] Saving as draft...');
     const submitRef = findElementByText(snapshot, 'js_submit') || findElementByText(snapshot, '保存');
     if (submitRef) {
-      ab(`click ${submitRef}`);
+      ab(['click', submitRef]);
     } else {
-      ab(`eval "document.querySelector('#js_submit')?.click()"`);
+      ab(['eval', "document.querySelector('#js_submit')?.click()"]);
     }
     await sleep(3000);
     console.log('[wechat] Draft saved!');
@@ -261,7 +289,7 @@ async function postToWeChat(options: WeChatOptions): Promise<void> {
 
   if (!keepOpen) {
     console.log('[wechat] Closing browser...');
-    ab('close');
+    ab(['close']);
   } else {
     console.log('[wechat] Done. Browser window left open.');
   }

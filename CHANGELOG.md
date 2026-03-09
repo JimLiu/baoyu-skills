@@ -2,6 +2,21 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.58.0 - 2026-03-08
+
+### Features
+- Add XDG config path support for EXTEND.md (by @liby)
+
+### Fixes
+- `baoyu-post-to-wechat`: surface agent-browser startup errors
+- `baoyu-post-to-wechat`: harden agent-browser command and eval handling (by @luojiyin1987)
+- `baoyu-image-gen`: use execFileSync for google curl requests (by @luojiyin1987)
+- `baoyu-format-markdown`: use spawnSync for autocorrect command (by @luojiyin1987)
+
+### Documentation
+- Fix CLAUDE dependency statement (by @luojiyin1987)
+- Add markdown-to-html to README utility skills (by @luojiyin1987)
+
 ## 1.57.0 - 2026-03-08
 
 ### Features

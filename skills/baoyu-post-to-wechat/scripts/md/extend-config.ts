@@ -37,6 +37,10 @@ function parseExtendYaml(yaml: string): Partial<ExtendConfig> {
 export function loadExtendConfig(): Partial<ExtendConfig> {
   const paths = [
     path.join(process.cwd(), ".baoyu-skills", "baoyu-markdown-to-html", "EXTEND.md"),
+    path.join(
+      process.env.XDG_CONFIG_HOME || path.join(homedir(), ".config"),
+      "baoyu-skills", "baoyu-markdown-to-html", "EXTEND.md"
+    ),
     path.join(homedir(), ".baoyu-skills", "baoyu-markdown-to-html", "EXTEND.md"),
   ];
   for (const p of paths) {

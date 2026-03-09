@@ -89,7 +89,7 @@ ${BUN_X} skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.md 
 
 - **Bun**: TypeScript runtime (native `bun` preferred, fallback `npx -y bun`)
 - **Chrome**: Required for `baoyu-danger-gemini-web` auth and `baoyu-post-to-x` automation
-- **No npm packages**: Self-contained TypeScript, no external dependencies
+- **npm packages (per skill)**: Some skill subprojects include `package.json`/lockfiles and require dependency installation in their own `scripts/` directories
 
 ## Chrome Profile (Unified)
 
@@ -472,22 +472,27 @@ Check EXTEND.md existence (priority order):
 \`\`\`bash
 # macOS, Linux, WSL, Git Bash
 test -f .baoyu-skills/<skill-name>/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/<skill-name>/EXTEND.md" && echo "xdg"
 test -f "$HOME/.baoyu-skills/<skill-name>/EXTEND.md" && echo "user"
 \`\`\`
 
 \`\`\`powershell
 # PowerShell (Windows)
 if (Test-Path .baoyu-skills/<skill-name>/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/<skill-name>/EXTEND.md") { "xdg" }
 if (Test-Path "$HOME/.baoyu-skills/<skill-name>/EXTEND.md") { "user" }
 \`\`\`
 
-┌────────────────────────────────────────────┬───────────────────┐
-│                    Path                    │     Location      │
-├────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/<skill-name>/EXTEND.md       │ Project directory │
-├────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/<skill-name>/EXTEND.md │ User home         │
-└────────────────────────────────────────────┴───────────────────┘
+┌────────────────────────────────────────────────────────┬──────────────────────────┐
+│                          Path                          │         Location         │
+├────────────────────────────────────────────────────────┼──────────────────────────┤
+│ .baoyu-skills/<skill-name>/EXTEND.md                   │ Project directory        │
+├────────────────────────────────────────────────────────┼──────────────────────────┤
+│ $XDG_CONFIG_HOME/baoyu-skills/<skill-name>/EXTEND.md   │ XDG config (~/.config)   │
+├────────────────────────────────────────────────────────┼──────────────────────────┤
+│ $HOME/.baoyu-skills/<skill-name>/EXTEND.md             │ User home (legacy)       │
+└────────────────────────────────────────────────────────┴──────────────────────────┘
 
 ┌───────────┬───────────────────────────────────────────────────────────────────────────┐
 │  Result   │                                  Action                                   │
@@ -523,5 +528,6 @@ Custom configurations via EXTEND.md. See **Preferences** section for paths and s
 **Notes**:
 - Replace `<skill-name>` with actual skill name (e.g., `baoyu-cover-image`)
 - Use `$HOME` instead of `~` for cross-platform compatibility (macOS/Linux/WSL/PowerShell)
+- `$XDG_CONFIG_HOME` defaults to `~/.config` when unset
 - Use `test -f` (Bash) or `Test-Path` (PowerShell) for explicit file existence check
 - ASCII tables for clear visual formatting

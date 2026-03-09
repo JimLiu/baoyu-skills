@@ -76,7 +76,7 @@ clawhub install baoyu-markdown-to-html
 |------|------|----------|
 | **content-skills** | 内容生成和发布 | [xhs-images](#baoyu-xhs-images), [infographic](#baoyu-infographic), [cover-image](#baoyu-cover-image), [slide-deck](#baoyu-slide-deck), [comic](#baoyu-comic), [article-illustrator](#baoyu-article-illustrator), [post-to-x](#baoyu-post-to-x), [post-to-wechat](#baoyu-post-to-wechat), [post-to-weibo](#baoyu-post-to-weibo) |
 | **ai-generation-skills** | AI 生成后端 | [image-gen](#baoyu-image-gen), [danger-gemini-web](#baoyu-danger-gemini-web) |
-| **utility-skills** | 内容处理工具 | [url-to-markdown](#baoyu-url-to-markdown), [danger-x-to-markdown](#baoyu-danger-x-to-markdown), [compress-image](#baoyu-compress-image), [format-markdown](#baoyu-format-markdown), [translate](#baoyu-translate) |
+| **utility-skills** | 内容处理工具 | [url-to-markdown](#baoyu-url-to-markdown), [danger-x-to-markdown](#baoyu-danger-x-to-markdown), [compress-image](#baoyu-compress-image), [format-markdown](#baoyu-format-markdown), [markdown-to-html](#baoyu-markdown-to-html), [translate](#baoyu-translate) |
 
 ## 更新技能
 
@@ -797,6 +797,21 @@ AI 驱动的生成后端。
 | 并列要点 | `-` 无序列表或 `1.` 有序列表 |
 | 代码/命令 | `` `行内` `` 或 ` ```代码块``` ` |
 | 引用 | `>` 引用块 |
+
+#### baoyu-markdown-to-html
+
+将 Markdown 文件转换为样式化 HTML，支持微信公众号兼容主题、代码高亮，以及可选的外链底部引用。
+
+```bash
+# 基础转换
+/baoyu-markdown-to-html article.md
+
+# 主题 + 颜色
+/baoyu-markdown-to-html article.md --theme grace --color red
+
+# 将普通外链转换为文末引用
+/baoyu-markdown-to-html article.md --cite
+```
 
 #### baoyu-translate
 

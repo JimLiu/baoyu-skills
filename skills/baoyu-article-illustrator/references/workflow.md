@@ -35,7 +35,52 @@ Supports:
 - Default language
 - Output directory
 
-## Step 2: Setup and Analyze
+**Questions to include** (skip if preference exists or not applicable):
+
+| Question | When to Ask | Options |
+|----------|-------------|---------|
+| Output directory | No `default_output_dir` in EXTEND.md | `{article-dir}/`, `{article-dir}/imgs/` (Recommended), `{article-dir}/illustrations/`, `illustrations/{topic-slug}/` |
+| Existing images | Target dir has `.png/.jpg/.webp` files | `supplement`, `overwrite`, `regenerate` |
+| Article update | Always (file path input) | `update`, `copy` |
+
+**Preference Values** (if configured, skip asking):
+
+| `default_output_dir` | Path |
+|----------------------|------|
+| `same-dir` | `{article-dir}/` |
+| `imgs-subdir` | `{article-dir}/imgs/` |
+| `illustrations-subdir` | `{article-dir}/illustrations/` |
+| `independent` | `illustrations/{topic-slug}/` |
+
+### 1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING
+
+**CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to reference images, do NOT ask about content, do NOT ask about type/style — ONLY complete the preferences setup first.
+
+```bash
+# macOS, Linux, WSL, Git Bash
+test -f .baoyu-skills/baoyu-article-illustrator/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "xdg"
+test -f "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "user"
+```
+
+```powershell
+# PowerShell (Windows)
+if (Test-Path .baoyu-skills/baoyu-article-illustrator/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "xdg" }
+if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user" }
+```
+
+| Result | Action |
+|--------|--------|
+| Found | Read, parse, display summary → Continue |
+| Not found | ⛔ **BLOCKING**: Run first-time setup ONLY ([config/first-time-setup.md](config/first-time-setup.md)) → Complete and save EXTEND.md → Then continue |
+
+**Supports**: Watermark | Preferred type/style | Custom styles | Language | Output directory
+
+---
+
+## Step 2: Setup & Analyze
 
 ### 2.1 Analyze Content
 

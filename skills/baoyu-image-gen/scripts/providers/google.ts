@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import type { CliArgs } from "../types";
 
 const GOOGLE_MULTIMODAL_MODELS = [
@@ -76,14 +76,43 @@ async function postGoogleJsonViaCurl<T>(
 ): Promise<T> {
   const proxy = getHttpProxy();
   const bodyStr = JSON.stringify(body);
-  const proxyArgs = proxy ? `-x "${proxy}"` : "";
+  const args = [
+    "-s",
+    "--connect-timeout",
+    "30",
+    "--max-time",
+    "300",
+    ...(proxy ? ["-x", proxy] : []),
+    url,
+    "-H",
+    "Content-Type: application/json",
+    "-H",
+    `x-goog-api-key: ${apiKey}`,
+    "-d",
+    "@-",
+  ];
 
-  const result = execSync(
-    `curl -s --connect-timeout 30 --max-time 300 ${proxyArgs} "${url}" -H "Content-Type: application/json" -H "x-goog-api-key: ${apiKey}" -d @-`,
-    { input: bodyStr, maxBuffer: 100 * 1024 * 1024, timeout: 310000 },
-  );
+  let result = "";
+  try {
+    result = execFileSync("curl", args, {
+      input: bodyStr,
+      encoding: "utf8",
+      maxBuffer: 100 * 1024 * 1024,
+      timeout: 310000,
+    });
+  } catch (error) {
+    const e = error as { message?: string; stderr?: string | Buffer };
+    const stderrText =
+      typeof e.stderr === "string"
+        ? e.stderr
+        : e.stderr
+          ? e.stderr.toString("utf8")
+          : "";
+    const details = stderrText.trim() || e.message || "curl request failed";
+    throw new Error(`Google API request failed via curl: ${details}`);
+  }
 
-  const parsed = JSON.parse(result.toString()) as any;
+  const parsed = JSON.parse(result) as any;
   if (parsed.error) {
     throw new Error(
       `Google API error (${parsed.error.code}): ${parsed.error.message}`,
