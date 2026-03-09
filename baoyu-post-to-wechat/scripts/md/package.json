@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "front-matter": "^4.0.2",
+    "highlight.js": "^11.11.1",
+    "juice": "^11.0.1",
+    "marked": "^15.0.6",
+    "reading-time": "^1.5.0",
+    "remark-cjk-friendly": "^1.1.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5"
+  }
+}

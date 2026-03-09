@@ -1,0 +1,465 @@
+/**
+ * MD 现代主题 (modern)
+ * 大圆角、药丸形标题、宽松行距、现代感
+ * 如需使用主题色，请使用 var(--md-primary-color) 代替颜色值
+ */
+
+/* ==================== 容器样式覆盖 ==================== */
+section,
+container {
+  font-family: var(--md-font-family);
+  font-size: var(--md-font-size);
+  line-height: 2;
+  letter-spacing: 0px;
+  font-weight: 400;
+  background-color: var(--md-container-bg);
+  border: 1px solid rgba(255, 255, 255, 0.01);
+  border-radius: 25px;
+  padding: 12px 12px;
+}
+
+#output {
+  font-family: var(--md-font-family);
+  font-size: var(--md-font-size);
+  line-height: 2;
+}
+
+/* ==================== 一级标题 ==================== */
+h1 {
+  display: table;
+  padding: 0.3em 1em;
+  margin: 20px auto;
+  color: hsl(var(--foreground));
+  background: var(--md-primary-color);
+  border-radius: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ==================== 二级标题 ==================== */
+h2 {
+  display: block;
+  padding: 0.2em 0;
+  padding-bottom: 0;
+  margin: 0 auto 20px;
+  width: 100%;
+  color: var(--md-primary-color);
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.578px;
+  line-height: 1.7;
+  border-bottom: 2px solid var(--md-accent-color);
+  text-align: left;
+}
+
+/* ==================== 三级标题 ==================== */
+h3 {
+  padding-left: 10px;
+  border-left: 4px solid var(--md-primary-color);
+  border-radius: 2px;
+  margin: 0 8px 10px;
+  color: hsl(var(--foreground));
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+/* ==================== 四级标题 ==================== */
+h4 {
+  margin: 0 8px 10px;
+  color: var(--md-primary-color);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ==================== 五级标题 ==================== */
+h5 {
+  display: inline-block;
+  margin: 0 8px 10px;
+  padding: 4px 12px;
+  color: hsl(var(--foreground));
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgb(189, 224, 254);
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ==================== 六级标题 ==================== */
+h6 {
+  margin: 0 8px 10px;
+  color: var(--md-primary-color);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* ==================== 段落 ==================== */
+p {
+  margin: 20px 0;
+  letter-spacing: 0.1em;
+  color: hsl(var(--foreground));
+  line-height: 2;
+  letter-spacing: 0px;
+  font-size: 15px;
+  font-weight: 400;
+  word-break: break-all;
+}
+
+/* ==================== 引用块 ==================== */
+blockquote {
+  font-style: normal;
+  padding: 15px 0;
+  margin: 12px 0;
+  border-left: 7px solid var(--md-accent-color);
+  border-radius: 10px;
+  color: hsl(var(--foreground));
+  background-color: var(--blockquote-background);
+}
+
+blockquote > p {
+  display: block;
+  font-size: 1em;
+  letter-spacing: 0.1em;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+/* ==================== GFM 警告块 ==================== */
+.alert-title-note,
+.alert-title-tip,
+.alert-title-info,
+.alert-title-important,
+.alert-title-warning,
+.alert-title-caution,
+.alert-title-abstract,
+.alert-title-summary,
+.alert-title-tldr,
+.alert-title-todo,
+.alert-title-success,
+.alert-title-done,
+.alert-title-question,
+.alert-title-help,
+.alert-title-faq,
+.alert-title-failure,
+.alert-title-fail,
+.alert-title-missing,
+.alert-title-danger,
+.alert-title-error,
+.alert-title-bug,
+.alert-title-example,
+.alert-title-quote,
+.alert-title-cite {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.alert-title-note {
+  color: #478be6;
+}
+
+.alert-title-tip {
+  color: #57ab5a;
+}
+
+.alert-title-info {
+  color: #93c5fd;
+}
+
+.alert-title-important {
+  color: #986ee2;
+}
+
+.alert-title-warning {
+  color: #c69026;
+}
+
+.alert-title-caution {
+  color: #e5534b;
+}
+
+.alert-title-abstract,
+.alert-title-summary,
+.alert-title-tldr {
+  color: #00bfff;
+}
+
+.alert-title-todo {
+  color: #478be6;
+}
+
+.alert-title-success,
+.alert-title-done {
+  color: #57ab5a;
+}
+
+.alert-title-question,
+.alert-title-help,
+.alert-title-faq {
+  color: #c69026;
+}
+
+.alert-title-failure,
+.alert-title-fail,
+.alert-title-missing {
+  color: #e5534b;
+}
+
+.alert-title-danger,
+.alert-title-error {
+  color: #e5534b;
+}
+
+.alert-title-bug {
+  color: #e5534b;
+}
+
+.alert-title-example {
+  color: #986ee2;
+}
+
+.alert-title-quote,
+.alert-title-cite {
+  color: #9ca3af;
+}
+
+/* GFM Alert SVG 图标颜色 */
+.alert-icon-note {
+  fill: #478be6;
+}
+
+.alert-icon-tip {
+  fill: #57ab5a;
+}
+
+.alert-icon-info {
+  fill: #93c5fd;
+}
+
+.alert-icon-important {
+  fill: #986ee2;
+}
+
+.alert-icon-warning {
+  fill: #c69026;
+}
+
+.alert-icon-caution {
+  fill: #e5534b;
+}
+
+.alert-icon-abstract,
+.alert-icon-summary,
+.alert-icon-tldr {
+  fill: #00bfff;
+}
+
+.alert-icon-todo {
+  fill: #478be6;
+}
+
+.alert-icon-success,
+.alert-icon-done {
+  fill: #57ab5a;
+}
+
+.alert-icon-question,
+.alert-icon-help,
+.alert-icon-faq {
+  fill: #c69026;
+}
+
+.alert-icon-failure,
+.alert-icon-fail,
+.alert-icon-missing {
+  fill: #e5534b;
+}
+
+.alert-icon-danger,
+.alert-icon-error {
+  fill: #e5534b;
+}
+
+.alert-icon-bug {
+  fill: #e5534b;
+}
+
+.alert-icon-example {
+  fill: #986ee2;
+}
+
+.alert-icon-quote,
+.alert-icon-cite {
+  fill: #9ca3af;
+}
+
+/* ==================== 代码块 ==================== */
+pre.code__pre,
+.hljs.code__pre {
+  font-size: 90%;
+  overflow-x: auto;
+  border-radius: 10px;
+  padding: 0 !important;
+  line-height: 1.5;
+  margin: 10px 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* ==================== 图片 ==================== */
+img {
+  display: block;
+  max-width: 100%;
+  margin: 0.1em auto 0.5em;
+  border-radius: 10px;
+}
+
+/* ==================== 列表 ==================== */
+ol {
+  padding-left: 1em;
+  margin-left: 0;
+  color: hsl(var(--foreground));
+  line-height: 2;
+}
+
+ul {
+  list-style: circle;
+  padding-left: 1em;
+  margin-left: 0;
+  color: hsl(var(--foreground));
+  line-height: 2;
+}
+
+li {
+  display: block;
+  margin: 0.2em 8px;
+  color: hsl(var(--foreground));
+}
+
+/* ==================== 脚注 ==================== */
+p.footnotes {
+  margin: 0.5em 8px;
+  font-size: 80%;
+  color: hsl(var(--foreground));
+}
+
+/* ==================== 图表 ==================== */
+figure {
+  margin: 1.5em 8px;
+  color: hsl(var(--foreground));
+}
+
+figcaption,
+.md-figcaption {
+  text-align: center;
+  color: #888;
+  font-size: 0.8em;
+}
+
+/* ==================== 分隔线 ==================== */
+hr {
+  border-style: solid;
+  border-width: 1px 0 0;
+  border-color: var(--md-accent-color);
+  margin: 1.5em 0;
+}
+
+/* ==================== 行内代码 ==================== */
+code {
+  font-size: 90%;
+  color: #d14;
+  background: rgba(27, 31, 35, 0.05);
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+
+/* 代码块内的 code 标签需要特殊处理（覆盖行内 code 样式） */
+pre.code__pre > code,
+.hljs.code__pre > code {
+  display: -webkit-box;
+  padding: 0.5em 1em 1em;
+  overflow-x: auto;
+  text-indent: 0;
+  color: inherit;
+  background: none;
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* ==================== 强调 ==================== */
+em {
+  font-style: italic;
+  font-size: inherit;
+}
+
+/* ==================== 链接 ==================== */
+a {
+  color: var(--md-primary-color);
+  text-decoration: none;
+}
+
+/* ==================== 粗体 ==================== */
+strong {
+  color: var(--md-primary-color);
+  font-weight: bold;
+  font-size: inherit;
+}
+
+/* ==================== 表格 ==================== */
+table {
+  color: hsl(var(--foreground));
+}
+
+thead {
+  font-weight: bold;
+  color: hsl(var(--foreground));
+}
+
+th {
+  border: 1px solid #dfdfdf;
+  padding: 0.25em 0.5em;
+  color: hsl(var(--foreground));
+  word-break: keep-all;
+  background: color-mix(in srgb, var(--md-primary-color) 10%, transparent);
+}
+
+td {
+  border: 1px solid #dfdfdf;
+  padding: 0.25em 0.5em;
+  color: hsl(var(--foreground));
+  word-break: keep-all;
+}
+
+/* ==================== KaTeX 公式 ==================== */
+.katex-inline {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.katex-block {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5em 0;
+  text-align: center;
+}
+
+/* ==================== 标记高亮 ==================== */
+.markup-highlight {
+  background-color: var(--md-primary-color);
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.markup-underline {
+  text-decoration: underline;
+  text-decoration-color: var(--md-primary-color);
+}
+
+.markup-wavyline {
+  text-decoration: underline wavy;
+  text-decoration-color: var(--md-primary-color);
+  text-decoration-thickness: 2px;
+}
