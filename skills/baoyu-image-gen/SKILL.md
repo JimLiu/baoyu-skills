@@ -165,7 +165,11 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY` | Override provider concurrency, e.g. `BAOYU_IMAGE_GEN_REPLICATE_CONCURRENCY` |
 | `BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS` | Override provider start gap, e.g. `BAOYU_IMAGE_GEN_REPLICATE_START_INTERVAL_MS` |
 
-**DashScope 兼容性说明**: 默认使用 qwen-image-2.0-pro（新 API），同时兼容旧模型如 z-image-turbo。
+**DashScope 模型说明**:
+- **默认模型**: `qwen-image-2.0-pro`（推荐，支持更多功能）
+- **兼容旧模型**: 如 `z-image-turbo`、`wanx-v1` 等，可通过 `--model`、EXTEND.md 或环境变量 `DASHSCOPE_IMAGE_MODEL` 指定
+- **自动适配**: 系统会根据所选模型自动使用对应的 API 格式，无需手动配置
+- **注意**: DashScope 特有参数（如 `negative_prompt`、`prompt_extend`、`watermark`）暂未通过 CLI 暴露
 
 **Load Priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
 
