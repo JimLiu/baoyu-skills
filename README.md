@@ -666,7 +666,7 @@ AI SDK-based image generation using official OpenAI, Google and DashScope (Aliyu
 | `DASHSCOPE_API_KEY` | DashScope API key (Aliyun) | - |
 | `OPENAI_IMAGE_MODEL` | OpenAI model | `gpt-image-1.5` |
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
-| `DASHSCOPE_IMAGE_MODEL` | DashScope model | `z-image-turbo` |
+| `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
 | `GOOGLE_BASE_URL` | Custom Google endpoint | - |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint | - |

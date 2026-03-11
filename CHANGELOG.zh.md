@@ -2,6 +2,19 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 未发布
+
+### 新功能
+- `baoyu-image-gen`：新增 DashScope Qwen API 兼容支持，自动模型路由
+- `baoyu-image-gen`：为 Qwen API 添加默认 negative_prompt 提升图片质量
+
+### 破坏性变更
+- `baoyu-image-gen`：DashScope 默认模型从 `z-image-turbo` 变更为 `qwen-image-2.0-pro`
+
+### 文档
+- `baoyu-image-gen`：新增 DashScope 模型兼容性说明文档
+- `baoyu-image-gen`：新增 Qwen API 规格文档
+
 ## 1.59.0 - 2026-03-09
 
 ### 新功能

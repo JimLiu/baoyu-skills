@@ -2,6 +2,19 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## Unreleased
+
+### Features
+- `baoyu-image-gen`: add DashScope Qwen API compatibility with automatic model routing
+- `baoyu-image-gen`: add default negative_prompt for Qwen API to improve image quality
+
+### Breaking Changes
+- `baoyu-image-gen`: change DashScope default model from `z-image-turbo` to `qwen-image-2.0-pro`
+
+### Documentation
+- `baoyu-image-gen`: add DashScope model compatibility documentation
+- `baoyu-image-gen`: add Qwen API specification document
+
 ## 1.59.0 - 2026-03-09
 
 ### Features

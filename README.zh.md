@@ -666,7 +666,7 @@ AI 驱动的生成后端。
 | `DASHSCOPE_API_KEY` | DashScope API 密钥（阿里云） | - |
 | `OPENAI_IMAGE_MODEL` | OpenAI 模型 | `gpt-image-1.5` |
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
-| `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `z-image-turbo` |
+| `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
 | `OPENAI_BASE_URL` | 自定义 OpenAI 端点 | - |
 | `GOOGLE_BASE_URL` | 自定义 Google 端点 | - |
 | `DASHSCOPE_BASE_URL` | 自定义 DashScope 端点 | - |
@@ -923,7 +923,7 @@ GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
 
 # DashScope（阿里通义万相）
 DASHSCOPE_API_KEY=sk-xxx
-DASHSCOPE_IMAGE_MODEL=z-image-turbo
+DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
 # DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
 EOF
 ```
