@@ -164,3 +164,6 @@ posts/
 # ClawHub local state (current and legacy directory names from the official CLI)
 .clawhub/
 .clawdhub/
+
+# Git worktrees
+.worktrees/
