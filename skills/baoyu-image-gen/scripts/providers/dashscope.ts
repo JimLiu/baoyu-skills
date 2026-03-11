@@ -132,6 +132,7 @@ async function generateWithQwenApi(
     parameters: {
       prompt_extend: false,
       watermark: false,
+      negative_prompt: "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感，构图混乱，文字模糊，扭曲",
       size,
     },
   };
