@@ -1,7 +1,7 @@
 import type { CliArgs } from "../types";
 
 export function getDefaultModel(): string {
-  return process.env.DASHSCOPE_IMAGE_MODEL || "z-image-turbo";
+  return process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0-pro";
 }
 
 function getApiKey(): string | null {

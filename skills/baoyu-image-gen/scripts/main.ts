@@ -107,7 +107,7 @@ Environment variables:
   REPLICATE_API_TOKEN       Replicate API token
   OPENAI_IMAGE_MODEL        Default OpenAI model (gpt-image-1.5)
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
-  DASHSCOPE_IMAGE_MODEL     Default DashScope model (z-image-turbo)
+  DASHSCOPE_IMAGE_MODEL     Default DashScope model (qwen-image-2.0-pro)
   REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
   OPENAI_BASE_URL           Custom OpenAI endpoint
   OPENAI_IMAGE_USE_CHAT     Use /chat/completions instead of /images/generations (true|false)

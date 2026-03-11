@@ -155,7 +155,7 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `REPLICATE_API_TOKEN` | Replicate API token |
 | `OPENAI_IMAGE_MODEL` | OpenAI model override |
 | `GOOGLE_IMAGE_MODEL` | Google model override |
-| `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: z-image-turbo) |
+| `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: qwen-image-2.0-pro) |
 | `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-pro) |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint |
 | `GOOGLE_BASE_URL` | Custom Google endpoint |
@@ -164,6 +164,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `BAOYU_IMAGE_GEN_MAX_WORKERS` | Override batch worker cap |
 | `BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY` | Override provider concurrency, e.g. `BAOYU_IMAGE_GEN_REPLICATE_CONCURRENCY` |
 | `BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS` | Override provider start gap, e.g. `BAOYU_IMAGE_GEN_REPLICATE_START_INTERVAL_MS` |
+
+**DashScope 兼容性说明**: 默认使用 qwen-image-2.0-pro（新 API），同时兼容旧模型如 z-image-turbo。
 
 **Load Priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
 
