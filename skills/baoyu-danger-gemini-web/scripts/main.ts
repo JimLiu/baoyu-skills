@@ -18,6 +18,7 @@ type CliArgs = {
   login: boolean;
   cookiePath: string | null;
   profileDir: string | null;
+  keepWatermark: boolean;
   help: boolean;
 };
 
@@ -95,6 +96,7 @@ Options:
   --ref <files...>          Alias for --reference
   --sessionId <id>          Session ID for multi-turn conversation (agent should generate unique ID)
   --list-sessions           List saved sessions (max 100, sorted by update time)
+  --keep-watermark          Skip watermark removal (watermark is removed by default)
   --login                   Only refresh cookies, then exit
   --cookie-path <path>      Cookie file path (default: ${cookiePath})
   --profile-dir <path>      Chrome profile dir (default: ${profileDir})
@@ -117,6 +119,7 @@ function parseArgs(argv: string[]): CliArgs {
     login: false,
     cookiePath: null,
     profileDir: null,
+    keepWatermark: false,
     help: false,
   };
 
@@ -154,6 +157,11 @@ function parseArgs(argv: string[]): CliArgs {
 
     if (a === '--login') {
       out.login = true;
+      continue;
+    }
+
+    if (a === '--keep-watermark') {
+      out.keepWatermark = true;
       continue;
     }
 
@@ -474,7 +482,7 @@ async function main(): Promise<void> {
       const dp = dir;
 
       if (img instanceof GeneratedImage) {
-        savedImage = await img.save(dp, fn, undefined, false, false, true);
+        savedImage = await img.save(dp, fn, undefined, false, false, true, !args.keepWatermark);
       } else {
         savedImage = await img.save(dp, fn, c.cookies, false, false);
       }

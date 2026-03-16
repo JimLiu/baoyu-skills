@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 
 import { logger } from '../utils/logger.js';
 import { cookie_header, fetch_with_timeout } from '../utils/http.js';
+import { removeWatermarkFromFile } from '../watermark.js';
 
 export class Image {
   constructor(
@@ -105,10 +106,20 @@ export class GeneratedImage extends Image {
     verbose: boolean = false,
     skip_invalid_filename: boolean = false,
     full_size: boolean = true,
+    stripWatermark: boolean = true,
   ): Promise<string | null> {
     const u = full_size ? `${this.url}=s2048` : this.url;
     const f = filename ?? `${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}_${u.slice(-10)}.png`;
     const img = new Image(u, this.title, this.alt, this.proxy);
-    return await img.save(p, f, cookies ?? this.cookies, verbose, skip_invalid_filename);
+    const dest = await img.save(p, f, cookies ?? this.cookies, verbose, skip_invalid_filename);
+    if (dest && stripWatermark) {
+      try {
+        const removed = await removeWatermarkFromFile(dest);
+        if (verbose) logger.info(removed ? `Watermark removed from ${dest}` : `Watermark removal skipped (non-PNG?) for ${dest}`);
+      } catch (e) {
+        if (verbose) logger.warning(`Watermark removal failed: ${e}`);
+      }
+    }
+    return dest;
   }
 }

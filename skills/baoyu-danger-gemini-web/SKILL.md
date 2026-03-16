@@ -122,9 +122,18 @@ ${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 | `--sessionId` | Session ID for multi-turn conversation |
 | `--list-sessions` | List saved sessions |
 | `--json` | Output as JSON |
+| `--keep-watermark` | Skip watermark removal (removed by default) |
 | `--login` | Refresh cookies, then exit |
 | `--cookie-path` | Custom cookie file path |
 | `--profile-dir` | Chrome profile directory |
+
+## Watermark Removal
+
+Generated images have Gemini's visible watermark removed by default using reverse alpha blending. This is a lossless mathematical operation that precisely restores the original pixels — not AI inpainting.
+
+To keep the watermark, pass `--keep-watermark`.
+
+Algorithm credit: [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) by journey-ad, based on [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool) by allenk.
 
 ## Models
 

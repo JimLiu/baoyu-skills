@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "baoyu-chrome-cdp": "file:./vendor/baoyu-chrome-cdp"
+    "baoyu-chrome-cdp": "file:./vendor/baoyu-chrome-cdp",
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5"
   }
 }
