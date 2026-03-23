@@ -10,44 +10,28 @@
   },
   "plugins": [
     {
-      "name": "content-skills",
-      "description": "Content generation and publishing skills",
+      "name": "baoyu-skills",
+      "description": "Content generation, AI backends, and utility tools for daily work efficiency",
       "source": "./",
       "strict": true,
       "skills": [
-        "./skills/baoyu-xhs-images",
-        "./skills/baoyu-post-to-x",
-        "./skills/baoyu-post-to-wechat",
-        "./skills/baoyu-post-to-weibo",
         "./skills/baoyu-article-illustrator",
-        "./skills/baoyu-cover-image",
-        "./skills/baoyu-slide-deck",
         "./skills/baoyu-comic",
-        "./skills/baoyu-infographic"
-      ]
-    },
-    {
-      "name": "ai-generation-skills",
-      "description": "AI-powered generation backends",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/baoyu-danger-gemini-web",
-        "./skills/baoyu-image-gen"
-      ]
-    },
-    {
-      "name": "utility-skills",
-      "description": "Utility tools for content processing",
-      "source": "./",
-      "strict": true,
-      "skills": [
-        "./skills/baoyu-danger-x-to-markdown",
         "./skills/baoyu-compress-image",
-        "./skills/baoyu-url-to-markdown",
+        "./skills/baoyu-cover-image",
+        "./skills/baoyu-danger-gemini-web",
+        "./skills/baoyu-danger-x-to-markdown",
         "./skills/baoyu-format-markdown",
+        "./skills/baoyu-image-gen",
+        "./skills/baoyu-infographic",
         "./skills/baoyu-markdown-to-html",
+        "./skills/baoyu-post-to-weibo",
+        "./skills/baoyu-post-to-wechat",
+        "./skills/baoyu-post-to-x",
+        "./skills/baoyu-slide-deck",
         "./skills/baoyu-translate",
+        "./skills/baoyu-url-to-markdown",
+        "./skills/baoyu-xhs-images",
         "./skills/baoyu-youtube-transcript"
       ]
     }
