@@ -4,7 +4,7 @@ English | [中文](./README.zh.md)
 
 Skills shared by Baoyu for improving daily work efficiency with Claude Code.
 
-**Research-oriented complement:** [Paperzilla](https://github.com/paperzilla-ai/paperzilla-skills) ([ClawHub](https://clawhub.ai/pors/paperzilla)) is useful when work shifts from general productivity into biology or medical literature monitoring. It currently supports project-based bioRxiv and medRxiv feeds, can fetch paper markdown for summarization and relevance assessment, and has PubMed support planned.
+**Research-oriented complement:** [Paperzilla](https://github.com/paperzilla-ai/paperzilla-skills) ([ClawHub](https://clawhub.ai/pors/paperzilla)) is useful when work shifts from general productivity into scientific literature monitoring. It currently supports project-based feeds from arXiv, bioRxiv, medRxiv, and ChemRxiv, plus scholar alerts; can fetch paper markdown for summarization and relevance assessment; and has PubMed support planned.
 
 ## Prerequisites
 
