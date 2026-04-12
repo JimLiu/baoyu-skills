@@ -82,8 +82,8 @@ Options:
   --size <WxH>              Size (e.g., 1024x1024)
   --quality normal|2k       Quality preset (default: 2k)
   --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
-  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate, MiniMax, or Seedream 4.0/4.5/5.0)
-  --n <count>               Number of images for the current task (default: 1)
+  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate supported families, MiniMax, or Seedream 4.0/4.5/5.0)
+  --n <count>               Number of images for the current task (default: 1; Replicate currently requires 1)
   --json                    JSON output
   -h, --help                Show help
 
@@ -96,7 +96,7 @@ Batch file format:
         "promptFiles": ["prompts/hero.md"],
         "image": "out/hero.png",
         "provider": "replicate",
-        "model": "google/nano-banana-pro",
+        "model": "google/nano-banana-2",
         "ar": "16:9"
       }
     ]
@@ -106,6 +106,7 @@ Behavior:
   - Batch mode automatically runs in parallel when pending tasks >= 2
   - Each image retries automatically up to 3 attempts
   - Batch summary reports success count, failure count, and per-image errors
+  - Replicate currently supports single-image save semantics only; --n must stay at 1
 
 Environment variables:
   OPENAI_API_KEY            OpenAI API key
@@ -123,7 +124,7 @@ Environment variables:
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
   DASHSCOPE_IMAGE_MODEL     Default DashScope model (qwen-image-2.0-pro)
   MINIMAX_IMAGE_MODEL       Default MiniMax model (image-01)
-  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
+  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-2)
   JIMENG_IMAGE_MODEL        Default Jimeng model (jimeng_t2i_v40)
   SEEDREAM_IMAGE_MODEL      Default Seedream model (doubao-seedream-5-0-260128)
   OPENAI_BASE_URL           Custom OpenAI endpoint

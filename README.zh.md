@@ -751,8 +751,14 @@ AI 驱动的生成后端。
 # MiniMax + 角色参考图
 /baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
-# Replicate
+# Replicate（默认：google/nano-banana-2）
 /baoyu-imagine --prompt "一只猫" --image cat.png --provider replicate
+
+# Replicate Seedream 4.5
+/baoyu-imagine --prompt "一张影棚人像" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+
+# Replicate Wan 2.7 Image Pro
+/baoyu-imagine --prompt "一张概念分镜" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # 即梦（Jimeng）
 /baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
@@ -781,8 +787,8 @@ AI 驱动的生成后端。
 | `--size` | 尺寸（如 `1024x1024`） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
 | `--imageSize` | Google/OpenRouter 使用的 `1K`、`2K`、`4K` |
-| `--ref` | 参考图片（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate、MiniMax 或 Seedream 5.0/4.5/4.0） |
-| `--n` | 单次请求生成图片数量 |
+| `--ref` | 参考图片（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate 支持的模型家族、MiniMax 或 Seedream 5.0/4.5/4.0） |
+| `--n` | 单次请求生成图片数量（`replicate` 当前只支持 `--n 1`） |
 | `--json` | 输出 JSON 结果 |
 
 **环境变量**（配置方法见[环境配置](#环境配置)）：
@@ -806,7 +812,7 @@ AI 驱动的生成后端。
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax 模型 | `image-01` |
-| `REPLICATE_IMAGE_MODEL` | Replicate 模型 | `google/nano-banana-pro` |
+| `REPLICATE_IMAGE_MODEL` | Replicate 模型 | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | 即梦模型 | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | 豆包模型 | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | 自定义 OpenAI 端点 | - |
@@ -834,6 +840,9 @@ AI 驱动的生成后端。
 - MiniMax 参考图会走 `subject_reference`，当前能力更偏角色 / 人像一致性。
 - 即梦不支持参考图。
 - 豆包参考图能力仅适用于 Seedream 5.0 / 4.5 / 4.0，不适用于 Seedream 3.0。
+- Replicate 默认模型改为 `google/nano-banana-2`。`baoyu-imagine` 目前只对 `google/nano-banana*`、`bytedance/seedream-4.5`、`bytedance/seedream-5-lite`、`wan-video/wan-2.7-image` 和 `wan-video/wan-2.7-image-pro` 开启本地能力识别与校验。
+- Replicate 当前只保存单张输出图，`--n > 1` 会在本地直接报错，避免多图结果被静默丢弃。
+- Replicate 的参数能力按模型家族区分：nano-banana 走 `--quality` / `--ar`，Seedream 走校验后的 `--size` / `--ar`，Wan 走校验后的 `--size`（`--ar` 会先在本地换算成具体尺寸）。
 
 **服务商自动选择**：
 1. 如果指定了 `--provider` → 使用指定的
@@ -1146,7 +1155,7 @@ MINIMAX_IMAGE_MODEL=image-01
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx
-REPLICATE_IMAGE_MODEL=google/nano-banana-pro
+REPLICATE_IMAGE_MODEL=google/nano-banana-2
 # REPLICATE_BASE_URL=https://api.replicate.com
 
 # 即梦（Jimeng）

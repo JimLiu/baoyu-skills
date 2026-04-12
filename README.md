@@ -751,8 +751,14 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 # MiniMax with subject reference
 /baoyu-imagine --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
 
-# Replicate
+# Replicate (default: google/nano-banana-2)
 /baoyu-imagine --prompt "A cat" --image cat.png --provider replicate
+
+# Replicate Seedream 4.5
+/baoyu-imagine --prompt "A studio portrait" --image portrait.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+
+# Replicate Wan 2.7 Image Pro
+/baoyu-imagine --prompt "A concept frame" --image frame.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # Jimeng (即梦)
 /baoyu-imagine --prompt "一只可爱的猫" --image cat.png --provider jimeng
@@ -781,8 +787,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `--size` | Size (e.g., `1024x1024`) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
 | `--imageSize` | `1K`, `2K`, or `4K` for Google/OpenRouter |
-| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0) |
-| `--n` | Number of images per request |
+| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 5.0/4.5/4.0) |
+| `--n` | Number of images per request (`replicate` currently requires `--n 1`) |
 | `--json` | JSON output |
 
 **Environment Variables** (see [Environment Configuration](#environment-configuration) for setup):
@@ -806,7 +812,7 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model | `image-01` |
-| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-pro` |
+| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
@@ -834,6 +840,9 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 - MiniMax reference images are sent as `subject_reference`; the current API is specialized toward character / portrait consistency.
 - Jimeng does not support reference images.
 - Seedream reference images are supported by Seedream 5.0 / 4.5 / 4.0, not Seedream 3.0.
+- Replicate defaults to `google/nano-banana-2`. `baoyu-imagine` only enables Replicate advanced options for `google/nano-banana*`, `bytedance/seedream-4.5`, `bytedance/seedream-5-lite`, `wan-video/wan-2.7-image`, and `wan-video/wan-2.7-image-pro`.
+- Replicate currently saves exactly one output image per request. `--n > 1` is blocked locally instead of silently dropping extra results.
+- Replicate model behavior is family-specific: nano-banana uses `--quality` / `--ar`, Seedream uses validated `--size` / `--ar`, and Wan uses validated `--size` (with `--ar` converted locally to a concrete size).
 
 **Provider Auto-Selection**:
 1. If `--provider` is specified → use it
@@ -1146,7 +1155,7 @@ MINIMAX_IMAGE_MODEL=image-01
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx
-REPLICATE_IMAGE_MODEL=google/nano-banana-pro
+REPLICATE_IMAGE_MODEL=google/nano-banana-2
 # REPLICATE_BASE_URL=https://api.replicate.com
 
 # Jimeng (即梦)

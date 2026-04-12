@@ -1,7 +1,7 @@
 ---
 name: baoyu-imagine
 description: AI image generation with OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, MiniMax, Jimeng, Seedream and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
-version: 1.56.4
+version: 1.56.5
 metadata:
   openclaw:
     homepage: https://github.com/JimLiu/baoyu-skills#baoyu-imagine
@@ -76,7 +76,7 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --quality 2k
 # From prompt files
 ${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
 
-# With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 4.0/4.5/5.0)
+# With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 4.0/4.5/5.0)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref source.png
 
 # With reference images (explicit provider/model)
@@ -112,11 +112,14 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A girl stands by the library window
 # MiniMax with custom size (documented for image-01)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic poster" --image out.jpg --provider minimax --model image-01 --size 1536x1024
 
-# Replicate (google/nano-banana-pro)
+# Replicate (default: google/nano-banana-2)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
 
-# Replicate with specific model
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate --model google/nano-banana
+# Replicate Seedream 4.5
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic portrait" --image out.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
+
+# Replicate Wan 2.7 Image Pro
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A concept frame" --image out.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
 # Batch mode with saved prompt files
 ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json
@@ -136,7 +139,7 @@ ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4 --json
       "promptFiles": ["prompts/hero.md"],
       "image": "out/hero.png",
       "provider": "replicate",
-      "model": "google/nano-banana-pro",
+      "model": "google/nano-banana-2",
       "ar": "16:9",
       "quality": "2k"
     },
@@ -167,8 +170,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `--size <WxH>` | Size (e.g., `1024x1024`) |
 | `--quality normal\|2k` | Quality preset (default: `2k`) |
 | `--imageSize 1K\|2K\|4K` | Image size for Google/OpenRouter (default: from quality) |
-| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate, MiniMax subject-reference, and Seedream 5.0/4.5/4.0. Not supported by Jimeng, Seedream 3.0, or removed SeedEdit 3.0 |
-| `--n <count>` | Number of images |
+| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, and Seedream 5.0/4.5/4.0. Not supported by Jimeng, Seedream 3.0, or removed SeedEdit 3.0 |
+| `--n <count>` | Number of images. Replicate currently supports only `--n 1` because this path saves exactly one output image |
 | `--json` | JSON output |
 
 ## Environment Variables
@@ -192,7 +195,7 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `GOOGLE_IMAGE_MODEL` | Google model override |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: `qwen-image-2.0-pro`) |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model override (default: `image-01`) |
-| `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-pro) |
+| `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-2) |
 | `JIMENG_IMAGE_MODEL` | Jimeng model override (default: jimeng_t2i_v40) |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model override (default: doubao-seedream-5-0-260128) |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint |
@@ -322,10 +325,33 @@ Notes:
 
 ### Replicate Models
 
-Supported model formats:
+Replicate support in `baoyu-imagine` is intentionally scoped to the model families that the tool can validate locally and save without dropping outputs:
 
-- `owner/name` (recommended for official models), e.g. `google/nano-banana-pro`
-- `owner/name:version` (community models by version), e.g. `stability-ai/sdxl:<version>`
+- `google/nano-banana*` (default: `google/nano-banana-2`)
+  - Supports prompt-only and reference-image generation
+  - Uses Replicate `aspect_ratio`, `resolution`, and `output_format`
+  - `--size <WxH>` is accepted only as a shorthand for a documented aspect ratio plus `1K` / `2K`
+- `bytedance/seedream-4.5`
+  - Supports prompt-only and reference-image generation
+  - Uses Replicate `size`, `aspect_ratio`, and `image_input`
+  - Local validation blocks unsupported `1K` requests before the API call
+- `bytedance/seedream-5-lite`
+  - Supports prompt-only and reference-image generation
+  - Uses Replicate `size`, `aspect_ratio`, and `image_input`
+  - Local validation currently accepts `2K` / `3K` only
+- `wan-video/wan-2.7-image`
+  - Supports prompt-only and reference-image generation
+  - Uses Replicate `size` and `images`
+  - Max output size is 2K
+- `wan-video/wan-2.7-image-pro`
+  - Supports prompt-only and reference-image generation
+  - Uses Replicate `size` and `images`
+  - 4K is allowed only for text-to-image; local validation blocks `4K + --ref`
+
+Guardrails:
+
+- Replicate currently supports only single-output save semantics in this tool. Keep `--n 1`.
+- If a Replicate model is outside the compatibility list above, `baoyu-imagine` only treats it as prompt-only and rejects advanced local options instead of guessing a nano-banana-style schema.
 
 Examples:
 
@@ -360,7 +386,7 @@ Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`
 - Google multimodal: uses `imageConfig.aspectRatio`
 - OpenAI: maps to closest supported size
 - OpenRouter: sends `imageGenerationOptions.aspect_ratio`; if only `--size <WxH>` is given, aspect ratio is inferred automatically
-- Replicate: passes `aspect_ratio` to model; when `--ref` is provided without `--ar`, defaults to `match_input_image`
+- Replicate: behavior is model-family-specific. `google/nano-banana*` uses `aspect_ratio`; `bytedance/seedream-*` uses documented Replicate aspect ratios; Wan 2.7 maps `--ar` to a concrete `size`
 - MiniMax: sends official `aspect_ratio` values directly; if `--size <WxH>` is given without `--ar`, `width` / `height` are sent for `image-01`
 
 ## Generation Mode

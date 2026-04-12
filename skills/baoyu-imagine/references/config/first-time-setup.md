@@ -56,7 +56,7 @@ options:
   - label: "MiniMax"
     description: "MiniMax image generation with subject-reference character workflows"
   - label: "Replicate"
-    description: "Community models - nano-banana-pro, flexible model selection"
+    description: "Curated Replicate image families - nano-banana-2, Seedream, and Wan image models"
 ```
 
 ### Question 2: Default Google Model
@@ -263,10 +263,14 @@ Notes for DashScope setup:
 header: "Replicate Model"
 question: "Choose a default Replicate image generation model?"
 options:
-  - label: "google/nano-banana-pro (Recommended)"
-    description: "Google's fast image model on Replicate"
-  - label: "google/nano-banana"
-    description: "Google's base image model on Replicate"
+  - label: "google/nano-banana-2 (Recommended)"
+    description: "Current default for general Replicate image generation in baoyu-imagine"
+  - label: "bytedance/seedream-4.5"
+    description: "Replicate Seedream 4.5 with validated local size/ref guardrails"
+  - label: "bytedance/seedream-5-lite"
+    description: "Replicate Seedream 5 Lite with validated local size/ref guardrails"
+  - label: "wan-video/wan-2.7-image-pro"
+    description: "Replicate Wan 2.7 Image Pro with 4K text-to-image support"
 ```
 
 ### MiniMax Model Selection
