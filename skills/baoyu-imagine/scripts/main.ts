@@ -165,6 +165,7 @@ export function parseArgs(argv: string[]): CliArgs {
     provider: null,
     model: null,
     aspectRatio: null,
+    aspectRatioSource: null,
     size: null,
     quality: null,
     imageSize: null,
@@ -272,6 +273,7 @@ export function parseArgs(argv: string[]): CliArgs {
       const v = argv[++i];
       if (!v) throw new Error("Missing value for --ar");
       out.aspectRatio = v;
+      out.aspectRatioSource = "cli";
       continue;
     }
 
@@ -544,12 +546,16 @@ export async function loadExtendConfig(
 }
 
 export function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
+  const aspectRatio = args.aspectRatio ?? extend.default_aspect_ratio ?? null;
   const imageSize = args.imageSize ?? extend.default_image_size ?? null;
   return {
     ...args,
     provider: args.provider ?? extend.default_provider ?? null,
     quality: args.quality ?? extend.default_quality ?? null,
-    aspectRatio: args.aspectRatio ?? extend.default_aspect_ratio ?? null,
+    aspectRatio,
+    aspectRatioSource:
+      args.aspectRatioSource ??
+      (args.aspectRatio !== null ? "cli" : (aspectRatio !== null ? "config" : null)),
     imageSize,
     imageSizeSource:
       args.imageSizeSource ??
@@ -880,6 +886,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
     provider: task.provider ?? baseArgs.provider ?? null,
     model: task.model ?? baseArgs.model ?? null,
     aspectRatio: task.ar ?? baseArgs.aspectRatio ?? null,
+    aspectRatioSource: task.ar != null ? "task" : (baseArgs.aspectRatioSource ?? null),
     size: task.size ?? baseArgs.size ?? null,
     quality: task.quality ?? baseArgs.quality ?? null,
     imageSize: task.imageSize ?? baseArgs.imageSize ?? null,

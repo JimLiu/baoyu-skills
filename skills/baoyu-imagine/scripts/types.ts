@@ -18,6 +18,7 @@ export type CliArgs = {
   provider: Provider | null;
   model: string | null;
   aspectRatio: string | null;
+  aspectRatioSource?: "cli" | "task" | "config" | null;
   size: string | null;
   quality: Quality | null;
   imageSize: string | null;

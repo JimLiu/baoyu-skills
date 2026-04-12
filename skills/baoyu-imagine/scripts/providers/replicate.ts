@@ -32,6 +32,8 @@ type PixelSize = {
   height: number;
 };
 
+type Seedream45Size = "2K" | "4K" | { width: number; height: number };
+
 export function getDefaultModel(): string {
   return process.env.REPLICATE_IMAGE_MODEL || DEFAULT_MODEL;
 }
@@ -194,7 +196,7 @@ function getNanoBananaResolution(args: CliArgs): "1K" | "2K" {
   return getQualityPreset(args) === "normal" ? "1K" : "2K";
 }
 
-function resolveSeedream45Size(args: CliArgs): "2K" | "4K" | string {
+function resolveSeedream45Size(args: CliArgs): Seedream45Size {
   if (args.size) {
     const upper = args.size.trim().toUpperCase();
     if (upper === "2K" || upper === "4K") {
@@ -208,7 +210,7 @@ function resolveSeedream45Size(args: CliArgs): "2K" | "4K" | string {
     if (parsed.width < 1024 || parsed.width > 4096 || parsed.height < 1024 || parsed.height > 4096) {
       throw new Error("Replicate Seedream 4.5 custom --size must keep width and height between 1024 and 4096.");
     }
-    return `${parsed.width}x${parsed.height}`;
+    return parsed;
   }
 
   return getQualityPreset(args) === "normal" ? "2K" : "4K";
@@ -317,10 +319,18 @@ function buildSeedreamInput(
   args: CliArgs,
   referenceImages: string[],
 ): Record<string, unknown> {
+  const size = family === "seedream45" ? resolveSeedream45Size(args) : resolveSeedream5LiteSize(args);
   const input: Record<string, unknown> = {
     prompt,
-    size: family === "seedream45" ? resolveSeedream45Size(args) : resolveSeedream5LiteSize(args),
   };
+
+  if (family === "seedream45" && typeof size === "object") {
+    input.size = "custom";
+    input.width = size.width;
+    input.height = size.height;
+  } else {
+    input.size = size;
+  }
 
   if (referenceImages.length > 0) {
     input.image_input = referenceImages;
@@ -417,7 +427,9 @@ export function validateArgs(model: string, args: CliArgs): void {
     return;
   }
 
-  if (args.referenceImages.length > 0 || args.aspectRatio || args.size) {
+  const hasExplicitAspectRatio = !!args.aspectRatio && args.aspectRatioSource !== "config";
+
+  if (args.referenceImages.length > 0 || hasExplicitAspectRatio || args.size) {
     throw new Error(
       `Replicate model ${model} is not in the baoyu-imagine compatibility list. Supported families: google/nano-banana*, bytedance/seedream-4.5, bytedance/seedream-5-lite, wan-video/wan-2.7-image, wan-video/wan-2.7-image-pro.`
     );

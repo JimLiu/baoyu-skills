@@ -28,6 +28,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     provider: null,
     model: null,
     aspectRatio: null,
+    aspectRatioSource: null,
     size: null,
     quality: null,
     imageSize: null,
@@ -98,6 +99,7 @@ test("parseArgs parses the main baoyu-imagine CLI flags", () => {
   assert.equal(args.imagePath, "out/hero");
   assert.equal(args.provider, "zai");
   assert.equal(args.quality, "2k");
+  assert.equal(args.aspectRatioSource, null);
   assert.equal(args.imageSize, "4K");
   assert.equal(args.imageSizeSource, "cli");
   assert.deepEqual(args.referenceImages, ["ref/one.png", "ref/two.jpg"]);
@@ -256,6 +258,7 @@ test("mergeConfig only fills values missing from CLI args", () => {
   assert.equal(merged.provider, "openai");
   assert.equal(merged.quality, "2k");
   assert.equal(merged.aspectRatio, "3:2");
+  assert.equal(merged.aspectRatioSource, "config");
   assert.equal(merged.imageSize, "4K");
   assert.equal(merged.imageSizeSource, "cli");
 });

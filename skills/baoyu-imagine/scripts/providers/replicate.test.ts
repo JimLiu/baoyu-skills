@@ -19,6 +19,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     provider: null,
     model: null,
     aspectRatio: null,
+    aspectRatioSource: null,
     size: null,
     quality: null,
     imageSize: null,
@@ -121,6 +122,21 @@ test("Replicate Seedream and Wan inputs use family-specific request fields", () 
       size: "4K",
       image_input: ["data:image/png;base64,AAAA"],
       aspect_ratio: "match_input_image",
+    },
+  );
+
+  assert.deepEqual(
+    buildInput(
+      "bytedance/seedream-4.5",
+      "A cinematic portrait",
+      makeArgs({ size: "1536x1024" }),
+      [],
+    ),
+    {
+      prompt: "A cinematic portrait",
+      size: "custom",
+      width: 1536,
+      height: 1024,
     },
   );
 
@@ -235,6 +251,22 @@ test("Replicate validateArgs blocks misleading multi-output and unsupported fami
         makeArgs({ imageSize: "2K", imageSizeSource: "cli" }),
       ),
     /do not use --imageSize/,
+  );
+
+  assert.doesNotThrow(() =>
+    validateArgs(
+      "stability-ai/sdxl",
+      makeArgs({ aspectRatio: "16:9", aspectRatioSource: "config" }),
+    ),
+  );
+
+  assert.throws(
+    () =>
+      validateArgs(
+        "stability-ai/sdxl",
+        makeArgs({ aspectRatio: "16:9", aspectRatioSource: "cli" }),
+      ),
+    /compatibility list/,
   );
 
   assert.doesNotThrow(() =>
