@@ -22,6 +22,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     size: null,
     quality: null,
     imageSize: null,
+    imageSizeSource: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -218,6 +219,22 @@ test("Replicate validateArgs blocks misleading multi-output and unsupported fami
         makeArgs({ aspectRatio: "16:9" }),
       ),
     /compatibility list/,
+  );
+
+  assert.doesNotThrow(() =>
+    validateArgs(
+      "google/nano-banana-2",
+      makeArgs({ imageSize: "2K", imageSizeSource: "config" }),
+    ),
+  );
+
+  assert.throws(
+    () =>
+      validateArgs(
+        "google/nano-banana-2",
+        makeArgs({ imageSize: "2K", imageSizeSource: "cli" }),
+      ),
+    /do not use --imageSize/,
   );
 
   assert.doesNotThrow(() =>

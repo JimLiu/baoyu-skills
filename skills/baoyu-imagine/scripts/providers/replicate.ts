@@ -361,7 +361,7 @@ export function validateArgs(model: string, args: CliArgs): void {
     throw new Error("Replicate integration currently supports exactly one output image per request. Remove --n or use --n 1.");
   }
 
-  if (args.imageSize) {
+  if (args.imageSize && args.imageSizeSource !== "config") {
     throw new Error("Replicate models in baoyu-imagine do not use --imageSize. Use --quality, --ar, or --size instead.");
   }
 

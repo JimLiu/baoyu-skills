@@ -53,6 +53,8 @@ options:
     description: "Router for Gemini/FLUX/OpenAI-compatible image models"
   - label: "DashScope"
     description: "Alibaba Cloud - Qwen-Image, strong Chinese/English text rendering"
+  - label: "Z.AI"
+    description: "GLM-image, strong poster and text-heavy image generation"
   - label: "MiniMax"
     description: "MiniMax image generation with subject-reference character workflows"
   - label: "Replicate"
@@ -119,6 +121,20 @@ options:
     description: "Faster variant, use aspect ratio instead of custom size"
 ```
 
+### Question 2e: Default Z.AI Model
+
+Only show if user selected Z.AI.
+
+```yaml
+header: "Z.AI Model"
+question: "Default Z.AI image generation model?"
+options:
+  - label: "glm-image (Recommended)"
+    description: "Best default for posters, diagrams, and text-heavy images"
+  - label: "cogview-4-250304"
+    description: "Legacy Z.AI image model on the same endpoint"
+```
+
 ### Question 3: Default Quality
 
 ```yaml
@@ -165,6 +181,7 @@ default_model:
   azure: [selected azure deployment or null]
   openrouter: [selected openrouter model or null]
   dashscope: null
+  zai: [selected Z.AI model or null]
   minimax: [selected minimax model or null]
   replicate: null
 ---
@@ -257,6 +274,24 @@ Notes for DashScope setup:
 - `qwen-image-max` / `qwen-image-plus` / `qwen-image` only support five fixed sizes: `1664*928`, `1472*1104`, `1328*1328`, `1104*1472`, `928*1664`.
 - In `baoyu-imagine`, `quality` is a compatibility preset. It is not a native DashScope parameter.
 
+### Z.AI Model Selection
+
+```yaml
+header: "Z.AI Model"
+question: "Choose a default Z.AI image generation model?"
+options:
+  - label: "glm-image (Recommended)"
+    description: "Current flagship image model with better text rendering and poster layouts"
+  - label: "cogview-4-250304"
+    description: "Legacy model on the sync image endpoint"
+```
+
+Notes for Z.AI setup:
+
+- Prefer `glm-image` for posters, diagrams, and Chinese/English text-heavy layouts.
+- In `baoyu-imagine`, Z.AI currently exposes text-to-image only; reference images are not wired for this provider.
+- The sync Z.AI image API returns a downloadable image URL, which the runtime saves locally after download.
+
 ### Replicate Model Selection
 
 ```yaml
@@ -306,6 +341,7 @@ default_model:
   azure: [value or null]
   openrouter: [value or null]
   dashscope: [value or null]
+  zai: [value or null]
   minimax: [value or null]
   replicate: [value or null]
 ```

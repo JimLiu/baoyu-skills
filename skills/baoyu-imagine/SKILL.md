@@ -1,7 +1,7 @@
 ---
 name: baoyu-imagine
-description: AI image generation with OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, MiniMax, Jimeng, Seedream and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
-version: 1.56.5
+description: AI image generation with OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, Z.AI GLM-Image, MiniMax, Jimeng, Seedream and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
+version: 1.57.0
 metadata:
   openclaw:
     homepage: https://github.com/JimLiu/baoyu-skills#baoyu-imagine
@@ -13,7 +13,7 @@ metadata:
 
 # Image Generation (AI SDK)
 
-Official API-based image generation. Supports OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), MiniMax, Jimeng (即梦), Seedream (豆包) and Replicate providers.
+Official API-based image generation. Supports OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包) and Replicate providers.
 
 ## Script Directory
 
@@ -103,6 +103,12 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "为咖啡品牌设计一张 21:9 �
 # DashScope legacy Qwen fixed-size model
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "一张电影感海报" --image out.png --provider dashscope --model qwen-image-max --size 1664x928
 
+# Z.AI GLM-image
+${BUN_X} {baseDir}/scripts/main.ts --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+
+# Z.AI GLM-image with explicit custom size
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A science illustration with labels" --image out.png --provider zai --model glm-image --size 1472x1088
+
 # MiniMax
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
@@ -164,8 +170,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `--image <path>` | Output image path (required in single-image mode) |
 | `--batchfile <path>` | JSON batch file for multi-image generation |
 | `--jobs <count>` | Worker count for batch mode (default: auto, max from config, built-in default 10) |
-| `--provider google\|openai\|azure\|openrouter\|dashscope\|minimax\|jimeng\|seedream\|replicate` | Force provider (default: auto-detect) |
-| `--model <id>`, `-m` | Model ID (Google: `gemini-3-pro-image-preview`; OpenAI: `gpt-image-1.5`; Azure: deployment name such as `gpt-image-1.5` or `image-prod`; OpenRouter: `google/gemini-3.1-flash-image-preview`; DashScope: `qwen-image-2.0-pro`; MiniMax: `image-01`) |
+| `--provider google\|openai\|azure\|openrouter\|dashscope\|zai\|minimax\|jimeng\|seedream\|replicate` | Force provider (default: auto-detect) |
+| `--model <id>`, `-m` | Model ID (Google: `gemini-3-pro-image-preview`; OpenAI: `gpt-image-1.5`; Azure: deployment name such as `gpt-image-1.5` or `image-prod`; OpenRouter: `google/gemini-3.1-flash-image-preview`; DashScope: `qwen-image-2.0-pro`; Z.AI: `glm-image`; MiniMax: `image-01`) |
 | `--ar <ratio>` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size <WxH>` | Size (e.g., `1024x1024`) |
 | `--quality normal\|2k` | Quality preset (default: `2k`) |
@@ -183,6 +189,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `OPENROUTER_API_KEY` | OpenRouter API key |
 | `GOOGLE_API_KEY` | Google API key |
 | `DASHSCOPE_API_KEY` | DashScope API key (阿里云) |
+| `ZAI_API_KEY` | Z.AI API key |
+| `BIGMODEL_API_KEY` | Backward-compatible alias for Z.AI API key |
 | `MINIMAX_API_KEY` | MiniMax API key |
 | `REPLICATE_API_TOKEN` | Replicate API token |
 | `JIMENG_ACCESS_KEY_ID` | Jimeng (即梦) Volcengine access key |
@@ -194,6 +202,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model override (default: `google/gemini-3.1-flash-image-preview`) |
 | `GOOGLE_IMAGE_MODEL` | Google model override |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: `qwen-image-2.0-pro`) |
+| `ZAI_IMAGE_MODEL` | Z.AI model override (default: `glm-image`) |
+| `BIGMODEL_IMAGE_MODEL` | Backward-compatible alias for Z.AI model override |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model override (default: `image-01`) |
 | `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-2) |
 | `JIMENG_IMAGE_MODEL` | Jimeng model override (default: jimeng_t2i_v40) |
@@ -206,6 +216,8 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution |
 | `GOOGLE_BASE_URL` | Custom Google endpoint |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint |
+| `ZAI_BASE_URL` | Custom Z.AI endpoint (default: `https://api.z.ai/api/paas/v4`) |
+| `BIGMODEL_BASE_URL` | Backward-compatible alias for Z.AI endpoint |
 | `MINIMAX_BASE_URL` | Custom MiniMax endpoint (default: `https://api.minimax.io`) |
 | `REPLICATE_BASE_URL` | Custom Replicate endpoint |
 | `JIMENG_BASE_URL` | Custom Jimeng endpoint (default: `https://visual.volcengineapi.com`) |
@@ -279,6 +291,32 @@ Official references:
 - [Qwen-Image API](https://help.aliyun.com/zh/model-studio/qwen-image-api)
 - [Text-to-image guide](https://help.aliyun.com/zh/model-studio/text-to-image)
 - [Qwen-Image Edit API](https://help.aliyun.com/zh/model-studio/qwen-image-edit-api)
+
+### Z.AI Models
+
+Use `--model glm-image` or set `default_model.zai` / `ZAI_IMAGE_MODEL` when the user wants GLM-image output.
+
+Official Z.AI image model options currently documented in the sync image API:
+
+- `glm-image` (recommended default)
+  - Text-to-image only in `baoyu-imagine`
+  - Native `quality` options are `hd` and `standard`; this skill maps `2k -> hd` and `normal -> standard`
+  - Recommended sizes: `1280x1280`, `1568x1056`, `1056x1568`, `1472x1088`, `1088x1472`, `1728x960`, `960x1728`
+  - Custom `--size` requires width and height between `1024` and `2048`, divisible by `32`, with total pixels <= `2^22`
+- `cogview-4-250304`
+  - Legacy Z.AI image model family exposed by the same endpoint
+  - Custom `--size` requires width and height between `512` and `2048`, divisible by `16`, with total pixels <= `2^21`
+
+Notes:
+
+- The official sync API returns a temporary image URL; `baoyu-imagine` downloads that URL and writes the image locally
+- `--ref` is not supported for Z.AI in this skill yet
+- The sync API currently returns a single image, so `--n > 1` is rejected
+
+Official references:
+
+- [GLM-Image Guide](https://docs.z.ai/guides/image/glm-image)
+- [Generate Image API](https://docs.z.ai/api-reference/image/generate-image)
 
 ### MiniMax Models
 
@@ -368,7 +406,7 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider r
 1. `--ref` provided + no `--provider` → auto-select Google first, then OpenAI, then Azure, then OpenRouter, then Replicate, then Seedream, then MiniMax (MiniMax subject reference is more specialized toward character/portrait consistency)
 2. `--provider` specified → use it (if `--ref`, must be `google`, `openai`, `azure`, `openrouter`, `replicate`, `seedream`, or `minimax`)
 3. Only one API key available → use that provider
-4. Multiple available → default to Google
+4. Multiple available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
 
 ## Quality Presets
 

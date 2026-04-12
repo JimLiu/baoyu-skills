@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.100.0 - 2026-04-12
+
+### Features
+- `baoyu-imagine`: add Z.AI GLM-Image provider — supports `glm-image` and `cogview-4-250304` models via the Z.AI sync image API; configure with `ZAI_API_KEY` (or `BIGMODEL_API_KEY` for backward compatibility)
+
 ## 1.99.1 - 2026-04-11
 
 ### Fixes

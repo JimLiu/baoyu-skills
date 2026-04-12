@@ -58,6 +58,7 @@ const DEFAULT_PROVIDER_RATE_LIMITS: Record<Provider, ProviderRateLimit> = {
   openai: { concurrency: 3, startIntervalMs: 1100 },
   openrouter: { concurrency: 3, startIntervalMs: 1100 },
   dashscope: { concurrency: 3, startIntervalMs: 1100 },
+  zai: { concurrency: 3, startIntervalMs: 1100 },
   minimax: { concurrency: 3, startIntervalMs: 1100 },
   jimeng: { concurrency: 3, startIntervalMs: 1100 },
   seedream: { concurrency: 3, startIntervalMs: 1100 },
@@ -76,7 +77,7 @@ Options:
   --image <path>            Output image path (required in single-image mode)
   --batchfile <path>        JSON batch file for multi-image generation
   --jobs <count>            Worker count for batch mode (default: auto, max from config, built-in default 10)
-  --provider google|openai|openrouter|dashscope|minimax|replicate|jimeng|seedream|azure  Force provider (auto-detect by default)
+  --provider google|openai|openrouter|dashscope|zai|minimax|replicate|jimeng|seedream|azure  Force provider (auto-detect by default)
   -m, --model <id>          Model ID
   --ar <ratio>              Aspect ratio (e.g., 16:9, 1:1, 4:3)
   --size <WxH>              Size (e.g., 1024x1024)
@@ -114,6 +115,8 @@ Environment variables:
   GOOGLE_API_KEY            Google API key
   GEMINI_API_KEY            Gemini API key (alias for GOOGLE_API_KEY)
   DASHSCOPE_API_KEY         DashScope API key
+  ZAI_API_KEY               Z.AI API key
+  BIGMODEL_API_KEY          Backward-compatible alias for Z.AI API key
   MINIMAX_API_KEY           MiniMax API key
   REPLICATE_API_TOKEN       Replicate API token
   JIMENG_ACCESS_KEY_ID      Jimeng Access Key ID
@@ -123,6 +126,8 @@ Environment variables:
   OPENROUTER_IMAGE_MODEL    Default OpenRouter model (google/gemini-3.1-flash-image-preview)
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
   DASHSCOPE_IMAGE_MODEL     Default DashScope model (qwen-image-2.0-pro)
+  ZAI_IMAGE_MODEL           Default Z.AI model (glm-image)
+  BIGMODEL_IMAGE_MODEL      Backward-compatible alias for Z.AI model (glm-image)
   MINIMAX_IMAGE_MODEL       Default MiniMax model (image-01)
   REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-2)
   JIMENG_IMAGE_MODEL        Default Jimeng model (jimeng_t2i_v40)
@@ -134,6 +139,8 @@ Environment variables:
   OPENROUTER_TITLE          Optional app name for OpenRouter attribution
   GOOGLE_BASE_URL           Custom Google endpoint
   DASHSCOPE_BASE_URL        Custom DashScope endpoint
+  ZAI_BASE_URL              Custom Z.AI endpoint
+  BIGMODEL_BASE_URL         Backward-compatible alias for Z.AI endpoint
   MINIMAX_BASE_URL          Custom MiniMax endpoint
   REPLICATE_BASE_URL        Custom Replicate endpoint
   JIMENG_BASE_URL           Custom Jimeng endpoint
@@ -161,6 +168,7 @@ export function parseArgs(argv: string[]): CliArgs {
     size: null,
     quality: null,
     imageSize: null,
+    imageSizeSource: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -240,6 +248,7 @@ export function parseArgs(argv: string[]): CliArgs {
         v !== "openai" &&
         v !== "openrouter" &&
         v !== "dashscope" &&
+        v !== "zai" &&
         v !== "minimax" &&
         v !== "replicate" &&
         v !== "jimeng" &&
@@ -284,6 +293,7 @@ export function parseArgs(argv: string[]): CliArgs {
       const v = argv[++i]?.toUpperCase();
       if (v !== "1K" && v !== "2K" && v !== "4K") throw new Error(`Invalid imageSize: ${v}`);
       out.imageSize = v;
+      out.imageSizeSource = "cli";
       continue;
     }
 
@@ -396,6 +406,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           openai: null,
           openrouter: null,
           dashscope: null,
+          zai: null,
           minimax: null,
           replicate: null,
           jimeng: null,
@@ -424,6 +435,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           key === "openai" ||
           key === "openrouter" ||
           key === "dashscope" ||
+          key === "zai" ||
           key === "minimax" ||
           key === "replicate" ||
           key === "jimeng" ||
@@ -442,6 +454,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           key === "openai" ||
           key === "openrouter" ||
           key === "dashscope" ||
+          key === "zai" ||
           key === "minimax" ||
           key === "replicate" ||
           key === "jimeng" ||
@@ -531,12 +544,16 @@ export async function loadExtendConfig(
 }
 
 export function mergeConfig(args: CliArgs, extend: Partial<ExtendConfig>): CliArgs {
+  const imageSize = args.imageSize ?? extend.default_image_size ?? null;
   return {
     ...args,
     provider: args.provider ?? extend.default_provider ?? null,
     quality: args.quality ?? extend.default_quality ?? null,
     aspectRatio: args.aspectRatio ?? extend.default_aspect_ratio ?? null,
-    imageSize: args.imageSize ?? extend.default_image_size ?? null,
+    imageSize,
+    imageSizeSource:
+      args.imageSizeSource ??
+      (args.imageSize !== null ? "cli" : (imageSize !== null ? "config" : null)),
   };
 }
 
@@ -572,13 +589,14 @@ export function getConfiguredProviderRateLimits(
     openai: { ...DEFAULT_PROVIDER_RATE_LIMITS.openai },
     openrouter: { ...DEFAULT_PROVIDER_RATE_LIMITS.openrouter },
     dashscope: { ...DEFAULT_PROVIDER_RATE_LIMITS.dashscope },
+    zai: { ...DEFAULT_PROVIDER_RATE_LIMITS.zai },
     minimax: { ...DEFAULT_PROVIDER_RATE_LIMITS.minimax },
     jimeng: { ...DEFAULT_PROVIDER_RATE_LIMITS.jimeng },
     seedream: { ...DEFAULT_PROVIDER_RATE_LIMITS.seedream },
     azure: { ...DEFAULT_PROVIDER_RATE_LIMITS.azure },
   };
 
-  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "minimax", "jimeng", "seedream", "azure"] as Provider[]) {
+  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure"] as Provider[]) {
     const envPrefix = `BAOYU_IMAGE_GEN_${provider.toUpperCase()}`;
     const extendLimit = extendConfig.batch?.provider_limits?.[provider];
     configured[provider] = {
@@ -630,6 +648,7 @@ function inferProviderFromModel(model: string | null): Provider | null {
   const normalized = model.trim();
   if (normalized.includes("seedream") || normalized.includes("seededit")) return "seedream";
   if (normalized === "image-01" || normalized === "image-01-live") return "minimax";
+  if (normalized === "glm-image" || normalized === "cogview-4-250304") return "zai";
   return null;
 }
 
@@ -657,6 +676,7 @@ export function detectProvider(args: CliArgs): Provider {
   const hasOpenai = !!process.env.OPENAI_API_KEY;
   const hasOpenrouter = !!process.env.OPENROUTER_API_KEY;
   const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
+  const hasZai = !!(process.env.ZAI_API_KEY || process.env.BIGMODEL_API_KEY);
   const hasMinimax = !!process.env.MINIMAX_API_KEY;
   const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
   const hasJimeng = !!(process.env.JIMENG_ACCESS_KEY_ID && process.env.JIMENG_SECRET_ACCESS_KEY);
@@ -675,6 +695,13 @@ export function detectProvider(args: CliArgs): Provider {
       throw new Error("Model looks like a MiniMax image model, but MINIMAX_API_KEY is not set.");
     }
     return "minimax";
+  }
+
+  if (modelProvider === "zai") {
+    if (!hasZai) {
+      throw new Error("Model looks like a Z.AI image model, but ZAI_API_KEY is not set.");
+    }
+    return "zai";
   }
 
   if (args.referenceImages.length > 0) {
@@ -696,6 +723,7 @@ export function detectProvider(args: CliArgs): Provider {
     hasAzure && "azure",
     hasOpenrouter && "openrouter",
     hasDashscope && "dashscope",
+    hasZai && "zai",
     hasMinimax && "minimax",
     hasReplicate && "replicate",
     hasJimeng && "jimeng",
@@ -706,7 +734,7 @@ export function detectProvider(args: CliArgs): Provider {
   if (available.length > 1) return available[0]!;
 
   throw new Error(
-    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, DASHSCOPE_API_KEY, MINIMAX_API_KEY, REPLICATE_API_TOKEN, JIMENG keys, or ARK_API_KEY.\n" +
+    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, DASHSCOPE_API_KEY, ZAI_API_KEY, MINIMAX_API_KEY, REPLICATE_API_TOKEN, JIMENG keys, or ARK_API_KEY.\n" +
       "Create ~/.baoyu-skills/.env or <cwd>/.baoyu-skills/.env with your keys."
   );
 }
@@ -738,6 +766,7 @@ export function isRetryableGenerationError(error: unknown): boolean {
     "API error (403)",
     "API error (404)",
     "temporarily disabled",
+    "supports saving exactly one image",
   ];
   return !nonRetryableMarkers.some((marker) => msg.includes(marker));
 }
@@ -745,6 +774,7 @@ export function isRetryableGenerationError(error: unknown): boolean {
 async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
   if (provider === "google") return (await import("./providers/google")) as ProviderModule;
   if (provider === "dashscope") return (await import("./providers/dashscope")) as ProviderModule;
+  if (provider === "zai") return (await import("./providers/zai")) as ProviderModule;
   if (provider === "minimax") return (await import("./providers/minimax")) as ProviderModule;
   if (provider === "replicate") return (await import("./providers/replicate")) as ProviderModule;
   if (provider === "openrouter") return (await import("./providers/openrouter")) as ProviderModule;
@@ -776,6 +806,7 @@ function getModelForProvider(
       return extendConfig.default_model.openrouter;
     }
     if (provider === "dashscope" && extendConfig.default_model.dashscope) return extendConfig.default_model.dashscope;
+    if (provider === "zai" && extendConfig.default_model.zai) return extendConfig.default_model.zai;
     if (provider === "minimax" && extendConfig.default_model.minimax) return extendConfig.default_model.minimax;
     if (provider === "replicate" && extendConfig.default_model.replicate) return extendConfig.default_model.replicate;
     if (provider === "jimeng" && extendConfig.default_model.jimeng) return extendConfig.default_model.jimeng;
@@ -852,6 +883,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
     size: task.size ?? baseArgs.size ?? null,
     quality: task.quality ?? baseArgs.quality ?? null,
     imageSize: task.imageSize ?? baseArgs.imageSize ?? null,
+    imageSizeSource: task.imageSize != null ? "task" : (baseArgs.imageSizeSource ?? null),
     referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchPath(batchDir, filePath)) : [],
     n: task.n ?? baseArgs.n,
     batchFile: null,
@@ -1000,7 +1032,7 @@ async function runBatchTasks(
   const acquireProvider = createProviderGate(providerRateLimits);
   const workerCount = getWorkerCount(tasks.length, jobs, maxWorkers);
   console.error(`Batch mode: ${tasks.length} tasks, ${workerCount} workers, parallel mode enabled.`);
-  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "jimeng", "seedream", "azure"] as Provider[]) {
+  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure"] as Provider[]) {
     const limit = providerRateLimits[provider];
     console.error(`- ${provider}: concurrency=${limit.concurrency}, startIntervalMs=${limit.startIntervalMs}`);
   }

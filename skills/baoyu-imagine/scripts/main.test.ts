@@ -31,6 +31,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     size: null,
     quality: null,
     imageSize: null,
+    imageSizeSource: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -78,7 +79,7 @@ test("parseArgs parses the main baoyu-imagine CLI flags", () => {
     "--image",
     "out/hero",
     "--provider",
-    "openai",
+    "zai",
     "--quality",
     "2k",
     "--imageSize",
@@ -95,9 +96,10 @@ test("parseArgs parses the main baoyu-imagine CLI flags", () => {
 
   assert.deepEqual(args.promptFiles, ["prompts/system.md", "prompts/content.md"]);
   assert.equal(args.imagePath, "out/hero");
-  assert.equal(args.provider, "openai");
+  assert.equal(args.provider, "zai");
   assert.equal(args.quality, "2k");
   assert.equal(args.imageSize, "4K");
+  assert.equal(args.imageSizeSource, "cli");
   assert.deepEqual(args.referenceImages, ["ref/one.png", "ref/two.jpg"]);
   assert.equal(args.n, 3);
   assert.equal(args.jobs, 5);
@@ -124,6 +126,7 @@ default_image_size: 2K
 default_model:
   google: gemini-3-pro-image-preview
   openai: gpt-image-1.5
+  zai: glm-image
   azure: image-prod
   minimax: image-01
 batch:
@@ -134,6 +137,9 @@ batch:
       start_interval_ms: 900
     openai:
       concurrency: 4
+    zai:
+      concurrency: 2
+      start_interval_ms: 1000
     minimax:
       concurrency: 2
       start_interval_ms: 1400
@@ -151,6 +157,7 @@ batch:
   assert.equal(config.default_image_size, "2K");
   assert.equal(config.default_model?.google, "gemini-3-pro-image-preview");
   assert.equal(config.default_model?.openai, "gpt-image-1.5");
+  assert.equal(config.default_model?.zai, "glm-image");
   assert.equal(config.default_model?.azure, "image-prod");
   assert.equal(config.default_model?.minimax, "image-01");
   assert.equal(config.batch?.max_workers, 8);
@@ -160,6 +167,10 @@ batch:
   });
   assert.deepEqual(config.batch?.provider_limits?.openai, {
     concurrency: 4,
+  });
+  assert.deepEqual(config.batch?.provider_limits?.zai, {
+    concurrency: 2,
+    start_interval_ms: 1000,
   });
   assert.deepEqual(config.batch?.provider_limits?.minimax, {
     concurrency: 2,
@@ -246,6 +257,19 @@ test("mergeConfig only fills values missing from CLI args", () => {
   assert.equal(merged.quality, "2k");
   assert.equal(merged.aspectRatio, "3:2");
   assert.equal(merged.imageSize, "4K");
+  assert.equal(merged.imageSizeSource, "cli");
+});
+
+test("mergeConfig tags inherited imageSize defaults so providers can ignore incompatible config", () => {
+  const merged = mergeConfig(
+    makeArgs(),
+    {
+      default_image_size: "2K",
+    } satisfies Partial<ExtendConfig>,
+  );
+
+  assert.equal(merged.imageSize, "2K");
+  assert.equal(merged.imageSizeSource, "config");
 });
 
 test("detectProvider rejects non-ref-capable providers and prefers Google first when multiple keys exist", (t) => {
@@ -316,6 +340,27 @@ test("detectProvider selects Azure when only Azure credentials are configured", 
   );
 });
 
+test("detectProvider selects Z.AI when credentials are present or the model id matches", (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: "zai-key",
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+  });
+
+  assert.equal(detectProvider(makeArgs()), "zai");
+  assert.equal(detectProvider(makeArgs({ model: "glm-image" })), "zai");
+});
+
 test("detectProvider infers Seedream from model id and allows Seedream reference-image workflows", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
@@ -375,6 +420,7 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
     BAOYU_IMAGE_GEN_MAX_WORKERS: "12",
     BAOYU_IMAGE_GEN_GOOGLE_CONCURRENCY: "5",
     BAOYU_IMAGE_GEN_GOOGLE_START_INTERVAL_MS: "450",
+    BAOYU_IMAGE_GEN_ZAI_CONCURRENCY: "4",
   });
 
   const extendConfig: Partial<ExtendConfig> = {
@@ -384,6 +430,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
         google: {
           concurrency: 2,
           start_interval_ms: 900,
+        },
+        zai: {
+          concurrency: 1,
+          start_interval_ms: 1200,
         },
         minimax: {
           concurrency: 1,
@@ -397,6 +447,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
   assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).google, {
     concurrency: 5,
     startIntervalMs: 450,
+  });
+  assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).zai, {
+    concurrency: 4,
+    startIntervalMs: 1200,
   });
   assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).minimax, {
     concurrency: 1,
@@ -464,5 +518,11 @@ test("path normalization, worker count, and retry classification follow expected
   assert.equal(getWorkerCount(5, 0, 4), 1);
 
   assert.equal(isRetryableGenerationError(new Error("API error (401): denied")), false);
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("Replicate returned 2 outputs, but baoyu-imagine currently supports saving exactly one image per request."),
+    ),
+    false,
+  );
   assert.equal(isRetryableGenerationError(new Error("socket hang up")), true);
 });

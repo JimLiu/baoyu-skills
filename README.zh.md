@@ -745,6 +745,9 @@ AI 驱动的生成后端。
 # DashScope 自定义尺寸
 /baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
 
+# Z.AI GLM-Image
+/baoyu-imagine --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+
 # MiniMax
 /baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
@@ -781,8 +784,8 @@ AI 驱动的生成后端。
 | `--image` | 输出图片路径（必需） |
 | `--batchfile` | 多图批量生成的 JSON 文件 |
 | `--jobs` | 批量模式的并发 worker 数 |
-| `--provider` | `google`、`openai`、`azure`、`openrouter`、`dashscope`、`minimax`、`jimeng`、`seedream` 或 `replicate` |
-| `--model`, `-m` | 模型 ID 或部署名。Azure 使用部署名；OpenRouter 使用完整模型 ID；MiniMax 使用 `image-01` / `image-01-live` |
+| `--provider` | `google`、`openai`、`azure`、`openrouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream` 或 `replicate` |
+| `--model`, `-m` | 模型 ID 或部署名。Azure 使用部署名；OpenRouter 使用完整模型 ID；Z.AI 使用 `glm-image`；MiniMax 使用 `image-01` / `image-01-live` |
 | `--ar` | 宽高比（如 `16:9`、`1:1`、`4:3`） |
 | `--size` | 尺寸（如 `1024x1024`） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
@@ -800,6 +803,8 @@ AI 驱动的生成后端。
 | `GOOGLE_API_KEY` | Google API 密钥 | - |
 | `GEMINI_API_KEY` | `GOOGLE_API_KEY` 的别名 | - |
 | `DASHSCOPE_API_KEY` | DashScope API 密钥（阿里云） | - |
+| `ZAI_API_KEY` | Z.AI API 密钥 | - |
+| `BIGMODEL_API_KEY` | Z.AI API 密钥向后兼容别名 | - |
 | `MINIMAX_API_KEY` | MiniMax API 密钥 | - |
 | `REPLICATE_API_TOKEN` | Replicate API Token | - |
 | `JIMENG_ACCESS_KEY_ID` | 即梦火山引擎 Access Key | - |
@@ -811,6 +816,8 @@ AI 驱动的生成后端。
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
+| `ZAI_IMAGE_MODEL` | Z.AI 模型 | `glm-image` |
+| `BIGMODEL_IMAGE_MODEL` | Z.AI 模型向后兼容别名 | `glm-image` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax 模型 | `image-01` |
 | `REPLICATE_IMAGE_MODEL` | Replicate 模型 | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | 即梦模型 | `jimeng_t2i_v40` |
@@ -824,6 +831,8 @@ AI 驱动的生成后端。
 | `OPENROUTER_TITLE` | OpenRouter 归因用应用名 | - |
 | `GOOGLE_BASE_URL` | 自定义 Google 端点 | - |
 | `DASHSCOPE_BASE_URL` | 自定义 DashScope 端点 | - |
+| `ZAI_BASE_URL` | 自定义 Z.AI 端点 | `https://api.z.ai/api/paas/v4` |
+| `BIGMODEL_BASE_URL` | Z.AI 端点向后兼容别名 | - |
 | `MINIMAX_BASE_URL` | 自定义 MiniMax 端点 | `https://api.minimax.io` |
 | `REPLICATE_BASE_URL` | 自定义 Replicate 端点 | - |
 | `JIMENG_BASE_URL` | 自定义即梦端点 | `https://visual.volcengineapi.com` |
@@ -836,6 +845,7 @@ AI 驱动的生成后端。
 **Provider 说明**：
 - Azure OpenAI：`--model` 表示 Azure deployment name，不是底层模型家族名。
 - DashScope：`qwen-image-2.0-pro` 是自定义 `--size`、`21:9` 和中英文排版的推荐默认模型。
+- Z.AI：`glm-image` 适合海报、图表和中英文排版密集的图片生成，暂不支持参考图。
 - MiniMax：`image-01` 支持官方文档里的自定义 `width` / `height`；`image-01-live` 更偏低延迟，适合配合 `--ar` 使用。
 - MiniMax 参考图会走 `subject_reference`，当前能力更偏角色 / 人像一致性。
 - 即梦不支持参考图。
@@ -848,7 +858,7 @@ AI 驱动的生成后端。
 1. 如果指定了 `--provider` → 使用指定的
 2. 如果传了 `--ref` 且未指定 provider → 依次尝试 Google、OpenAI、Azure、OpenRouter、Replicate、Seedream，最后是 MiniMax
 3. 如果只有一个 API 密钥 → 使用对应服务商
-4. 如果多个可用 → 默认使用 Google
+4. 如果多个可用 → 默认使用 Google，然后依次为 OpenAI、Azure、OpenRouter、DashScope、Z.AI、MiniMax、Replicate、即梦、豆包
 
 #### baoyu-danger-gemini-web
 
@@ -1147,6 +1157,11 @@ GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
 DASHSCOPE_API_KEY=sk-xxx
 DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
 # DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
+
+# Z.AI
+ZAI_API_KEY=xxx
+ZAI_IMAGE_MODEL=glm-image
+# ZAI_BASE_URL=https://api.z.ai/api/paas/v4
 
 # MiniMax
 MINIMAX_API_KEY=xxx

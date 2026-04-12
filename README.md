@@ -745,6 +745,9 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 # DashScope with custom size
 /baoyu-imagine --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image banner.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
 
+# Z.AI GLM-Image
+/baoyu-imagine --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
+
 # MiniMax
 /baoyu-imagine --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
 
@@ -781,8 +784,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `--image` | Output image path (required) |
 | `--batchfile` | JSON batch file for multi-image generation |
 | `--jobs` | Worker count for batch mode |
-| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `minimax`, `jimeng`, `seedream`, or `replicate` |
-| `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; MiniMax uses `image-01` / `image-01-live` |
+| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, or `replicate` |
+| `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; Z.AI uses `glm-image`; MiniMax uses `image-01` / `image-01-live` |
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
@@ -800,6 +803,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `GOOGLE_API_KEY` | Google API key | - |
 | `GEMINI_API_KEY` | Alias for `GOOGLE_API_KEY` | - |
 | `DASHSCOPE_API_KEY` | DashScope API key (Aliyun) | - |
+| `ZAI_API_KEY` | Z.AI API key | - |
+| `BIGMODEL_API_KEY` | Backward-compatible alias for Z.AI API key | - |
 | `MINIMAX_API_KEY` | MiniMax API key | - |
 | `REPLICATE_API_TOKEN` | Replicate API token | - |
 | `JIMENG_ACCESS_KEY_ID` | Jimeng Volcengine access key | - |
@@ -811,6 +816,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
+| `ZAI_IMAGE_MODEL` | Z.AI model | `glm-image` |
+| `BIGMODEL_IMAGE_MODEL` | Backward-compatible alias for Z.AI model | `glm-image` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model | `image-01` |
 | `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
@@ -824,6 +831,8 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution | - |
 | `GOOGLE_BASE_URL` | Custom Google endpoint | - |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint | - |
+| `ZAI_BASE_URL` | Custom Z.AI endpoint | `https://api.z.ai/api/paas/v4` |
+| `BIGMODEL_BASE_URL` | Backward-compatible alias for Z.AI endpoint | - |
 | `MINIMAX_BASE_URL` | Custom MiniMax endpoint | `https://api.minimax.io` |
 | `REPLICATE_BASE_URL` | Custom Replicate endpoint | - |
 | `JIMENG_BASE_URL` | Custom Jimeng endpoint | `https://visual.volcengineapi.com` |
@@ -836,6 +845,7 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 **Provider Notes**:
 - Azure OpenAI: `--model` means Azure deployment name, not the underlying model family.
 - DashScope: `qwen-image-2.0-pro` is the recommended default for custom `--size`, `21:9`, and strong Chinese/English text rendering.
+- Z.AI: `glm-image` is recommended for posters, diagrams, and text-heavy Chinese/English images. Reference images are not supported.
 - MiniMax: `image-01` supports documented custom `width` / `height`; `image-01-live` is lower latency and works best with `--ar`.
 - MiniMax reference images are sent as `subject_reference`; the current API is specialized toward character / portrait consistency.
 - Jimeng does not support reference images.
@@ -848,7 +858,7 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 1. If `--provider` is specified → use it
 2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, Replicate, Seedream, and finally MiniMax
 3. If only one API key is available → use that provider
-4. If multiple providers are available → default to Google
+4. If multiple providers are available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
 
 #### baoyu-danger-gemini-web
 
@@ -1147,6 +1157,11 @@ GOOGLE_IMAGE_MODEL=gemini-3-pro-image-preview
 DASHSCOPE_API_KEY=sk-xxx
 DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
 # DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
+
+# Z.AI
+ZAI_API_KEY=xxx
+ZAI_IMAGE_MODEL=glm-image
+# ZAI_BASE_URL=https://api.z.ai/api/paas/v4
 
 # MiniMax
 MINIMAX_API_KEY=xxx

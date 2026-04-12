@@ -3,6 +3,7 @@ export type Provider =
   | "openai"
   | "openrouter"
   | "dashscope"
+  | "zai"
   | "minimax"
   | "replicate"
   | "jimeng"
@@ -20,6 +21,7 @@ export type CliArgs = {
   size: string | null;
   quality: Quality | null;
   imageSize: string | null;
+  imageSizeSource?: "cli" | "task" | "config" | null;
   referenceImages: string[];
   n: number;
   batchFile: string | null;
@@ -61,6 +63,7 @@ export type ExtendConfig = {
     openai: string | null;
     openrouter: string | null;
     dashscope: string | null;
+    zai: string | null;
     minimax: string | null;
     replicate: string | null;
     jimeng: string | null;
