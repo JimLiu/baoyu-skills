@@ -96,7 +96,7 @@ Batch file format:
         "promptFiles": ["prompts/hero.md"],
         "image": "out/hero.png",
         "provider": "replicate",
-        "model": "google/nano-banana-pro",
+        "model": "google/nano-banana-2",
         "ar": "16:9"
       }
     ]
@@ -123,7 +123,7 @@ Environment variables:
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
   DASHSCOPE_IMAGE_MODEL     Default DashScope model (qwen-image-2.0-pro)
   MINIMAX_IMAGE_MODEL       Default MiniMax model (image-01)
-  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
+  REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-2)
   JIMENG_IMAGE_MODEL        Default Jimeng model (jimeng_t2i_v40)
   SEEDREAM_IMAGE_MODEL      Default Seedream model (doubao-seedream-5-0-260128)
   OPENAI_BASE_URL           Custom OpenAI endpoint

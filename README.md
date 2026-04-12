@@ -806,7 +806,7 @@ AI SDK-based image generation using OpenAI, Azure OpenAI, Google, OpenRouter, Da
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model | `image-01` |
-| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-pro` |
+| `REPLICATE_IMAGE_MODEL` | Replicate model | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
@@ -1146,7 +1146,7 @@ MINIMAX_IMAGE_MODEL=image-01
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx
-REPLICATE_IMAGE_MODEL=google/nano-banana-pro
+REPLICATE_IMAGE_MODEL=google/nano-banana-2
 # REPLICATE_BASE_URL=https://api.replicate.com
 
 # Jimeng (即梦)

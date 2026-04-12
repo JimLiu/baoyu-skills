@@ -26,7 +26,7 @@ default_model:
   openrouter: null          # e.g., "google/gemini-3.1-flash-image-preview"
   dashscope: null           # e.g., "qwen-image-2.0-pro"
   minimax: null             # e.g., "image-01"
-  replicate: null           # e.g., "google/nano-banana-pro"
+  replicate: null           # e.g., "google/nano-banana-2"
 
 batch:
   max_workers: 10
@@ -101,7 +101,7 @@ default_model:
   openrouter: "google/gemini-3.1-flash-image-preview"
   dashscope: "qwen-image-2.0-pro"
   minimax: "image-01"
-  replicate: "google/nano-banana-pro"
+  replicate: "google/nano-banana-2"
 batch:
   max_workers: 10
   provider_limits:

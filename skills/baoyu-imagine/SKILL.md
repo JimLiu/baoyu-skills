@@ -112,7 +112,7 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A girl stands by the library window
 # MiniMax with custom size (documented for image-01)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic poster" --image out.jpg --provider minimax --model image-01 --size 1536x1024
 
-# Replicate (google/nano-banana-pro)
+# Replicate (google/nano-banana-2)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
 
 # Replicate with specific model
@@ -136,7 +136,7 @@ ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4 --json
       "promptFiles": ["prompts/hero.md"],
       "image": "out/hero.png",
       "provider": "replicate",
-      "model": "google/nano-banana-pro",
+      "model": "google/nano-banana-2",
       "ar": "16:9",
       "quality": "2k"
     },
@@ -192,7 +192,7 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `GOOGLE_IMAGE_MODEL` | Google model override |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: `qwen-image-2.0-pro`) |
 | `MINIMAX_IMAGE_MODEL` | MiniMax model override (default: `image-01`) |
-| `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-pro) |
+| `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-2) |
 | `JIMENG_IMAGE_MODEL` | Jimeng model override (default: jimeng_t2i_v40) |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model override (default: doubao-seedream-5-0-260128) |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint |
@@ -324,7 +324,7 @@ Notes:
 
 Supported model formats:
 
-- `owner/name` (recommended for official models), e.g. `google/nano-banana-pro`
+- `owner/name` (recommended for official models), e.g. `google/nano-banana-2`
 - `owner/name:version` (community models by version), e.g. `stability-ai/sdxl:<version>`
 
 Examples:

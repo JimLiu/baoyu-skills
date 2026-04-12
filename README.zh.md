@@ -806,7 +806,7 @@ AI 驱动的生成后端。
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image-preview` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
 | `MINIMAX_IMAGE_MODEL` | MiniMax 模型 | `image-01` |
-| `REPLICATE_IMAGE_MODEL` | Replicate 模型 | `google/nano-banana-pro` |
+| `REPLICATE_IMAGE_MODEL` | Replicate 模型 | `google/nano-banana-2` |
 | `JIMENG_IMAGE_MODEL` | 即梦模型 | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | 豆包模型 | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | 自定义 OpenAI 端点 | - |
@@ -1146,7 +1146,7 @@ MINIMAX_IMAGE_MODEL=image-01
 
 # Replicate
 REPLICATE_API_TOKEN=r8_xxx
-REPLICATE_IMAGE_MODEL=google/nano-banana-pro
+REPLICATE_IMAGE_MODEL=google/nano-banana-2
 # REPLICATE_BASE_URL=https://api.replicate.com
 
 # 即梦（Jimeng）

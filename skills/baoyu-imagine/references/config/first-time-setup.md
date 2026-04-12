@@ -56,7 +56,7 @@ options:
   - label: "MiniMax"
     description: "MiniMax image generation with subject-reference character workflows"
   - label: "Replicate"
-    description: "Community models - nano-banana-pro, flexible model selection"
+    description: "Community models - nano-banana-2, flexible model selection"
 ```
 
 ### Question 2: Default Google Model
@@ -263,7 +263,7 @@ Notes for DashScope setup:
 header: "Replicate Model"
 question: "Choose a default Replicate image generation model?"
 options:
-  - label: "google/nano-banana-pro (Recommended)"
+  - label: "google/nano-banana-2 (Recommended)"
     description: "Google's fast image model on Replicate"
   - label: "google/nano-banana"
     description: "Google's base image model on Replicate"
