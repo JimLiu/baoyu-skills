@@ -13,7 +13,7 @@
       "name": "baoyu-skills",
       "description": "Content generation, AI backends, and utility tools for daily work efficiency",
       "source": "./",
-      "strict": true,
+      "strict": false,
       "skills": [
         "./skills/baoyu-article-illustrator",
         "./skills/baoyu-comic",
