@@ -11,46 +11,6 @@ metadata:
 
 Break down complex content into eye-catching Xiaohongshu image card series with multiple style options.
 
-## Usage
-
-```bash
-# Auto-select style and layout based on content
-/baoyu-xhs-images posts/ai-future/article.md
-
-# Specify style
-/baoyu-xhs-images posts/ai-future/article.md --style notion
-
-# Specify layout
-/baoyu-xhs-images posts/ai-future/article.md --layout dense
-
-# Combine style and layout
-/baoyu-xhs-images posts/ai-future/article.md --style notion --layout list
-
-# Specify palette (override style colors)
-/baoyu-xhs-images posts/ai-future/article.md --style notion --palette macaron
-
-# Use preset (style + layout + optional palette shorthand)
-/baoyu-xhs-images posts/ai-future/article.md --preset knowledge-card
-
-# Preset with override
-/baoyu-xhs-images posts/ai-future/article.md --preset poster --layout quadrant
-
-# Preset with palette override
-/baoyu-xhs-images posts/ai-future/article.md --preset hand-drawn-edu --palette warm
-
-# Direct content input
-/baoyu-xhs-images
-[paste content]
-
-# Direct input with options
-/baoyu-xhs-images --style bold --layout comparison
-[paste content]
-
-# Non-interactive (for scheduled tasks / automation)
-/baoyu-xhs-images posts/ai-future/article.md --yes
-/baoyu-xhs-images posts/ai-future/article.md --yes --preset knowledge-card
-```
-
 ## Options
 
 | Option | Description |
@@ -109,7 +69,7 @@ Quick-start presets by content scenario. Use `--preset <name>` or recommend duri
 | `knowledge-card` | notion | dense | 干货知识卡、概念科普 |
 | `checklist` | notion | list | 清单、排行榜、必备清单 |
 | `concept-map` | notion | mindmap | 概念图、知识脉络 |
-| `swot` | notion | quadrant | SWOT分析、四象限分类 |
+| `swot` | notion | quadrant | SWOT 分析、四象限分类 |
 | `tutorial` | chalkboard | flow | 教程步骤、操作流程 |
 | `classroom` | chalkboard | balanced | 课堂笔记、知识讲解 |
 | `study-guide` | study-notes | dense | 学习笔记、考试重点 |
@@ -197,7 +157,7 @@ Detailed palette definitions: `references/palettes/<palette>.md`
 | Education, tutorial, learning, teaching, classroom | `chalkboard` | balanced/dense | `tutorial`, `classroom` |
 | Notes, handwritten, study guide, knowledge, realistic, photo | `study-notes` | dense/list/mindmap | `study-guide` |
 | Movie, album, concert, poster, opinion, editorial, dramatic, cinematic | `screen-print` | sparse/comparison | `poster`, `editorial`, `cinematic` |
-| Hand-drawn, infographic, diagram, visual summary, 手绘, 图解, workflow, process | `sketch-notes` | flow/balanced/dense | `hand-drawn-edu`, `sketch-card`, `sketch-summary` |
+| Hand-drawn, infographic, diagram, visual summary, 手绘，图解，workflow, process | `sketch-notes` | flow/balanced/dense | `hand-drawn-edu`, `sketch-card`, `sketch-summary` |
 
 ## Outline Strategies
 
@@ -253,7 +213,7 @@ xhs-images/{topic-slug}/
 
 **Slug Generation**:
 1. Extract main topic from content (2-4 words, kebab-case)
-2. Example: "AI工具推荐" → `ai-tools-recommend`
+2. Example: "AI 工具推荐" → `ai-tools-recommend`
 
 **Conflict Resolution**:
 If `xhs-images/{topic-slug}/` already exists:

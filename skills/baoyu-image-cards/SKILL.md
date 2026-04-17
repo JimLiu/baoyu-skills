@@ -11,45 +11,15 @@ metadata:
 
 Break down complex content into eye-catching image card series with multiple style options.
 
-## Usage
+## User Input Tools
 
-```bash
-# Auto-select style and layout based on content
-/baoyu-image-cards posts/ai-future/article.md
+When this skill prompts the user, follow this tool-selection rule (priority order):
 
-# Specify style
-/baoyu-image-cards posts/ai-future/article.md --style notion
+1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
+2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
+3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
 
-# Specify layout
-/baoyu-image-cards posts/ai-future/article.md --layout dense
-
-# Combine style and layout
-/baoyu-image-cards posts/ai-future/article.md --style notion --layout list
-
-# Specify palette (override style colors)
-/baoyu-image-cards posts/ai-future/article.md --style notion --palette macaron
-
-# Use preset (style + layout + optional palette shorthand)
-/baoyu-image-cards posts/ai-future/article.md --preset knowledge-card
-
-# Preset with override
-/baoyu-image-cards posts/ai-future/article.md --preset poster --layout quadrant
-
-# Preset with palette override
-/baoyu-image-cards posts/ai-future/article.md --preset hand-drawn-edu --palette warm
-
-# Direct content input
-/baoyu-image-cards
-[paste content]
-
-# Direct input with options
-/baoyu-image-cards --style bold --layout comparison
-[paste content]
-
-# Non-interactive (for scheduled tasks / automation)
-/baoyu-image-cards posts/ai-future/article.md --yes
-/baoyu-image-cards posts/ai-future/article.md --yes --preset knowledge-card
-```
+Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
 ## Options
 
@@ -109,7 +79,7 @@ Quick-start presets by content scenario. Use `--preset <name>` or recommend duri
 | `knowledge-card` | notion | dense | 干货知识卡、概念科普 |
 | `checklist` | notion | list | 清单、排行榜、必备清单 |
 | `concept-map` | notion | mindmap | 概念图、知识脉络 |
-| `swot` | notion | quadrant | SWOT分析、四象限分类 |
+| `swot` | notion | quadrant | SWOT 分析、四象限分类 |
 | `tutorial` | chalkboard | flow | 教程步骤、操作流程 |
 | `classroom` | chalkboard | balanced | 课堂笔记、知识讲解 |
 | `study-guide` | study-notes | dense | 学习笔记、考试重点 |
@@ -197,7 +167,7 @@ Detailed palette definitions: `references/palettes/<palette>.md`
 | Education, tutorial, learning, teaching, classroom | `chalkboard` | balanced/dense | `tutorial`, `classroom` |
 | Notes, handwritten, study guide, knowledge, realistic, photo | `study-notes` | dense/list/mindmap | `study-guide` |
 | Movie, album, concert, poster, opinion, editorial, dramatic, cinematic | `screen-print` | sparse/comparison | `poster`, `editorial`, `cinematic` |
-| Hand-drawn, infographic, diagram, visual summary, 手绘, 图解, workflow, process | `sketch-notes` | flow/balanced/dense | `hand-drawn-edu`, `sketch-card`, `sketch-summary` |
+| Hand-drawn, infographic, diagram, visual summary, 手绘，图解，workflow, process | `sketch-notes` | flow/balanced/dense | `hand-drawn-edu`, `sketch-card`, `sketch-summary` |
 
 ## Outline Strategies
 
@@ -253,7 +223,7 @@ image-cards/{topic-slug}/
 
 **Slug Generation**:
 1. Extract main topic from content (2-4 words, kebab-case)
-2. Example: "AI工具推荐" → `ai-tools-recommend`
+2. Example: "AI 工具推荐" → `ai-tools-recommend`
 
 **Conflict Resolution**:
 If `image-cards/{topic-slug}/` already exists:

@@ -50,6 +50,18 @@ Execute: `${BUN_X} skills/<skill>/scripts/main.ts [options]`
 
 Priority: project `skills/` → `$HOME/.baoyu-skills/` → system-level.
 
+## Skill Self-Containment
+
+Each skill under `skills/` (and `.claude/skills/`) is distributed and consumed independently — the folder may be extracted, copied into another project, or loaded without the rest of this repo. Therefore:
+
+- **Never link from `SKILL.md` or its `references/` to files outside the skill's own directory.** This includes `docs/`, sibling skills, and the repo root. Relative paths like `../../docs/foo.md` break when the skill is used standalone.
+- **Inline any shared convention** (e.g., user-input rules) directly in the skill rather than referencing an out-of-skill doc.
+- Shared docs under `docs/` exist for **repo-author guidance only** — they may be referenced from `CLAUDE.md` and `docs/creating-skills.md`, but NOT from any `SKILL.md`.
+
+## User Input Tools
+
+Skills that prompt users for choices MUST declare the tool-selection convention **inline** in exactly one place per `SKILL.md` — a `## User Input Tools` section near the top. Do NOT link out to [docs/user-input-tools.md](docs/user-input-tools.md); that doc is the author-side canonical source — copy its body into each SKILL.md. Concrete `AskUserQuestion` mentions elsewhere in a skill are treated as examples — other runtimes substitute their local equivalent under the rule.
+
 ## Deprecated Skills
 
 | Skill | Note |

@@ -1,6 +1,6 @@
 ---
 name: baoyu-infographic
-description: Generates professional infographics with 21 layout types and 21 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics. Use when user asks to create "infographic", "信息图", "visual summary", "可视化", or "高密度信息大图".
+description: Generate professional infographics with 21 layout types and 21 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics. Use when user asks to create "infographic", "信息图", "visual summary", "可视化", or "高密度信息大图".
 version: 1.56.1
 metadata:
   openclaw:
@@ -11,15 +11,15 @@ metadata:
 
 Two dimensions: **layout** (information structure) × **style** (visual aesthetics). Freely combine any layout with any style.
 
-## Usage
+## User Input Tools
 
-```bash
-/baoyu-infographic path/to/content.md
-/baoyu-infographic path/to/content.md --layout hierarchical-layers --style technical-schematic
-/baoyu-infographic path/to/content.md --aspect portrait --lang zh
-/baoyu-infographic path/to/content.md --aspect 3:4
-/baoyu-infographic  # then paste content
-```
+When this skill prompts the user, follow this tool-selection rule (priority order):
+
+1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
+2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
+3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
+
+Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
 ## Options
 
@@ -219,15 +219,13 @@ See `references/structured-content-template.md` for detailed format.
 
 ### Step 4: Confirm Options
 
-Use **single AskUserQuestion call** with multiple questions to confirm all options together:
+Ask the user to confirm the questions below following the [User Input Tools](#user-input-tools) rule at the top of this file (batch into one call if the runtime supports multiple questions; otherwise ask one at a time in priority order).
 
-| Question | When | Options |
-|----------|------|---------|
-| **Combination** | Always | 3+ layout×style combos with rationale |
-| **Aspect** | Always | Named presets (landscape/portrait/square) or custom W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
-| **Language** | Only if source ≠ user language | Language for text content |
-
-**Important**: Do NOT split into separate AskUserQuestion calls. Combine all applicable questions into one call.
+| Priority | Question | When | Options |
+|----------|----------|------|---------|
+| 1 | **Combination** | Always | 3+ layout×style combos with rationale |
+| 2 | **Aspect** | Always | Named presets (landscape/portrait/square) or custom W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
+| 3 | **Language** | Only if source ≠ user language | Language for text content |
 
 ### Step 5: Generate Prompt → `prompts/infographic.md`
 

@@ -11,28 +11,15 @@ metadata:
 
 Generate elegant cover images for articles with 5-dimensional customization.
 
-## Usage
+## User Input Tools
 
-```bash
-# Auto-select dimensions based on content
-/baoyu-cover-image path/to/article.md
+When this skill prompts the user, follow this tool-selection rule (priority order):
 
-# Quick mode: skip confirmation
-/baoyu-cover-image article.md --quick
+1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
+2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
+3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
 
-# Specify dimensions
-/baoyu-cover-image article.md --type conceptual --palette warm --rendering flat-vector
-
-# Style presets (shorthand for palette + rendering)
-/baoyu-cover-image article.md --style blueprint
-
-# With reference images
-/baoyu-cover-image article.md --ref style-ref.png
-
-# Direct content input
-/baoyu-cover-image --palette mono --aspect 1:1 --quick
-[paste content]
-```
+Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
 ## Options
 
