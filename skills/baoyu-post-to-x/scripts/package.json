@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "baoyu-chrome-cdp": "file:./vendor/baoyu-chrome-cdp",
+    "baoyu-chrome-cdp": "^0.1.0",
     "front-matter": "^4.0.2",
     "highlight.js": "^11.11.1",
     "marked": "^15.0.6",

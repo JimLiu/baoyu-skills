@@ -1,12 +1,13 @@
 {
   "name": "baoyu-fetch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Read URLs into high-quality Markdown or JSON with Chrome CDP and site adapters.",
   "type": "module",
   "bin": {
-    "baoyu-fetch": "./src/cli.ts"
+    "baoyu-fetch": "dist/cli.js"
   },
   "files": [
+    "dist",
     "README.zh-CN.md",
     "src/adapters",
     "src/browser",
@@ -36,7 +37,8 @@
     "dev": "bun run ./src/cli.ts",
     "release": "changeset publish",
     "test": "bun test",
-    "version-packages": "changeset version"
+    "version-packages": "changeset version",
+    "prepack": "bun run build"
   },
   "engines": {
     "bun": ">=1.2.0"

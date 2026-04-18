@@ -18,8 +18,8 @@ import {
   resolveContentImages,
   serializeFrontmatter,
   stripWrappingQuotes,
-} from "./vendor/baoyu-md/src/index.ts";
-import type { CliOptions } from "./vendor/baoyu-md/src/types.ts";
+} from "baoyu-md";
+import type { CliOptions } from "baoyu-md";
 
 interface ImageInfo {
   placeholder: string;

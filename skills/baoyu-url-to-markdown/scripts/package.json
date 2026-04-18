@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "baoyu-fetch": "file:./vendor/baoyu-fetch"
+    "baoyu-fetch": "^0.1.2"
   }
 }

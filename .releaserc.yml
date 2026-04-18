@@ -2,5 +2,5 @@ release:
   target_globs:
     - skills/*
   hooks:
-    prepare_artifact: node scripts/sync-shared-skill-packages.mjs --repo-root "{project_root}" --target "{target}"
+    prepare_artifact: node scripts/verify-shared-package-deps.mjs --repo-root "{project_root}" --target "{target}"
     publish_artifact: node scripts/publish-skill.mjs --skill-dir "{target}" --version "{version}" --changelog-file "{release_notes_file}" --dry-run "{dry_run}"

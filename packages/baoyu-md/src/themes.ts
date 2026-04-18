@@ -3,7 +3,27 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ThemeName } from "./types.js";
 
-const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+function resolveCommonJsDir(): string | undefined {
+  try {
+    const value = eval(
+      "typeof module === 'object' && module && module.exports && typeof __dirname === 'string' ? __dirname : undefined",
+    );
+    return typeof value === "string" ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveModuleDir(metaUrl?: string): string {
+  const commonJsDir = resolveCommonJsDir();
+  if (commonJsDir) return commonJsDir;
+  if (!metaUrl) {
+    throw new Error("Unable to resolve module directory.");
+  }
+  return path.dirname(fileURLToPath(metaUrl));
+}
+
+const SCRIPT_DIR = resolveModuleDir(import.meta.url);
 export const THEME_DIR = path.resolve(SCRIPT_DIR, "themes");
 const FALLBACK_THEMES: ThemeName[] = ["default", "grace", "simple"];
 const THEMES_EXTENDING_DEFAULT = new Set<ThemeName>(["grace", "simple"]);

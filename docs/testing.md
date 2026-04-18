@@ -9,7 +9,7 @@ This repository has many scripts, but they do not share a single runtime or depe
 - Coverage command: `npm run test:coverage`
 - CI trigger: GitHub Actions on `push`, `pull_request`, and manual dispatch
 
-This avoids introducing Jest/Vitest across a repo that already mixes plain Node scripts, Bun-based skill packages, vendored code, and browser automation.
+This avoids introducing Jest/Vitest across a repo that already mixes plain Node scripts, Bun-based skill packages, npm-published shared packages, and browser automation.
 
 ## Rollout Plan
 
@@ -18,19 +18,19 @@ This avoids introducing Jest/Vitest across a repo that already mixes plain Node 
 Focus on pure functions under `scripts/lib/` first.
 
 - `scripts/lib/release-files.mjs`
-- `scripts/lib/shared-skill-packages.mjs`
+- `scripts/verify-shared-package-deps.mjs`
 
 Goals:
 
 - Validate file filtering and release packaging rules
-- Catch regressions in package vendoring and dependency rewriting
+- Catch regressions that reintroduce local `file:` dependencies or vendored workspace packages
 - Keep tests deterministic and free of network, Bun, or browser requirements
 
 ### Phase 2: Root CLI integration tests
 
 Add temp-directory integration tests for root CLIs that already support dry-run or local-only flows.
 
-- `scripts/sync-shared-skill-packages.mjs`
+- `scripts/verify-shared-package-deps.mjs`
 - `scripts/publish-skill.mjs --dry-run`
 - `scripts/sync-clawhub.mjs` argument handling and local skill discovery
 

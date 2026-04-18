@@ -1,15 +1,15 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
+  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "baoyu-danger-x-to-markdown-scripts",
       "dependencies": {
-        "baoyu-chrome-cdp": "file:./vendor/baoyu-chrome-cdp",
+        "baoyu-chrome-cdp": "^0.1.0",
       },
     },
   },
   "packages": {
-    "baoyu-chrome-cdp": ["baoyu-chrome-cdp@file:vendor/baoyu-chrome-cdp", {}],
+    "baoyu-chrome-cdp": ["baoyu-chrome-cdp@0.1.0", "", {}, "sha512-Hk1yolVrlIlzMCKXjc21yAJP0dttun+SaPRcW7HL9/mmwZ9kedQ6fFgxf8M91I+/Fe348sPbdYVhSAmYHzVunQ=="],
   }
 }

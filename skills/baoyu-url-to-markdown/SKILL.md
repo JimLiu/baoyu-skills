@@ -17,13 +17,13 @@ Fetches any URL via `baoyu-fetch` CLI (Chrome CDP + site-specific adapters) and 
 
 ## CLI Setup
 
-**Important**: The CLI source is vendored in the `scripts/vendor/baoyu-fetch/` subdirectory of this skill.
+**Important**: The CLI is provided by the npm package dependency `baoyu-fetch`. Do not use a vendored `scripts/vendor/baoyu-fetch` copy.
 
 **Agent Execution Instructions**:
 1. Determine this SKILL.md file's directory path as `{baseDir}`
-2. CLI entry point = `{baseDir}/scripts/vendor/baoyu-fetch/src/cli.ts`
-3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
-4. `${READER}` = `${BUN_X} {baseDir}/scripts/vendor/baoyu-fetch/src/cli.ts`
+2. Resolve `${BUN}` runtime: if `bun` installed → `bun`; else suggest installing Bun
+3. If `{baseDir}/scripts/node_modules/.bin/baoyu-fetch` does not exist, run `${BUN} install --cwd {baseDir}/scripts`
+4. `${READER}` = `{baseDir}/scripts/node_modules/.bin/baoyu-fetch`
 5. Replace all `${READER}` in this document with the resolved value
 
 ## Preferences (EXTEND.md)
