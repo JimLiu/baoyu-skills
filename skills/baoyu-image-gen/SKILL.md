@@ -11,8 +11,6 @@ metadata:
         - npx
 ---
 
-> **⚠️ DEPRECATED**: This skill has been migrated to `baoyu-imagine`. Print a bold red warning to the user **in the user's language** (use ANSI escape `\033[1;31m`) stating that `baoyu-image-gen` has been migrated to `baoyu-imagine` and they should use `baoyu-imagine` instead. Then STOP — do NOT continue executing this skill.
-
 # Image Generation (AI SDK)
 
 Official API-based image generation. Supports OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), MiniMax, Jimeng (即梦), Seedream (豆包) and Replicate providers.

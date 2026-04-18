@@ -13,7 +13,7 @@ metadata:
 
 # Slide Deck Generator
 
-Transform content into professional slide deck images.
+Transform content into professional slide deck images. The deck is designed for **reading and sharing** (self-explanatory slides, logical scroll flow, social-media-friendly) rather than live presentation — that assumption drives every layout and density decision below.
 
 ## User Input Tools
 
@@ -33,47 +33,15 @@ When this skill needs to render an image:
 - **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
 - **If none are available**, tell the user and ask how to proceed.
 
-**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-slide-[slug].md`) BEFORE invoking any backend. The file is the reproducibility record and lets you switch backends without regenerating prompts.
 
-Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+## Language
 
-## Reference Images
-
-Users may supply reference images to guide slide style, palette, layout, or subject.
-
-**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
-- File path(s) → copy to `{slide-deck-dir}/refs/NN-ref-{slug}.{ext}` alongside the output
-- Pasted image with no path → ask the user for the path (per the User Input Tools rule above), or extract style traits verbally as a text fallback
-- No reference → skip this section
-
-**Usage modes** (per reference):
-
-| Usage | Effect |
-|-------|--------|
-| `direct` | Pass the file to the backend as a reference image for each slide's generation |
-| `style` | Extract style traits (line treatment, texture, mood) and append to every slide's prompt body |
-| `palette` | Extract hex colors from the image and append to every slide's prompt body |
-
-**Record in each slide's `prompts/NN-slide-[slug].md` frontmatter** when refs exist:
-
-```yaml
-references:
-  - ref_id: 01
-    filename: 01-ref-brand.png
-    usage: direct
-```
-
-**At generation time**:
-- Verify each referenced file exists on disk
-- If `usage: direct` AND the chosen backend accepts reference images (e.g., `baoyu-imagine` via `--ref`) → pass the file via the backend's ref parameter on every slide
-- Otherwise → embed extracted `style`/`palette` traits in each slide prompt
+Respond in the user's language across questions, progress reports, error messages, and the completion summary. Keep technical tokens (style names, file paths, code) in English.
 
 ## Script Directory
 
-**Agent Execution Instructions**:
-1. Determine this SKILL.md file's directory path as `{baseDir}`
-2. Script path = `{baseDir}/scripts/<script-name>.ts`
-3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
+`{baseDir}` = this SKILL.md's directory. Resolve `${BUN_X}`: prefer `bun`; else `npx -y bun`; else suggest `brew install oven-sh/bun/bun`.
 
 | Script | Purpose |
 |--------|---------|
@@ -84,145 +52,72 @@ references:
 
 | Option | Description |
 |--------|-------------|
-| `--style <name>` | Visual style: preset name, `custom`, or custom style name |
-| `--audience <type>` | Target: beginners, intermediate, experts, executives, general |
-| `--lang <code>` | Output language (en, zh, ja, etc.) |
-| `--slides <number>` | Target slide count (8-25 recommended, max 30) |
-| `--outline-only` | Generate outline only, skip image generation |
-| `--prompts-only` | Generate outline + prompts, skip images |
-| `--images-only` | Generate images from existing prompts directory |
-| `--regenerate <N>` | Regenerate specific slide(s): `--regenerate 3` or `--regenerate 2,5,8` |
-| `--ref <files...>` | Reference images (file paths) applied to every slide for style / palette / composition / subject guidance |
-
-**Slide Count by Content Length**:
-| Content | Slides |
-|---------|--------|
-| < 1000 words | 5-10 |
-| 1000-3000 words | 10-18 |
-| 3000-5000 words | 15-25 |
-| > 5000 words | 20-30 (consider splitting) |
+| `--style <name>` | Preset (see `references/styles-gallery.md`), `custom`, or custom style name |
+| `--audience <type>` | beginners / intermediate / experts / executives / general |
+| `--lang <code>` | Output language (en, zh, ja, ...) |
+| `--slides <N>` | Target slide count (8-25 recommended, max 30) |
+| `--ref <files...>` | Reference images applied per slide (style / palette / composition / subject) |
+| `--outline-only` | Stop after outline |
+| `--prompts-only` | Stop after prompts (skip image generation) |
+| `--images-only` | Skip to Step 7; requires existing `prompts/` |
+| `--regenerate <N>` | Regenerate specific slide(s): `3` or `2,5,8` |
 
 ## Style System
 
-### Presets
+17 presets covering technical/educational/lifestyle/editorial use cases. SKILL.md does not list them — the workflow picks a preset from `references/styles-gallery.md` based on content signals, and the user confirms or chooses "Custom dimensions" in Step 2.
 
-| Preset | Dimensions | Best For |
-|--------|------------|----------|
-| `blueprint` (Default) | grid + cool + technical + balanced | Architecture, system design |
-| `chalkboard` | organic + warm + handwritten + balanced | Education, tutorials |
-| `corporate` | clean + professional + geometric + balanced | Investor decks, proposals |
-| `minimal` | clean + neutral + geometric + minimal | Executive briefings |
-| `sketch-notes` | organic + warm + handwritten + balanced | Educational, tutorials |
-| `hand-drawn-edu` | organic + macaron + handwritten + balanced | Educational diagrams, process explainers |
-| `watercolor` | organic + warm + humanist + minimal | Lifestyle, wellness |
-| `dark-atmospheric` | clean + dark + editorial + balanced | Entertainment, gaming |
-| `notion` | clean + neutral + geometric + dense | Product demos, SaaS |
-| `bold-editorial` | clean + vibrant + editorial + balanced | Product launches, keynotes |
-| `editorial-infographic` | clean + cool + editorial + dense | Tech explainers, research |
-| `fantasy-animation` | organic + vibrant + handwritten + minimal | Educational storytelling |
-| `intuition-machine` | clean + cool + technical + dense | Technical docs, academic |
-| `pixel-art` | pixel + vibrant + technical + balanced | Gaming, developer talks |
-| `scientific` | clean + cool + technical + dense | Biology, chemistry, medical |
-| `vector-illustration` | clean + vibrant + humanist + balanced | Creative, children's content |
-| `vintage` | paper + warm + editorial + balanced | Historical, heritage |
+Under the hood every preset is a combination of four dimensions (texture / mood / typography / density). If the user picks "Custom dimensions", Round 2 of the confirmation asks one question per dimension — options and verbatim copy live in `references/confirmation.md`.
 
-### Style Dimensions
+## Reference Images
 
-| Dimension | Options | Description |
-|-----------|---------|-------------|
-| **Texture** | clean, grid, organic, pixel, paper | Visual texture and background treatment |
-| **Mood** | professional, warm, cool, vibrant, dark, neutral, macaron | Color temperature and palette style |
-| **Typography** | geometric, humanist, handwritten, editorial, technical | Headline and body text styling |
-| **Density** | minimal, balanced, dense | Information density per slide |
+Users may supply reference images to guide style, palette, layout, or subject.
 
-Full specs: `references/dimensions/*.md`
+**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
+- File path → copy to `{slide-deck-dir}/refs/NN-ref-{slug}.{ext}`
+- Pasted image with no path → ask for the path, or extract style traits verbally as a text fallback
 
-### Auto Style Selection
+**Usage modes** (per reference):
 
-| Content Signals | Preset |
-|-----------------|--------|
-| tutorial, learn, education, guide, beginner | `sketch-notes` |
-| hand-drawn, infographic, diagram, process, onboarding | `hand-drawn-edu` |
-| classroom, teaching, school, chalkboard | `chalkboard` |
-| architecture, system, data, analysis, technical | `blueprint` |
-| creative, children, kids, cute | `vector-illustration` |
-| briefing, academic, research, bilingual | `intuition-machine` |
-| executive, minimal, clean, simple | `minimal` |
-| saas, product, dashboard, metrics | `notion` |
-| investor, quarterly, business, corporate | `corporate` |
-| launch, marketing, keynote, magazine | `bold-editorial` |
-| entertainment, music, gaming, atmospheric | `dark-atmospheric` |
-| explainer, journalism, science communication | `editorial-infographic` |
-| story, fantasy, animation, magical | `fantasy-animation` |
-| gaming, retro, pixel, developer | `pixel-art` |
-| biology, chemistry, medical, scientific | `scientific` |
-| history, heritage, vintage, expedition | `vintage` |
-| lifestyle, wellness, travel, artistic | `watercolor` |
-| Default | `blueprint` |
+| Usage | Effect |
+|-------|--------|
+| `direct` | Pass the file to the backend as a reference image for each slide |
+| `style` | Extract style traits (line treatment, texture, mood) and append to every slide's prompt body |
+| `palette` | Extract hex colors and append to every slide's prompt body |
 
-## Design Philosophy
+Record refs in each slide's prompt frontmatter:
 
-Decks designed for **reading and sharing**, not live presentation:
-- Each slide self-explanatory without verbal commentary
-- Logical flow when scrolling
-- All necessary context within each slide
-- Optimized for social media sharing
+```yaml
+references:
+  - ref_id: 01
+    filename: 01-ref-brand.png
+    usage: direct
+```
 
-See `references/design-guidelines.md` for:
-- Audience-specific principles
-- Visual hierarchy
-- Content density guidelines
-- Color and typography selection
-- Font recommendations
+At generation time, verify files exist. If `usage: direct` and the backend accepts refs (e.g., `baoyu-imagine --ref`), pass the file on every slide. Otherwise embed extracted `style`/`palette` traits in the prompt text.
 
-See `references/layouts.md` for layout options.
-
-## File Management
-
-### Output Directory
+## File Layout
 
 ```
 slide-deck/{topic-slug}/
 ├── source-{slug}.{ext}
 ├── outline.md
-├── prompts/
-│   └── 01-slide-cover.md, 02-slide-{slug}.md, ...
-├── 01-slide-cover.png, 02-slide-{slug}.png, ...
+├── prompts/NN-slide-{slug}.md
+├── NN-slide-{slug}.png
 ├── {topic-slug}.pptx
 └── {topic-slug}.pdf
 ```
 
-**Slug**: Extract topic (2-4 words, kebab-case). Example: "Introduction to Machine Learning" → `intro-machine-learning`
+**Slug**: 2-4 words, kebab-case, extracted from topic. "Introduction to Machine Learning" → `intro-machine-learning`.
 
-**Conflict Handling**: See Step 1.3 for existing content detection and user options.
-
-## Language Handling
-
-**Detection Priority**:
-1. `--lang` flag (explicit)
-2. EXTEND.md `language` setting
-3. User's conversation language (input language)
-4. Source content language
-
-**Rule**: ALL responses use user's preferred language:
-- Questions and confirmations
-- Progress reports
-- Error messages
-- Completion summaries
-
-Technical terms (style names, file paths, code) remain in English.
+**Backup rule** (applies across steps): if a file about to be written already exists, rename it to `<name>-backup-YYYYMMDD-HHMMSS.<ext>` before writing the new one. This protects user edits and enables rollback.
 
 ## Workflow
 
 Copy this checklist and check off items as you complete them:
 
 ```
-Slide Deck Progress:
-- [ ] Step 1: Setup & Analyze
-  - [ ] 1.1 Load preferences
-  - [ ] 1.2 Analyze content
-  - [ ] 1.3 Check existing ⚠️ REQUIRED
-- [ ] Step 2: Confirmation ⚠️ REQUIRED (Round 1, optional Round 2)
+- [ ] Step 1: Setup & analyze
+- [ ] Step 2: Confirmation ⚠️ REQUIRED (Round 1; Round 2 only if "Custom dimensions")
 - [ ] Step 3: Generate outline
 - [ ] Step 4: Review outline (conditional)
 - [ ] Step 5: Generate prompts
@@ -232,530 +127,132 @@ Slide Deck Progress:
 - [ ] Step 9: Output summary
 ```
 
-### Flow
-
-```
-Input → Preferences → Analyze → [Check Existing?] → Confirm (1-2 rounds) → Outline → [Review Outline?] → Prompts → [Review Prompts?] → Images → Merge → Complete
-```
-
 ### Step 1: Setup & Analyze
 
-**1.1 Load Preferences (EXTEND.md)**
+**1.1 Load EXTEND.md** — check these paths in order; first hit wins:
 
-Check EXTEND.md existence (priority order):
+| Path | Scope |
+|------|-------|
+| `.baoyu-skills/baoyu-slide-deck/EXTEND.md` | Project |
+| `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-slide-deck/EXTEND.md` | XDG |
+| `$HOME/.baoyu-skills/baoyu-slide-deck/EXTEND.md` | User home |
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-slide-deck/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-slide-deck/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-slide-deck/EXTEND.md" && echo "user"
-```
+If found, read, parse, and print a summary (style / audience / language / review). If not, proceed with defaults — first-time setup is not blocking for this skill. Schema: `references/config/preferences-schema.md`.
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-slide-deck/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-slide-deck/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-slide-deck/EXTEND.md") { "user" }
-```
+**1.2 Analyze content** — follow `references/analysis-framework.md`: classify content, detect language, note signals for style selection, estimate slide count from length (see `references/styles-gallery.md` → "Slide Count Heuristic"), generate topic slug. Save source as `source.md` (honor backup rule if one exists).
 
-┌──────────────────────────────────────────────────┬───────────────────┐
-│                       Path                       │     Location      │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-slide-deck/EXTEND.md         │ Project directory │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-slide-deck/EXTEND.md   │ User home         │
-└──────────────────────────────────────────────────┴───────────────────┘
+**1.3 Check existing output** ⚠️ REQUIRED before Step 2. If `slide-deck/{topic-slug}/` exists, ask how to proceed — four options (regenerate outline / regenerate images / backup and regenerate / exit), verbatim copy in `references/confirmation.md`.
 
-**When EXTEND.md Found** → Read, parse, **output summary to user**:
-
-```
-📋 Loaded preferences from [full path]
-├─ Style: [preset/custom name]
-├─ Audience: [audience or "auto-detect"]
-├─ Language: [language or "auto-detect"]
-└─ Review: [enabled/disabled]
-```
-
-**When EXTEND.md Not Found** → First-time setup using AskUserQuestion or proceed with defaults.
-
-**EXTEND.md Supports**: Preferred style | Custom dimensions | Default audience | Language preference | Review preference
-
-Schema: `references/config/preferences-schema.md`
-
-**1.2 Analyze Content**
-
-1. Save source content (if pasted, save as `source.md`)
-   - **Backup rule**: If `source.md` exists, rename to `source-backup-YYYYMMDD-HHMMSS.md`
-2. Follow `references/analysis-framework.md` for content analysis
-3. Analyze content signals for style recommendations
-4. Detect source language
-5. Determine recommended slide count
-6. Generate topic slug from content
-
-**1.3 Check Existing Content** ⚠️ REQUIRED
-
-**MUST execute before proceeding to Step 2.**
-
-Use Bash to check if output directory exists:
-
-```bash
-test -d "slide-deck/{topic-slug}" && echo "exists"
-```
-
-**If directory exists**, use AskUserQuestion:
-
-```
-header: "Existing"
-question: "Existing content found. How to proceed?"
-options:
-  - label: "Regenerate outline"
-    description: "Keep images, regenerate outline only"
-  - label: "Regenerate images"
-    description: "Keep outline, regenerate images only"
-  - label: "Backup and regenerate"
-    description: "Backup to {slug}-backup-{timestamp}, then regenerate all"
-  - label: "Exit"
-    description: "Cancel, keep existing content unchanged"
-```
-
-**Save to `analysis.md`** with:
-- Topic, audience, content signals
-- Recommended style (based on Auto Style Selection)
-- Recommended slide count
-- Language detection
+Save findings to `analysis.md`: topic, audience, signals, recommended style and slide count, language detection.
 
 ### Step 2: Confirmation ⚠️ REQUIRED
 
-**Two-round confirmation**: Round 1 always, Round 2 only if "Custom dimensions" selected.
+**Round 1 (always)** — batch five questions in one `AskUserQuestion` call: style, audience, slide count, review-outline?, review-prompts?. Verbatim options in `references/confirmation.md`.
 
-**Language**: Use user's input language or saved language preference.
+Summary displayed before the questions:
+- Content type + topic
+- Detected language
+- Recommended style (based on signals)
+- Recommended slide count (based on length)
 
-**Display summary**:
-- Content type + topic identified
-- Language: [from EXTEND.md or detected]
-- **Recommended style**: [preset] (based on content signals)
-- **Recommended slides**: [N] (based on content length)
+**Round 2 (only if "Custom dimensions" in Round 1)** — batch four questions: texture, mood, typography, density. Verbatim options in `references/confirmation.md`. The four answers replace the preset.
 
-#### Round 1 (Always)
-
-**Use AskUserQuestion** for all 5 questions:
-
-**Question 1: Style**
-```
-header: "Style"
-question: "Which visual style for this deck?"
-options:
-  - label: "{recommended_preset} (Recommended)"
-    description: "Best match based on content analysis"
-  - label: "{alternative_preset}"
-    description: "[alternative style description]"
-  - label: "Custom dimensions"
-    description: "Choose texture, mood, typography, density separately"
-```
-
-**Question 2: Audience**
-```
-header: "Audience"
-question: "Who is the primary reader?"
-options:
-  - label: "General readers (Recommended)"
-    description: "Broad appeal, accessible content"
-  - label: "Beginners/learners"
-    description: "Educational focus, clear explanations"
-  - label: "Experts/professionals"
-    description: "Technical depth, domain knowledge"
-  - label: "Executives"
-    description: "High-level insights, minimal detail"
-```
-
-**Question 3: Slide Count**
-```
-header: "Slides"
-question: "How many slides?"
-options:
-  - label: "{N} slides (Recommended)"
-    description: "Based on content length"
-  - label: "Fewer ({N-3} slides)"
-    description: "More condensed, less detail"
-  - label: "More ({N+3} slides)"
-    description: "More detailed breakdown"
-```
-
-**Question 4: Review Outline**
-```
-header: "Outline"
-question: "Review outline before generating prompts?"
-options:
-  - label: "Yes, review outline (Recommended)"
-    description: "Review slide titles and structure"
-  - label: "No, skip outline review"
-    description: "Proceed directly to prompt generation"
-```
-
-**Question 5: Review Prompts**
-```
-header: "Prompts"
-question: "Review prompts before generating images?"
-options:
-  - label: "Yes, review prompts (Recommended)"
-    description: "Review image generation prompts"
-  - label: "No, skip prompt review"
-    description: "Proceed directly to image generation"
-```
-
-#### Round 2 (Only if "Custom dimensions" selected)
-
-**Use AskUserQuestion** for all 4 dimensions:
-
-**Question 1: Texture**
-```
-header: "Texture"
-question: "Which visual texture?"
-options:
-  - label: "clean"
-    description: "Pure solid color, no texture"
-  - label: "grid"
-    description: "Subtle grid overlay, technical"
-  - label: "organic"
-    description: "Soft textures, hand-drawn feel"
-  - label: "pixel"
-    description: "Chunky pixels, 8-bit aesthetic"
-```
-(Note: "paper" available via Other)
-
-**Question 2: Mood**
-```
-header: "Mood"
-question: "Which color mood?"
-options:
-  - label: "professional"
-    description: "Cool-neutral, navy/gold"
-  - label: "warm"
-    description: "Earth tones, friendly"
-  - label: "cool"
-    description: "Blues, grays, analytical"
-  - label: "vibrant"
-    description: "High saturation, bold"
-  - label: "macaron"
-    description: "Pastel blocks (blue, mint, lavender, peach) on cream"
-```
-(Note: "dark", "neutral" available via Other)
-
-**Question 3: Typography**
-```
-header: "Typography"
-question: "Which typography style?"
-options:
-  - label: "geometric"
-    description: "Modern sans-serif, clean"
-  - label: "humanist"
-    description: "Friendly, readable"
-  - label: "handwritten"
-    description: "Marker/brush, organic"
-  - label: "editorial"
-    description: "Magazine style, dramatic"
-```
-(Note: "technical" available via Other)
-
-**Question 4: Density**
-```
-header: "Density"
-question: "Information density?"
-options:
-  - label: "balanced (Recommended)"
-    description: "2-3 key points per slide"
-  - label: "minimal"
-    description: "One focus point, maximum whitespace"
-  - label: "dense"
-    description: "Multiple data points, compact"
-```
-
-**After Round 2**: Store custom dimensions as the style configuration.
-
-**After Confirmation**:
-1. Update `analysis.md` with confirmed preferences
-2. Store `skip_outline_review` flag from Question 4
-3. Store `skip_prompt_review` flag from Question 5
-4. → Step 3
+**After confirmation**: update `analysis.md` with final choices and store `skip_outline_review` / `skip_prompt_review` flags from Q4/Q5.
 
 ### Step 3: Generate Outline
 
-Create outline using the confirmed style from Step 2.
+Resolve style: preset → `references/styles/{preset}.md`; custom dimensions → combine files in `references/dimensions/`. Build `STYLE_INSTRUCTIONS` from the resolved style, apply confirmed audience + language + slide count, follow `references/outline-template.md`, and save as `outline.md`.
 
-**Style Resolution**:
-- If preset selected → Read `references/styles/{preset}.md`
-- If custom dimensions → Read dimension files from `references/dimensions/` and combine
-
-**Generate**:
-1. Follow `references/outline-template.md` for structure
-2. Build STYLE_INSTRUCTIONS from style or dimensions
-3. Apply confirmed audience, language, slide count
-4. Save as `outline.md`
-
-**After generation**:
-- If `--outline-only`, stop here
-- If `skip_outline_review` is true → Skip Step 4, go to Step 5
-- If `skip_outline_review` is false → Continue to Step 4
+Stop here if `--outline-only`. Skip Step 4 if `skip_outline_review`.
 
 ### Step 4: Review Outline (Conditional)
 
-**Skip this step** if user selected "No, skip outline review" in Step 2.
+Display a slide-by-slide table (`# | Title | Type | Layout`) along with total count and resolved style. Ask: proceed / edit outline first / regenerate — verbatim in `references/confirmation.md`.
 
-**Purpose**: Review outline structure before prompt generation.
-
-**Language**: Use user's input language or saved language preference.
-
-**Display**:
-- Total slides: N
-- Style: [preset name or "custom: texture+mood+typography+density"]
-- Slide-by-slide summary table:
-
-```
-| # | Title | Type | Layout |
-|---|-------|------|--------|
-| 1 | [title] | Cover | title-hero |
-| 2 | [title] | Content | [layout] |
-| 3 | [title] | Content | [layout] |
-| ... | ... | ... | ... |
-```
-
-**Use AskUserQuestion**:
-```
-header: "Confirm"
-question: "Ready to generate prompts?"
-options:
-  - label: "Yes, proceed (Recommended)"
-    description: "Generate image prompts"
-  - label: "Edit outline first"
-    description: "I'll modify outline.md before continuing"
-  - label: "Regenerate outline"
-    description: "Create new outline with different approach"
-```
-
-**After response**:
-1. If "Edit outline first" → Inform user to edit `outline.md`, ask again when ready
-2. If "Regenerate outline" → Back to Step 3
-3. If "Yes, proceed" → Continue to Step 5
+On "Edit outline first", tell the user to edit `outline.md` and ask again when ready. On "Regenerate outline", return to Step 3.
 
 ### Step 5: Generate Prompts
 
+For each slide in outline:
 1. Read `references/base-prompt.md`
-2. For each slide in outline:
-   - Extract STYLE_INSTRUCTIONS from outline (not from style file again)
-   - Add slide-specific content
-   - If `Layout:` specified, include layout guidance from `references/layouts.md`
-3. Save to `prompts/` directory
-   - **Backup rule**: If prompt file exists, rename to `prompts/NN-slide-{slug}-backup-YYYYMMDD-HHMMSS.md`
+2. Extract `STYLE_INSTRUCTIONS` from the outline (don't re-read the style file)
+3. Add the slide's content
+4. If a `Layout:` is specified, include guidance from `references/layouts.md`
+5. Save to `prompts/NN-slide-{slug}.md` (backup rule applies)
 
-**After generation**:
-- If `--prompts-only`, stop here and output prompt summary
-- If `skip_prompt_review` is true → Skip Step 6, go to Step 7
-- If `skip_prompt_review` is false → Continue to Step 6
+Stop here if `--prompts-only`. Skip Step 6 if `skip_prompt_review`.
 
 ### Step 6: Review Prompts (Conditional)
 
-**Skip this step** if user selected "No, skip prompt review" in Step 2.
-
-**Purpose**: Review prompts before image generation.
-
-**Language**: Use user's input language or saved language preference.
-
-**Display**:
-- Total prompts: N
-- Style: [preset name or custom dimensions]
-- Prompt list:
-
-```
-| # | Filename | Slide Title |
-|---|----------|-------------|
-| 1 | 01-slide-cover.md | [title] |
-| 2 | 02-slide-xxx.md | [title] |
-| ... | ... | ... |
-```
-
-- Path to prompts directory: `prompts/`
-
-**Use AskUserQuestion**:
-```
-header: "Confirm"
-question: "Ready to generate slide images?"
-options:
-  - label: "Yes, proceed (Recommended)"
-    description: "Generate all slide images"
-  - label: "Edit prompts first"
-    description: "I'll modify prompts before continuing"
-  - label: "Regenerate prompts"
-    description: "Create new prompts with different approach"
-```
-
-**After response**:
-1. If "Edit prompts first" → Inform user to edit prompts, ask again when ready
-2. If "Regenerate prompts" → Back to Step 5
-3. If "Yes, proceed" → Continue to Step 7
+Display the prompts index (`# | Filename | Slide Title`) and ask: proceed / edit prompts first / regenerate — verbatim in `references/confirmation.md`. Branches mirror Step 4.
 
 ### Step 7: Generate Images
 
-**For `--images-only`**: Start here with existing prompts.
+1. Resolve the image backend via the Image Generation Tools rule at the top — ask once if multiple are installed.
+2. Confirm every `prompts/NN-slide-{slug}.md` exists (hard requirement; prompt files are the reproducibility record regardless of backend).
+3. Session ID: `slides-{topic-slug}-{timestamp}` — pass to the backend only if it supports sessions.
+4. For each slide: generate sequentially, reusing the session ID. Backup rule applies to PNG files. Report progress as `Generated X/N`. Auto-retry once on failure before reporting an error.
 
-**For `--regenerate N`**: Only regenerate specified slide(s).
+`--regenerate N` jumps to this step for the named slides only. `--images-only` starts here with existing prompts.
 
-**Standard flow**:
-1. Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session.
-2. Ensure every `prompts/NN-slide-[slug].md` file is already written (hard requirement — the prompt files are the reproducibility record regardless of backend).
-3. Generate session ID: `slides-{topic-slug}-{timestamp}`
-4. For each slide:
-   - **Backup rule**: If image file exists, rename to `NN-slide-{slug}-backup-YYYYMMDD-HHMMSS.png`
-   - Generate image sequentially with same session ID (session ID is passed only when the chosen backend supports it)
-5. Report progress: "Generated X/N" (in user's language)
-6. Auto-retry once on failure before reporting error
-
-### Step 8: Merge to PPTX and PDF
+### Step 8: Merge
 
 ```bash
 ${BUN_X} {baseDir}/scripts/merge-to-pptx.ts <slide-deck-dir>
 ${BUN_X} {baseDir}/scripts/merge-to-pdf.ts <slide-deck-dir>
 ```
 
-### Step 9: Output Summary
-
-**Language**: Use user's input language or saved language preference.
+### Step 9: Summary
 
 ```
 Slide Deck Complete!
-
 Topic: [topic]
-Style: [preset name or custom dimensions]
-Location: [directory path]
-Slides: N total
+Style: [preset or "custom: texture+mood+typography+density"]
+Location: [directory]
+Slides: N
 
-- 01-slide-cover.png - Cover
-- 02-slide-intro.png - Content
+- 01-slide-cover.png
 - ...
-- {NN}-slide-back-cover.png - Back Cover
+- NN-slide-back-cover.png
 
 Outline: outline.md
 PPTX: {topic-slug}.pptx
 PDF: {topic-slug}.pdf
 ```
 
-## Partial Workflows
-
-| Option | Workflow |
-|--------|----------|
-| `--outline-only` | Steps 1-3 only (stop after outline) |
-| `--prompts-only` | Steps 1-5 (generate prompts, skip images) |
-| `--images-only` | Skip to Step 7 (requires existing prompts/) |
-| `--regenerate N` | Regenerate specific slide(s) only |
-
-### Using `--prompts-only`
-
-Generate outline and prompts without images:
-
-```bash
-/baoyu-slide-deck content.md --prompts-only
-```
-
-Output: `outline.md` + `prompts/*.md` ready for review/editing.
-
-### Using `--images-only`
-
-Generate images from existing prompts (starts at Step 7):
-
-```bash
-/baoyu-slide-deck slide-deck/topic-slug/ --images-only
-```
-
-Prerequisites:
-- `prompts/` directory with slide prompt files
-- `outline.md` with style information
-
-### Using `--regenerate`
-
-Regenerate specific slides:
-
-```bash
-# Single slide
-/baoyu-slide-deck slide-deck/topic-slug/ --regenerate 3
-
-# Multiple slides
-/baoyu-slide-deck slide-deck/topic-slug/ --regenerate 2,5,8
-```
-
-Flow:
-1. Read existing prompts for specified slides
-2. Regenerate images only for those slides
-3. Regenerate PPTX/PDF
-
 ## Slide Modification
 
-### Quick Reference
+| Action | How |
+|--------|-----|
+| Edit | Update `prompts/NN-slide-{slug}.md` **first**, then `--regenerate N` |
+| Add | Create new prompt at position, generate image, renumber subsequent `NN` (slugs unchanged), update `outline.md`, re-merge |
+| Delete | Remove PNG + prompt, renumber subsequent, update `outline.md`, re-merge |
 
-| Action | Command | Manual Steps |
-|--------|---------|--------------|
-| **Edit** | `--regenerate N` | **Update prompt file FIRST** → Regenerate image → Regenerate PDF |
-| **Add** | Manual | Create prompt → Generate image → Renumber subsequent → Update outline → Regenerate PDF |
-| **Delete** | Manual | Remove files → Renumber subsequent → Update outline → Regenerate PDF |
+Always update the prompt file before regenerating the image — this keeps the prompts directory as the source of truth and makes changes reproducible. Only `NN` changes on renumber; slugs stay stable so references remain valid.
 
-### Edit Single Slide
-
-1. **Update prompt file FIRST** in `prompts/NN-slide-{slug}.md`
-2. Run: `/baoyu-slide-deck <dir> --regenerate N`
-3. Or manually regenerate image + PDF
-
-**IMPORTANT**: When updating slides, ALWAYS update the prompt file (`prompts/NN-slide-{slug}.md`) FIRST before regenerating. This ensures changes are documented and reproducible.
-
-### Add New Slide
-
-1. Create prompt at position: `prompts/NN-slide-{new-slug}.md`
-2. Generate image using same session ID
-3. **Renumber**: Subsequent files NN+1 (slugs unchanged)
-4. Update `outline.md`
-5. Regenerate PPTX/PDF
-
-### Delete Slide
-
-1. Remove `NN-slide-{slug}.png` and `prompts/NN-slide-{slug}.md`
-2. **Renumber**: Subsequent files NN-1 (slugs unchanged)
-3. Update `outline.md`
-4. Regenerate PPTX/PDF
-
-### File Naming
-
-Format: `NN-slide-[slug].png`
-- `NN`: Two-digit sequence (01, 02, ...)
-- `slug`: Kebab-case from content (2-5 words, unique)
-
-**Renumbering Rule**: Only NN changes, slugs remain unchanged.
-
-See `references/modification-guide.md` for complete details.
+See `references/modification-guide.md` for full details.
 
 ## References
 
 | File | Content |
 |------|---------|
-| `references/analysis-framework.md` | Content analysis for presentations |
-| `references/outline-template.md` | Outline structure and format |
-| `references/modification-guide.md` | Edit, add, delete slide workflows |
-| `references/content-rules.md` | Content and style guidelines |
-| `references/design-guidelines.md` | Audience, typography, colors, visual elements |
-| `references/layouts.md` | Layout options and selection tips |
-| `references/base-prompt.md` | Base prompt for image generation |
-| `references/dimensions/*.md` | Dimension specifications (texture, mood, typography, density) |
-| `references/dimensions/presets.md` | Preset → dimension mapping |
-| `references/styles/<style>.md` | Full style specifications (legacy) |
-| `references/config/preferences-schema.md` | EXTEND.md structure |
+| `references/styles-gallery.md` | Full preset list, dimensions, auto-select signals, slide-count heuristic |
+| `references/confirmation.md` | Verbatim AskUserQuestion option copy for every confirmation |
+| `references/analysis-framework.md` | Content analysis framework |
+| `references/outline-template.md` | Outline structure |
+| `references/base-prompt.md` | Base prompt body for image generation |
+| `references/layouts.md` | Layout options |
+| `references/design-guidelines.md` | Audience, typography, color selection |
+| `references/content-rules.md` | Content guidelines |
+| `references/modification-guide.md` | Edit/add/delete workflows |
+| `references/styles/<preset>.md` | Per-preset specifications |
+| `references/dimensions/*.md` | Per-dimension specifications |
+| `references/config/preferences-schema.md` | EXTEND.md schema |
 
 ## Notes
 
-- Image generation: 10-30 seconds per slide
-- Auto-retry once on generation failure
-- Use stylized alternatives for sensitive public figures
-- Maintain style consistency via session ID
-- **Step 2 confirmation required** - do not skip (style, audience, slides, outline review, prompt review)
-- **Step 4 conditional** - only if user requested outline review in Step 2
-- **Step 6 conditional** - only if user requested prompt review in Step 2
+- Image generation takes ~10-30s per slide; report progress between them.
+- For sensitive public figures, prefer stylized alternatives to avoid likeness issues.
+- Maintain visual consistency via the session ID when the backend supports it.
 
-## Extension Support
-
-Custom configurations via EXTEND.md. See **Step 1.1** for paths and supported options.
+Custom configurations via EXTEND.md. See Step 1.1 for paths and schema.

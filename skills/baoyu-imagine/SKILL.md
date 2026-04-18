@@ -13,7 +13,7 @@ metadata:
 
 # Image Generation (AI SDK)
 
-Official API-based image generation. Supports OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包) and Replicate providers.
+Official API-based image generation. Supports OpenAI, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包) and Replicate.
 
 ## User Input Tools
 
@@ -27,149 +27,50 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-**Agent Execution**:
-1. `{baseDir}` = this SKILL.md file's directory
-2. Script path = `{baseDir}/scripts/main.ts`
-3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
+`{baseDir}` = this SKILL.md's directory. Main script: `{baseDir}/scripts/main.ts`. Resolve `${BUN_X}`: prefer `bun`; else `npx -y bun`; else suggest `brew install oven-sh/bun/bun`.
 
 ## Step 0: Load Preferences ⛔ BLOCKING
 
-**CRITICAL**: This step MUST complete BEFORE any image generation. Do NOT skip or defer.
+This step MUST complete before any image generation — generation is blocked until EXTEND.md exists.
 
-Check EXTEND.md existence (priority: project → user):
+Check these paths in order; first hit wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-imagine/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-imagine/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-imagine/EXTEND.md" && echo "user"
-```
-
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-imagine/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-imagine/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-imagine/EXTEND.md") { "user" }
-```
-
-| Result | Action |
-|--------|--------|
-| Found | Load, parse, apply settings. If `default_model.[provider]` is null → ask model only (Flow 2) |
-| Not found | ⛔ Run first-time setup ([references/config/first-time-setup.md](references/config/first-time-setup.md)) → Save EXTEND.md → Then continue |
-
-**CRITICAL**: If not found, complete the full setup (provider + model + quality + save location) using AskUserQuestion BEFORE generating any images. Generation is BLOCKED until EXTEND.md is created.
-
-| Path | Location |
-|------|----------|
-| `.baoyu-skills/baoyu-imagine/EXTEND.md` | Project directory |
+| Path | Scope |
+|------|-------|
+| `.baoyu-skills/baoyu-imagine/EXTEND.md` | Project |
+| `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-imagine/EXTEND.md` | XDG |
 | `$HOME/.baoyu-skills/baoyu-imagine/EXTEND.md` | User home |
 
-Legacy compatibility: if `.baoyu-skills/baoyu-image-gen/EXTEND.md` exists and the new path does not, runtime renames it to `baoyu-imagine`. If both files exist, runtime leaves them unchanged and uses the new path.
+- **Found** → load, parse, apply. If `default_model.[provider]` is null → ask model only.
+- **Not found** → run first-time setup (`references/config/first-time-setup.md`) using AskUserQuestion to collect provider + model + quality + save location. Save EXTEND.md, then continue. Do not generate images before this completes.
 
-**EXTEND.md Supports**: Default provider | Default quality | Default aspect ratio | Default image size | OpenAI image API dialect | Default models | Batch worker cap | Provider-specific batch limits
+Legacy compatibility: if `.baoyu-skills/baoyu-image-gen/EXTEND.md` exists and the new path doesn't, the runtime renames it to `baoyu-imagine`. If both exist, the runtime leaves them alone and uses the new path.
 
-Schema: `references/config/preferences-schema.md`
+**EXTEND.md keys**: default provider, default quality, default aspect ratio, default image size, OpenAI image API dialect, default models, batch worker cap, provider-specific batch limits. Schema: `references/config/preferences-schema.md`.
 
 ## Usage
+
+Minimum working examples — see `references/usage-examples.md` for the full set including per-provider invocations and batch mode.
 
 ```bash
 # Basic
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image cat.png
 
-# With aspect ratio
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A landscape" --image out.png --ar 16:9
+# With aspect ratio and high quality
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A landscape" --image out.png --ar 16:9 --quality 2k
 
-# High quality
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --quality 2k
-
-# From prompt files
+# Prompt from files
 ${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
 
-# With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 4.0/4.5/5.0)
+# With reference image
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref source.png
 
-# With reference images (explicit provider/model)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --provider google --model gemini-3-pro-image-preview --ref source.png
-
-# Azure OpenAI (model means deployment name)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider azure --model gpt-image-1.5
-
-# OpenRouter (recommended default model)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openrouter
-
-# OpenRouter with reference images
-${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image-preview --ref source.png
-
 # Specific provider
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider dashscope --model qwen-image-2.0-pro
 
-# DashScope (阿里通义万象)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "一只可爱的猫" --image out.png --provider dashscope
-
-# DashScope Qwen-Image 2.0 Pro (recommended for custom sizes and text rendering)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "为咖啡品牌设计一张 21:9 横幅海报，包含清晰中文标题" --image out.png --provider dashscope --model qwen-image-2.0-pro --size 2048x872
-
-# DashScope legacy Qwen fixed-size model
-${BUN_X} {baseDir}/scripts/main.ts --prompt "一张电影感海报" --image out.png --provider dashscope --model qwen-image-max --size 1664x928
-
-# Z.AI GLM-image
-${BUN_X} {baseDir}/scripts/main.ts --prompt "一张带清晰中文标题的科技海报" --image out.png --provider zai
-
-# Z.AI GLM-image with explicit custom size
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A science illustration with labels" --image out.png --provider zai --model glm-image --size 1472x1088
-
-# MiniMax
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A fashion editorial portrait by a bright studio window" --image out.jpg --provider minimax
-
-# MiniMax with subject reference (best for character/portrait consistency)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A girl stands by the library window, cinematic lighting" --image out.jpg --provider minimax --model image-01 --ref portrait.png --ar 16:9
-
-# MiniMax with custom size (documented for image-01)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic poster" --image out.jpg --provider minimax --model image-01 --size 1536x1024
-
-# Replicate (default: google/nano-banana-2)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
-
-# Replicate Seedream 4.5
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic portrait" --image out.png --provider replicate --model bytedance/seedream-4.5 --ar 3:2
-
-# Replicate Wan 2.7 Image Pro
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A concept frame" --image out.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
-
-# Batch mode with saved prompt files
-${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json
-
-# Batch mode with explicit worker count
-${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4 --json
+# Batch mode
+${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4
 ```
-
-### Batch File Format
-
-```json
-{
-  "jobs": 4,
-  "tasks": [
-    {
-      "id": "hero",
-      "promptFiles": ["prompts/hero.md"],
-      "image": "out/hero.png",
-      "provider": "replicate",
-      "model": "google/nano-banana-2",
-      "ar": "16:9",
-      "quality": "2k"
-    },
-    {
-      "id": "diagram",
-      "promptFiles": ["prompts/diagram.md"],
-      "image": "out/diagram.png",
-      "ref": ["references/original.png"]
-    }
-  ]
-}
-```
-
-Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch file's directory. `jobs` is optional (overridden by CLI `--jobs`). Top-level array format (without `jobs` wrapper) is also accepted.
 
 ## Options
 
@@ -181,14 +82,14 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `--batchfile <path>` | JSON batch file for multi-image generation |
 | `--jobs <count>` | Worker count for batch mode (default: auto, max from config, built-in default 10) |
 | `--provider google\|openai\|azure\|openrouter\|dashscope\|zai\|minimax\|jimeng\|seedream\|replicate` | Force provider (default: auto-detect) |
-| `--model <id>`, `-m` | Model ID (Google: `gemini-3-pro-image-preview`; OpenAI: `gpt-image-1.5`; Azure: deployment name such as `gpt-image-1.5` or `image-prod`; OpenRouter: `google/gemini-3.1-flash-image-preview`; DashScope: `qwen-image-2.0-pro`; Z.AI: `glm-image`; MiniMax: `image-01`) |
-| `--ar <ratio>` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
-| `--size <WxH>` | Size (e.g., `1024x1024`) |
+| `--model <id>`, `-m` | Model ID — see provider references for defaults and allowed values |
+| `--ar <ratio>` | Aspect ratio (`16:9`, `1:1`, `4:3`, …) |
+| `--size <WxH>` | Explicit size (e.g., `1024x1024`) |
 | `--quality normal\|2k` | Quality preset (default: `2k`) |
 | `--imageSize 1K\|2K\|4K` | Image size for Google/OpenRouter (default: from quality) |
-| `--imageApiDialect openai-native\|ratio-metadata` | OpenAI-compatible image API dialect. Use `ratio-metadata` when the endpoint is OpenAI-compatible but expects aspect-ratio `size` plus `metadata.resolution` instead of pixel `size` |
-| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, and Seedream 5.0/4.5/4.0. Not supported by Jimeng, Seedream 3.0, or removed SeedEdit 3.0 |
-| `--n <count>` | Number of images. Replicate currently supports only `--n 1` because this path saves exactly one output image |
+| `--imageApiDialect openai-native\|ratio-metadata` | OpenAI-compatible endpoint dialect — use `ratio-metadata` for gateways that expect aspect-ratio `size` plus `metadata.resolution` |
+| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, Seedream 5.0/4.5/4.0. Not supported by Jimeng, Seedream 3.0, SeedEdit 3.0 |
+| `--n <count>` | Number of images. Replicate requires `--n 1` (single-output save semantics) |
 | `--json` | JSON output |
 
 ## Environment Variables
@@ -199,293 +100,109 @@ Paths in `promptFiles`, `image`, and `ref` are resolved relative to the batch fi
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API key |
 | `OPENROUTER_API_KEY` | OpenRouter API key |
 | `GOOGLE_API_KEY` | Google API key |
-| `DASHSCOPE_API_KEY` | DashScope API key (阿里云) |
-| `ZAI_API_KEY` | Z.AI API key |
-| `BIGMODEL_API_KEY` | Backward-compatible alias for Z.AI API key |
+| `DASHSCOPE_API_KEY` | DashScope API key |
+| `ZAI_API_KEY` (alias `BIGMODEL_API_KEY`) | Z.AI API key |
 | `MINIMAX_API_KEY` | MiniMax API key |
 | `REPLICATE_API_TOKEN` | Replicate API token |
-| `JIMENG_ACCESS_KEY_ID` | Jimeng (即梦) Volcengine access key |
-| `JIMENG_SECRET_ACCESS_KEY` | Jimeng (即梦) Volcengine secret key |
+| `JIMENG_ACCESS_KEY_ID`, `JIMENG_SECRET_ACCESS_KEY` | Jimeng (即梦) Volcengine credentials |
 | `ARK_API_KEY` | Seedream (豆包) Volcengine ARK API key |
-| `OPENAI_IMAGE_MODEL` | OpenAI model override |
-| `AZURE_OPENAI_DEPLOYMENT` | Azure default deployment name |
-| `AZURE_OPENAI_IMAGE_MODEL` | Backward-compatible alias for Azure default deployment/model name |
-| `OPENROUTER_IMAGE_MODEL` | OpenRouter model override (default: `google/gemini-3.1-flash-image-preview`) |
-| `GOOGLE_IMAGE_MODEL` | Google model override |
-| `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: `qwen-image-2.0-pro`) |
-| `ZAI_IMAGE_MODEL` | Z.AI model override (default: `glm-image`) |
-| `BIGMODEL_IMAGE_MODEL` | Backward-compatible alias for Z.AI model override |
-| `MINIMAX_IMAGE_MODEL` | MiniMax model override (default: `image-01`) |
-| `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-2) |
-| `JIMENG_IMAGE_MODEL` | Jimeng model override (default: jimeng_t2i_v40) |
-| `SEEDREAM_IMAGE_MODEL` | Seedream model override (default: doubao-seedream-5-0-260128) |
-| `OPENAI_BASE_URL` | Custom OpenAI endpoint |
-| `OPENAI_IMAGE_API_DIALECT` | OpenAI-compatible image API dialect override (`openai-native` or `ratio-metadata`) |
-| `AZURE_OPENAI_BASE_URL` | Azure resource endpoint or deployment endpoint |
-| `AZURE_API_VERSION` | Azure image API version (default: `2025-04-01-preview`) |
-| `OPENROUTER_BASE_URL` | Custom OpenRouter endpoint (default: `https://openrouter.ai/api/v1`) |
-| `OPENROUTER_HTTP_REFERER` | Optional app/site URL for OpenRouter attribution |
-| `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution |
-| `GOOGLE_BASE_URL` | Custom Google endpoint |
-| `DASHSCOPE_BASE_URL` | Custom DashScope endpoint |
-| `ZAI_BASE_URL` | Custom Z.AI endpoint (default: `https://api.z.ai/api/paas/v4`) |
-| `BIGMODEL_BASE_URL` | Backward-compatible alias for Z.AI endpoint |
-| `MINIMAX_BASE_URL` | Custom MiniMax endpoint (default: `https://api.minimax.io`) |
-| `REPLICATE_BASE_URL` | Custom Replicate endpoint |
-| `JIMENG_BASE_URL` | Custom Jimeng endpoint (default: `https://visual.volcengineapi.com`) |
-| `JIMENG_REGION` | Jimeng region (default: `cn-north-1`) |
-| `SEEDREAM_BASE_URL` | Custom Seedream endpoint (default: `https://ark.cn-beijing.volces.com/api/v3`) |
+| `<PROVIDER>_IMAGE_MODEL` | Per-provider model override (`OPENAI_IMAGE_MODEL`, `GOOGLE_IMAGE_MODEL`, `DASHSCOPE_IMAGE_MODEL`, `ZAI_IMAGE_MODEL`/`BIGMODEL_IMAGE_MODEL`, `MINIMAX_IMAGE_MODEL`, `OPENROUTER_IMAGE_MODEL`, `REPLICATE_IMAGE_MODEL`, `JIMENG_IMAGE_MODEL`, `SEEDREAM_IMAGE_MODEL`) |
+| `AZURE_OPENAI_DEPLOYMENT` (alias `AZURE_OPENAI_IMAGE_MODEL`) | Azure default deployment |
+| `<PROVIDER>_BASE_URL` | Per-provider endpoint override |
+| `AZURE_API_VERSION` | Azure image API version (default `2025-04-01-preview`) |
+| `JIMENG_REGION` | Jimeng region (default `cn-north-1`) |
+| `OPENAI_IMAGE_API_DIALECT` | `openai-native` \| `ratio-metadata` |
+| `OPENROUTER_HTTP_REFERER`, `OPENROUTER_TITLE` | Optional OpenRouter attribution |
 | `BAOYU_IMAGE_GEN_MAX_WORKERS` | Override batch worker cap |
-| `BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY` | Override provider concurrency, e.g. `BAOYU_IMAGE_GEN_REPLICATE_CONCURRENCY` |
-| `BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS` | Override provider start gap, e.g. `BAOYU_IMAGE_GEN_REPLICATE_START_INTERVAL_MS` |
+| `BAOYU_IMAGE_GEN_<PROVIDER>_CONCURRENCY` | Per-provider concurrency (e.g., `BAOYU_IMAGE_GEN_REPLICATE_CONCURRENCY`) |
+| `BAOYU_IMAGE_GEN_<PROVIDER>_START_INTERVAL_MS` | Per-provider start-gap |
 
-**Load Priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
+**Load priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
 
 ## Model Resolution
 
-Model priority (highest → lowest), applies to all providers:
+Priority (highest → lowest) applies to every provider:
 
-1. CLI flag: `--model <id>`
-2. EXTEND.md: `default_model.[provider]`
-3. Env var: `<PROVIDER>_IMAGE_MODEL` (e.g., `GOOGLE_IMAGE_MODEL`)
+1. CLI flag `--model <id>`
+2. EXTEND.md `default_model.[provider]`
+3. Env var `<PROVIDER>_IMAGE_MODEL`
 4. Built-in default
 
-For Azure, `--model` / `default_model.azure` should be the Azure deployment name. `AZURE_OPENAI_DEPLOYMENT` is the preferred env var, and `AZURE_OPENAI_IMAGE_MODEL` remains as a backward-compatible alias.
+For Azure, `--model` / `default_model.azure` is the Azure deployment name. `AZURE_OPENAI_DEPLOYMENT` is the preferred env var; `AZURE_OPENAI_IMAGE_MODEL` is kept as a backward-compatible alias.
 
-**EXTEND.md overrides env vars**. If both EXTEND.md `default_model.google: "gemini-3-pro-image-preview"` and env var `GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image-preview` exist, EXTEND.md wins.
+EXTEND.md overrides env vars: if EXTEND.md sets `default_model.google: "gemini-3-pro-image-preview"` and the env var sets `GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image-preview`, EXTEND.md wins.
 
-### OpenAI-Compatible Gateway Dialects
+**Display model info before each generation**:
 
-`provider=openai` means the auth and routing entrypoint is OpenAI-compatible. It does **not** guarantee that the upstream image API uses OpenAI native image-request semantics.
+- `Using [provider] / [model]`
+- `Switch model: --model <id> | EXTEND.md default_model.[provider] | env <PROVIDER>_IMAGE_MODEL`
 
-Use `default_image_api_dialect` in `EXTEND.md`, `OPENAI_IMAGE_API_DIALECT`, or `--imageApiDialect` when the endpoint expects a different wire format:
+## OpenAI-Compatible Gateway Dialects
 
-- `openai-native`: Sends pixel `size` such as `1536x1024` and native OpenAI quality fields when supported
-- `ratio-metadata`: Sends aspect-ratio `size` such as `16:9` and maps quality/size intent into `metadata.resolution` (`1K|2K|4K`) plus `metadata.orientation`
+`provider=openai` means the auth and routing entrypoint is OpenAI-compatible. It does **not** guarantee the upstream image API uses OpenAI native semantics. When a gateway expects a different wire format, set `default_image_api_dialect` in EXTEND.md, `OPENAI_IMAGE_API_DIALECT`, or `--imageApiDialect`:
 
-Recommended use:
+- `openai-native`: pixel `size` (`1536x1024`) and native OpenAI quality fields
+- `ratio-metadata`: aspect-ratio `size` (`16:9`) plus `metadata.resolution` (`1K|2K|4K`) and `metadata.orientation`
 
-- OpenAI native Images API or strict clones: keep `openai-native`
-- OpenAI-compatible gateways in front of Gemini or similar models: try `ratio-metadata`
+Use `openai-native` for the OpenAI native API or strict clones; try `ratio-metadata` for compatibility gateways in front of Gemini or similar models. Current limitation: `ratio-metadata` applies only to text-to-image; reference-image edits still need `openai-native` or a provider with first-class edit support.
 
-Current limitation: `ratio-metadata` only applies to text-to-image generation. Reference-image edit flows still require `openai-native` or another provider with first-class edit support.
+## Provider-Specific Guides
 
-**Agent MUST display model info** before each generation:
-- Show: `Using [provider] / [model]`
-- Show switch hint: `Switch model: --model <id> | EXTEND.md default_model.[provider] | env <PROVIDER>_IMAGE_MODEL`
+Each provider has its own quirks (model families, size rules, ref support, limits). Read these when the user picks that provider or asks for non-default behavior:
 
-### DashScope Models
-
-Use `--model qwen-image-2.0-pro` or set `default_model.dashscope` / `DASHSCOPE_IMAGE_MODEL` when the user wants official Qwen-Image behavior.
-
-Official DashScope model families:
-
-- `qwen-image-2.0-pro`, `qwen-image-2.0-pro-2026-03-03`, `qwen-image-2.0`, `qwen-image-2.0-2026-03-03`
-  - Free-form `size` in `宽*高` format
-  - Total pixels must stay between `512*512` and `2048*2048`
-  - Default size is approximately `1024*1024`
-  - Best choice for custom ratios such as `21:9` and text-heavy Chinese/English layouts
-- `qwen-image-max`, `qwen-image-max-2025-12-30`, `qwen-image-plus`, `qwen-image-plus-2026-01-09`, `qwen-image`
-  - Fixed sizes only: `1664*928`, `1472*1104`, `1328*1328`, `1104*1472`, `928*1664`
-  - Default size is `1664*928`
-  - `qwen-image` currently has the same capability as `qwen-image-plus`
-- Legacy DashScope models such as `z-image-turbo`, `z-image-ultra`, `wanx-v1`
-  - Keep using them only when the user explicitly asks for legacy behavior or compatibility
-
-When translating CLI args into DashScope behavior:
-
-- `--size` wins over `--ar`
-- For `qwen-image-2.0*`, prefer explicit `--size`; otherwise infer from `--ar` and use the official recommended resolutions below
-- For `qwen-image-max/plus/image`, only use the five official fixed sizes; if the requested ratio is not covered, switch to `qwen-image-2.0-pro`
-- `--quality` is a baoyu-imagine compatibility preset, not a native DashScope API field. Mapping `normal` / `2k` onto the `qwen-image-2.0*` table below is an implementation inference, not an official API guarantee
-
-Recommended `qwen-image-2.0*` sizes for common aspect ratios:
-
-| Ratio | `normal` | `2k` |
-|-------|----------|------|
-| `1:1` | `1024*1024` | `1536*1536` |
-| `2:3` | `768*1152` | `1024*1536` |
-| `3:2` | `1152*768` | `1536*1024` |
-| `3:4` | `960*1280` | `1080*1440` |
-| `4:3` | `1280*960` | `1440*1080` |
-| `9:16` | `720*1280` | `1080*1920` |
-| `16:9` | `1280*720` | `1920*1080` |
-| `21:9` | `1344*576` | `2048*872` |
-
-DashScope official APIs also expose `negative_prompt`, `prompt_extend`, and `watermark`, but `baoyu-imagine` does not expose them as dedicated CLI flags today.
-
-Official references:
-
-- [Qwen-Image API](https://help.aliyun.com/zh/model-studio/qwen-image-api)
-- [Text-to-image guide](https://help.aliyun.com/zh/model-studio/text-to-image)
-- [Qwen-Image Edit API](https://help.aliyun.com/zh/model-studio/qwen-image-edit-api)
-
-### Z.AI Models
-
-Use `--model glm-image` or set `default_model.zai` / `ZAI_IMAGE_MODEL` when the user wants GLM-image output.
-
-Official Z.AI image model options currently documented in the sync image API:
-
-- `glm-image` (recommended default)
-  - Text-to-image only in `baoyu-imagine`
-  - Native `quality` options are `hd` and `standard`; this skill maps `2k -> hd` and `normal -> standard`
-  - Recommended sizes: `1280x1280`, `1568x1056`, `1056x1568`, `1472x1088`, `1088x1472`, `1728x960`, `960x1728`
-  - Custom `--size` requires width and height between `1024` and `2048`, divisible by `32`, with total pixels <= `2^22`
-- `cogview-4-250304`
-  - Legacy Z.AI image model family exposed by the same endpoint
-  - Custom `--size` requires width and height between `512` and `2048`, divisible by `16`, with total pixels <= `2^21`
-
-Notes:
-
-- The official sync API returns a temporary image URL; `baoyu-imagine` downloads that URL and writes the image locally
-- `--ref` is not supported for Z.AI in this skill yet
-- The sync API currently returns a single image, so `--n > 1` is rejected
-
-Official references:
-
-- [GLM-Image Guide](https://docs.z.ai/guides/image/glm-image)
-- [Generate Image API](https://docs.z.ai/api-reference/image/generate-image)
-
-### MiniMax Models
-
-Use `--model image-01` or set `default_model.minimax` / `MINIMAX_IMAGE_MODEL` when the user wants MiniMax image generation.
-
-Official MiniMax image model options currently documented in the API reference:
-
-- `image-01` (recommended default)
-  - Supports text-to-image and subject-reference image generation
-  - Supports official `aspect_ratio` values: `1:1`, `16:9`, `4:3`, `3:2`, `2:3`, `3:4`, `9:16`, `21:9`
-  - Supports documented custom `width` / `height` output sizes when using `--size <WxH>`
-  - `width` and `height` must both be between `512` and `2048`, and both must be divisible by `8`
-- `image-01-live`
-  - Lower-latency variant
-  - Use `--ar` for sizing; MiniMax documents custom `width` / `height` as only effective for `image-01`
-
-MiniMax subject reference notes:
-
-- `--ref` files are sent as MiniMax `subject_reference`
-- MiniMax docs currently describe `subject_reference[].type` as `character`
-- Official docs say `image_file` supports public URLs or Base64 Data URLs; `baoyu-imagine` sends local refs as Data URLs
-- Official docs recommend front-facing portrait references in JPG/JPEG/PNG under 10MB
-
-Official references:
-
-- [MiniMax Image Generation Guide](https://platform.minimax.io/docs/guides/image-generation)
-- [MiniMax Text-to-Image API](https://platform.minimax.io/docs/api-reference/image-generation-t2i)
-- [MiniMax Image-to-Image API](https://platform.minimax.io/docs/api-reference/image-generation-i2i)
-
-### OpenRouter Models
-
-Use full OpenRouter model IDs, e.g.:
-
-- `google/gemini-3.1-flash-image-preview` (recommended, supports image output and reference-image workflows)
-- `google/gemini-2.5-flash-image-preview`
-- `black-forest-labs/flux.2-pro`
-- Other OpenRouter image-capable model IDs
-
-Notes:
-
-- OpenRouter image generation uses `/chat/completions`, not the OpenAI `/images` endpoints
-- If `--ref` is used, choose a multimodal model that supports image input and image output
-- `--imageSize` maps to OpenRouter `imageGenerationOptions.size`; `--size <WxH>` is converted to the nearest OpenRouter size and inferred aspect ratio when possible
-
-### Replicate Models
-
-Replicate support in `baoyu-imagine` is intentionally scoped to the model families that the tool can validate locally and save without dropping outputs:
-
-- `google/nano-banana*` (default: `google/nano-banana-2`)
-  - Supports prompt-only and reference-image generation
-  - Uses Replicate `aspect_ratio`, `resolution`, and `output_format`
-  - `--size <WxH>` is accepted only as a shorthand for a documented aspect ratio plus `1K` / `2K`
-- `bytedance/seedream-4.5`
-  - Supports prompt-only and reference-image generation
-  - Uses Replicate `size`, `aspect_ratio`, and `image_input`
-  - Local validation blocks unsupported `1K` requests before the API call
-- `bytedance/seedream-5-lite`
-  - Supports prompt-only and reference-image generation
-  - Uses Replicate `size`, `aspect_ratio`, and `image_input`
-  - Local validation currently accepts `2K` / `3K` only
-- `wan-video/wan-2.7-image`
-  - Supports prompt-only and reference-image generation
-  - Uses Replicate `size` and `images`
-  - Max output size is 2K
-- `wan-video/wan-2.7-image-pro`
-  - Supports prompt-only and reference-image generation
-  - Uses Replicate `size` and `images`
-  - 4K is allowed only for text-to-image; local validation blocks `4K + --ref`
-
-Guardrails:
-
-- Replicate currently supports only single-output save semantics in this tool. Keep `--n 1`.
-- If a Replicate model is outside the compatibility list above, `baoyu-imagine` only treats it as prompt-only and rejects advanced local options instead of guessing a nano-banana-style schema.
-
-Examples:
-
-```bash
-# Use Replicate default model
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
-
-# Override model explicitly
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate --model google/nano-banana
-```
+| Provider | Reference |
+|----------|-----------|
+| DashScope (Qwen-Image families, custom sizes) | `references/providers/dashscope.md` |
+| Z.AI (GLM-Image, cogview-4) | `references/providers/zai.md` |
+| MiniMax (image-01, subject-reference) | `references/providers/minimax.md` |
+| OpenRouter (multimodal models, `/chat/completions` flow) | `references/providers/openrouter.md` |
+| Replicate (nano-banana, Seedream, Wan) | `references/providers/replicate.md` |
 
 ## Provider Selection
 
-1. `--ref` provided + no `--provider` → auto-select Google first, then OpenAI, then Azure, then OpenRouter, then Replicate, then Seedream, then MiniMax (MiniMax subject reference is more specialized toward character/portrait consistency)
-2. `--provider` specified → use it (if `--ref`, must be `google`, `openai`, `azure`, `openrouter`, `replicate`, `seedream`, or `minimax`)
-3. Only one API key available → use that provider
-4. Multiple available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
+1. `--ref` provided + no `--provider` → auto-select Google → OpenAI → Azure → OpenRouter → Replicate → Seedream → MiniMax (MiniMax's subject reference is more specialized toward character/portrait consistency)
+2. `--provider` specified → use it (if `--ref`, must be google/openai/azure/openrouter/replicate/seedream/minimax)
+3. Only one API key present → use that provider
+4. Multiple keys → default priority: Google → OpenAI → Azure → OpenRouter → DashScope → Z.AI → MiniMax → Replicate → Jimeng → Seedream
 
 ## Quality Presets
 
-| Preset | Google imageSize | OpenAI Size | OpenRouter size | Replicate resolution | Use Case |
+| Preset | Google imageSize | OpenAI size | OpenRouter size | Replicate resolution | Use case |
 |--------|------------------|-------------|-----------------|----------------------|----------|
 | `normal` | 1K | 1024px | 1K | 1K | Quick previews |
 | `2k` (default) | 2K | 2048px | 2K | 2K | Covers, illustrations, infographics |
 
-**Google/OpenRouter imageSize**: Can be overridden with `--imageSize 1K|2K|4K`
+Google/OpenRouter `imageSize` can be overridden with `--imageSize 1K|2K|4K`.
 
 ## Aspect Ratios
 
-Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`
+Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`.
 
-- Google multimodal: uses `imageConfig.aspectRatio`
-- OpenAI: maps to closest supported size
-- OpenRouter: sends `imageGenerationOptions.aspect_ratio`; if only `--size <WxH>` is given, aspect ratio is inferred automatically
-- Replicate: behavior is model-family-specific. `google/nano-banana*` uses `aspect_ratio`; `bytedance/seedream-*` uses documented Replicate aspect ratios; Wan 2.7 maps `--ar` to a concrete `size`
-- MiniMax: sends official `aspect_ratio` values directly; if `--size <WxH>` is given without `--ar`, `width` / `height` are sent for `image-01`
+- Google multimodal: `imageConfig.aspectRatio`
+- OpenAI: closest supported size
+- OpenRouter: `imageGenerationOptions.aspect_ratio`; if only `--size <WxH>` is given, the ratio is inferred
+- Replicate: behavior is model-specific — `google/nano-banana*` uses `aspect_ratio`, `bytedance/seedream-*` uses documented Replicate ratios, Wan 2.7 maps `--ar` to a concrete `size`
+- MiniMax: official `aspect_ratio` values; if `--size <WxH>` is given without `--ar`, sends `width`/`height` for `image-01`
 
 ## Generation Mode
 
-**Default**: Sequential generation.
+**Default**: sequential. **Batch parallel**: enabled automatically when `--batchfile` contains 2+ pending tasks.
 
-**Batch Parallel Generation**: When `--batchfile` contains 2 or more pending tasks, the script automatically enables parallel generation.
+| Situation | Prefer | Why |
+|-----------|--------|-----|
+| One image, or 1-2 simple images | Sequential | Lower coordination overhead, easier debugging |
+| Multiple images with saved prompt files | Batch (`--batchfile`) | Reuses finalized prompts, applies shared throttling/retries, predictable throughput |
+| Each image still needs its own reasoning / prompt writing / style exploration | Subagents | Work is still exploratory, each needs independent analysis |
+| Input is `outline.md` + `prompts/` (e.g. from `baoyu-article-illustrator`) | Batch — use `scripts/build-batch.ts` to assemble the payload | The outline + prompt files already contain everything needed |
 
-| Mode | When to Use |
-|------|-------------|
-| Sequential (default) | Normal usage, single images, small batches |
-| Parallel batch | Batch mode with 2+ tasks |
+Rule of thumb: once prompt files are saved and the task is "generate all of these", prefer batch over subagents. Use subagents only when generation is coupled with per-image thinking or divergent creative exploration.
 
-Execution choice:
-
-| Situation | Preferred approach | Why |
-|-----------|--------------------|-----|
-| One image, or 1-2 simple images | Sequential | Lower coordination overhead and easier debugging |
-| Multiple images already have saved prompt files | Batch (`--batchfile`) | Reuses finalized prompts, applies shared throttling/retries, and gives predictable throughput |
-| Each image still needs separate reasoning, prompt writing, or style exploration | Subagents | The work is still exploratory, so each image may need independent analysis before generation |
-| Input is an `outline.md` + `prompts/` directory (e.g. from `baoyu-article-illustrator`) | Batch — use `scripts/build-batch.ts` to assemble the `--batchfile` payload | The outline + prompt files already contain everything needed for batch execution |
-
-Rule of thumb:
-
-- Prefer batch over subagents once prompt files are already saved and the task is "generate all of these"
-- Use subagents only when generation is coupled with per-image thinking, rewriting, or divergent creative exploration
-
-Parallel behavior:
+**Parallel behavior**:
 
 - Default worker count is automatic, capped by config, built-in default 10
-- Provider-specific throttling is applied only in batch mode, and the built-in defaults are tuned for faster throughput while still avoiding obvious RPM bursts
-- You can override worker count with `--jobs <count>`
-- Each image retries automatically up to 3 attempts
+- Provider-specific throttling applies only in batch mode; defaults are tuned for throughput while avoiding RPM bursts
+- Override with `--jobs <count>`
+- Each image retries up to 3 attempts
 - Final output includes success count, failure count, and per-image failure reasons
 
 ## Error Handling
@@ -495,6 +212,19 @@ Parallel behavior:
 - Invalid aspect ratio → warning, proceed with default
 - Reference images with unsupported provider/model → error with fix hint
 
+## References
+
+| File | Content |
+|------|---------|
+| `references/usage-examples.md` | Extended CLI examples across providers and batch mode |
+| `references/providers/dashscope.md` | DashScope families, sizes, limits |
+| `references/providers/zai.md` | Z.AI GLM-image / cogview-4 |
+| `references/providers/minimax.md` | MiniMax image-01 + subject reference |
+| `references/providers/openrouter.md` | OpenRouter multimodal flow |
+| `references/providers/replicate.md` | Replicate supported families + guardrails |
+| `references/config/preferences-schema.md` | EXTEND.md schema |
+| `references/config/first-time-setup.md` | First-time setup flow |
+
 ## Extension Support
 
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.
+Custom configurations via EXTEND.md. See Step 0 for paths and schema.
