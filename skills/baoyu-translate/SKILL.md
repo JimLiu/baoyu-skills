@@ -36,36 +36,22 @@ Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-translate/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-translate/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-translate/EXTEND.md" && echo "user"
-```
-
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-translate/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-translate/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-translate/EXTEND.md") { "user" }
-```
-
-| Path | Location |
-|------|----------|
-| `.baoyu-skills/baoyu-translate/EXTEND.md` | Project directory |
-| `$HOME/.baoyu-skills/baoyu-translate/EXTEND.md` | User home |
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-translate/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-translate/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-translate/EXTEND.md` | User home |
 
 | Result | Action |
 |--------|--------|
-| Found | Read, parse, apply settings. On first use in session, briefly remind: "Using preferences from [path]. You can edit EXTEND.md to customize glossary, audience, etc." |
+| Found | Read, parse, apply. On first use in session, briefly remind: "Using preferences from [path]. You can edit EXTEND.md to customize glossary, audience, etc." |
 | Not found | **MUST** run first-time setup (see below) — do NOT silently use defaults |
 
-**EXTEND.md Supports**: Default target language | Default mode | Target audience | Custom glossaries (inline or file path) | Translation style | Chunk settings
+**EXTEND.md supports**: default target language, default mode, target audience, custom glossaries (inline or file path), translation style, chunk settings.
 
-Schema: [references/config/extend-schema.md](references/config/extend-schema.md)
+Schema: [references/config/extend-schema.md](references/config/extend-schema.md).
 
 ### First-Time Setup (BLOCKING)
 

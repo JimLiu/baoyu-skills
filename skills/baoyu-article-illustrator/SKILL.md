@@ -81,20 +81,13 @@ See [references/styles.md](references/styles.md) for Core Styles, full gallery, 
 
 **1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING**
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-article-illustrator/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "user"
-```
+Check EXTEND.md in priority order — the first one found wins:
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-article-illustrator/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user" }
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-article-illustrator/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-article-illustrator/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md` | User home |
 
 | Result | Action |
 |--------|--------|

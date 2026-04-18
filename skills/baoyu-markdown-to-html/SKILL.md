@@ -35,40 +35,17 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-markdown-to-html/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-markdown-to-html/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md" && echo "user"
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | User home |
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-markdown-to-html/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-markdown-to-html/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md") { "user" }
-```
+If none found, use defaults.
 
-┌──────────────────────────────────────────────────────────────┬───────────────────┐
-│                             Path                             │     Location      │
-├──────────────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-markdown-to-html/EXTEND.md               │ Project directory │
-├──────────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md         │ User home         │
-└──────────────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default theme | Custom CSS variables | Code block style
+**EXTEND.md supports**: default theme, custom CSS variables, code block style.
 
 ## Workflow
 
@@ -103,26 +80,11 @@ Use `AskUserQuestion` to ask whether to format first. Formatting can fix:
 
 **Cross-skill EXTEND.md check** (only if this skill's EXTEND.md has no `default_theme`):
 
-```bash
-# Check baoyu-post-to-wechat EXTEND.md for default_theme
-test -f "$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md" && grep -o 'default_theme:.*' "$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md"
-```
-
-```powershell
-# PowerShell (Windows)
-if (Test-Path "$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md") { Select-String -Pattern 'default_theme:.*' -Path "$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md" | ForEach-Object { $_.Matches.Value } }
-```
+Read `$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md` if it exists and look for a `default_theme:` line. Use the value if present; otherwise fall through.
 
 **If theme is resolved from EXTEND.md**: Use it directly, do NOT ask the user.
 
-**If no default found**: Use AskUserQuestion to confirm:
-
-| Theme | Description |
-|-------|-------------|
-| `default` (Recommended) | Classic - traditional layout, centered title with bottom border, H2 with white text on colored background |
-| `grace` | Elegant - text shadow, rounded cards, refined blockquotes |
-| `simple` | Minimal - modern minimalist, asymmetric rounded corners, clean whitespace |
-| `modern` | Modern - large radius, pill-shaped titles, relaxed line height (pair with `--color red` for traditional red-gold style) |
+**If no default found**: use `AskUserQuestion` to confirm a theme from the [Themes](#themes) table below.
 
 ### Step 1.5: Determine Citation Mode
 

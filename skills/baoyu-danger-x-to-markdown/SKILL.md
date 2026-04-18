@@ -88,40 +88,20 @@ Use `AskUserQuestion` with options: "Yes, I accept" | "No, I decline"
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md" && echo "user"
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md` | User home |
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md") { "user" }
-```
+| Result | Action |
+|--------|--------|
+| Found | Read, parse, apply settings |
+| Not found | **MUST** run first-time setup (see below) — do NOT silently create defaults |
 
-┌────────────────────────────────────────────────────────────┬───────────────────┐
-│                            Path                            │     Location      │
-├────────────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md         │ Project directory │
-├────────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md   │ User home         │
-└────────────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ **MUST** run first-time setup (see below) — do NOT silently create defaults │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Download media by default | Default output directory
+**EXTEND.md supports**: Download media by default, default output directory.
 
 ### First-Time Setup (BLOCKING)
 

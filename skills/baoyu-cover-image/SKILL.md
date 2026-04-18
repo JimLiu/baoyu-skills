@@ -129,21 +129,13 @@ Analyze + Save Refs → [Output Dir] → [Confirm: 6 Dimensions] → Prompt → 
 
 ### Step 0: Load Preferences ⛔ BLOCKING
 
-Check EXTEND.md existence (priority: project → user):
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-cover-image/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-cover-image/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-cover-image/EXTEND.md" && echo "user"
-```
+Check EXTEND.md in priority order — the first one found wins:
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-cover-image/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-cover-image/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-cover-image/EXTEND.md") { "user" }
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-cover-image/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-cover-image/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-cover-image/EXTEND.md` | User home |
 
 | Result | Action |
 |--------|--------|

@@ -39,40 +39,17 @@ Posts text, images, videos, and long-form articles to X via real Chrome browser 
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-post-to-x/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-post-to-x/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md" && echo "user"
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-post-to-x/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-post-to-x/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md` | User home |
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-post-to-x/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-post-to-x/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md") { "user" }
-```
+If none found, use defaults.
 
-┌──────────────────────────────────────────────────┬───────────────────┐
-│                       Path                       │     Location      │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-post-to-x/EXTEND.md          │ Project directory │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md    │ User home         │
-└──────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default Chrome profile
+**EXTEND.md supports**: Default Chrome profile
 
 ## Prerequisites
 
