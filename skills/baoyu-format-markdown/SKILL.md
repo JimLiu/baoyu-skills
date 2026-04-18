@@ -39,40 +39,17 @@ Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-format-markdown/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-format-markdown/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-format-markdown/EXTEND.md" && echo "user"
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-format-markdown/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-format-markdown/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-format-markdown/EXTEND.md` | User home |
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-format-markdown/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-format-markdown/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-format-markdown/EXTEND.md") { "user" }
-```
+If none found, use defaults — no first-time setup required for this skill.
 
-┌──────────────────────────────────────────────────────────┬───────────────────┐
-│                           Path                           │     Location      │
-├──────────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-format-markdown/EXTEND.md            │ Project directory │
-├──────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-format-markdown/EXTEND.md      │ User home         │
-└──────────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**:
+**EXTEND.md supports**:
 
 | Setting | Values | Default | Description |
 |---------|--------|---------|-------------|
@@ -188,64 +165,7 @@ Check for YAML frontmatter (`---` block). Create if missing.
 | `description` | Longer descriptive summary (see **Summary Generation** below) |
 | `coverImage` | Check if `imgs/cover.png` exists in same directory; if so, use relative path |
 
-**Title Generation:**
-
-Whether or not a title already exists, always run the title optimization flow (unless `auto_select_title` is set).
-
-**Preparation** — read the full text and extract:
-- Core argument (one sentence: "what is this article about?")
-- Most impactful opinion or conclusion
-- Reader pain point or curiosity trigger
-- Most memorable metaphor or golden quote
-
-**Generate titles** using formulas from `references/title-formulas.md`:
-
-1. Select the **2-3 best-matching hook formulas** based on the article's content, tone, and structure (see "When to pick each formula" in the reference)
-2. Generate **1-2 straightforward titles** (descriptive or declarative, no formula — clear and accurate)
-3. If the user specifies a direction (e.g., "make it suspenseful"), prioritize that direction
-4. Total: **4-5 candidates**
-
-Use `AskUserQuestion` to present candidates:
-
-```
-Pick a title:
-
-1. [Hook title A] — (recommended) [formula name]
-2. [Hook title B] — [formula name]
-3. [Hook title C] — [formula name]
-4. [Straightforward title D] — straightforward
-5. [Straightforward title E] — straightforward
-
-Enter number, or type a custom title:
-```
-
-Put the strongest hook first and mark it (recommended). See `references/title-formulas.md` for title principles and prohibited patterns.
-
-If first line is H1, extract to frontmatter and remove from body. If frontmatter already has `title`, include it as context but still generate fresh candidates.
-
-**Summary Generation:**
-
-Generate two versions directly (no user selection needed), both stored in frontmatter:
-
-| Field | Length | Purpose |
-|-------|--------|---------|
-| `summary` | 1 sentence, ~50-80 chars | Concise hook — for feeds, social sharing, SEO meta |
-| `description` | 2-3 sentences, ~100-200 chars | Richer context — for article previews, newsletter blurbs |
-
-**Principles:**
-- Convey **core value** to the reader, not just the topic
-- Use concrete details (numbers, outcomes, specific methods) over vague descriptions
-- `summary` should be punchy and self-contained; `description` can expand with supporting details
-- If frontmatter already has `summary` or `description`, keep existing and only generate the missing one
-
-**Prohibited patterns:**
-- "This article introduces...", "This article explores..."
-- Pure topic description without value proposition
-- Repeating the title in different words
-
-**EXTEND.md skip behavior:** If `auto_select: true` or `auto_select_title: true` is set in EXTEND.md, skip title selection — generate the best candidate directly without asking.
-
-Once title is in frontmatter, body should NOT have H1 (avoid duplication).
+**Title & Summary generation**: see [references/title-summary.md](references/title-summary.md) for the candidate formula selection, `AskUserQuestion` template, summary principles, and prohibited patterns. The reference honors `auto_select` / `auto_select_title` and preserves existing `title` / `summary` / `description` values when already present.
 
 ### Step 4: Format Content
 

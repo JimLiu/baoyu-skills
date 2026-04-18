@@ -93,72 +93,23 @@ references:
 
 Details: [references/partial-workflows.md](references/partial-workflows.md)
 
-### Art Styles (画风)
+### Art, Tone & Preset Catalogue
 
-| Style | 中文 | Description |
-|-------|------|-------------|
-| `ligne-claire` | 清线 | Uniform lines, flat colors, European comic tradition (Tintin, Logicomix) |
-| `manga` | 日漫 | Large eyes, manga conventions, expressive emotions |
-| `realistic` | 写实 | Digital painting, realistic proportions, sophisticated |
-| `ink-brush` | 水墨 | Chinese brush strokes, ink wash effects |
-| `chalk` | 粉笔 | Chalkboard aesthetic, hand-drawn warmth |
-| `minimalist` | 极简 | Clean black line art, limited spot color, stick-figure characters |
+- **Art styles** (6): `ligne-claire`, `manga`, `realistic`, `ink-brush`, `chalk`, `minimalist`. Full definitions at `references/art-styles/<style>.md`.
+- **Tones** (7): `neutral`, `warm`, `dramatic`, `romantic`, `energetic`, `vintage`, `action`. Full definitions at `references/tones/<tone>.md`.
+- **Presets** (5) with special rules beyond plain art+tone:
 
-### Tones (基调)
+  | Preset | Equivalent | Hook |
+  |--------|-----------|------|
+  | `ohmsha` | manga + neutral | Visual metaphors, no talking heads, gadget reveals |
+  | `wuxia` | ink-brush + action | Qi effects, combat visuals, atmospheric |
+  | `shoujo` | manga + romantic | Decorative elements, eye details, romantic beats |
+  | `concept-story` | manga + warm | Visual symbol system, growth arc, dialogue+action balance |
+  | `four-panel` | minimalist + neutral + four-panel layout | 起承转合 structure, B&W + spot color, stick-figure characters |
 
-| Tone | 中文 | Description |
-|------|------|-------------|
-| `neutral` | 中性 | Balanced, rational, educational |
-| `warm` | 温馨 | Nostalgic, personal, comforting |
-| `dramatic` | 戏剧 | High contrast, intense, powerful |
-| `romantic` | 浪漫 | Soft, beautiful, decorative elements |
-| `energetic` | 活力 | Bright, dynamic, exciting |
-| `vintage` | 复古 | Historical, aged, period authenticity |
-| `action` | 动作 | Speed lines, impact effects, combat |
+  Full rules at `references/presets/<preset>.md` — load the file when a preset is picked.
 
-### Preset Shortcuts
-
-Presets with special rules beyond art+tone:
-
-| Preset | Equivalent | Special Rules |
-|--------|-----------|---------------|
-| `--style ohmsha` | `--art manga --tone neutral` | Visual metaphors, NO talking heads, gadget reveals |
-| `--style wuxia` | `--art ink-brush --tone action` | Qi effects, combat visuals, atmospheric elements |
-| `--style shoujo` | `--art manga --tone romantic` | Decorative elements, eye details, romantic beats |
-| `--style concept-story` | `--art manga --tone warm` | Visual symbol system, growth arc, dialogue+action balance |
-| `--style four-panel` | `--art minimalist --tone neutral --layout four-panel` | 起承转合 4-panel structure, B&W + spot color, stick-figure characters |
-
-### Compatibility Matrix
-
-| Art Style | ✓✓ Best | ✓ Works | ✗ Avoid |
-|-----------|---------|---------|---------|
-| ligne-claire | neutral, warm | dramatic, vintage, energetic | romantic, action |
-| manga | neutral, romantic, energetic, action | warm, dramatic | vintage |
-| realistic | neutral, warm, dramatic, vintage | action | romantic, energetic |
-| ink-brush | neutral, dramatic, action, vintage | warm | romantic, energetic |
-| chalk | neutral, warm, energetic | vintage | dramatic, action, romantic |
-| minimalist | neutral | warm, energetic | dramatic, vintage, romantic, action |
-
-Details: [references/auto-selection.md](references/auto-selection.md)
-
-## Auto Selection
-
-Content signals determine default art + tone + layout (or preset):
-
-| Content Signals | Recommended |
-|-----------------|-------------|
-| Tutorial, how-to, programming, educational | **ohmsha** preset |
-| Pre-1950, classical, ancient | realistic + vintage |
-| Personal story, mentor | ligne-claire + warm |
-| Martial arts, wuxia | **wuxia** preset |
-| Romance, school life | **shoujo** preset |
-| Psychology, motivation, business narrative | **concept-story** preset |
-| Business allegory, fable, parable, short insight, 四格 | **four-panel** preset |
-| Biography, balanced | ligne-claire + neutral |
-
-**When preset is recommended**: Load `references/presets/{preset}.md` and apply all special rules.
-
-Details: [references/auto-selection.md](references/auto-selection.md)
+- **Compatibility matrix** and **content-signal → preset** table live in [references/auto-selection.md](references/auto-selection.md). Read it before recommending combinations in Step 2.
 
 ## Script Directory
 
@@ -265,73 +216,39 @@ Analyze → [Check Existing?] → [Confirm: Style + Reviews] → Storyboard → 
 
 ### Step 7: Image Generation
 
-**7.1 Generate character sheet (conditional)**:
+**Pick a backend once per session** using the `## Image Generation Tools` rule at the top. If the backend is a repo skill (e.g., `baoyu-imagine`), read its `SKILL.md` and use its documented interface rather than its scripts.
 
-Character sheet is recommended for multi-page comics with recurring characters, but **NOT required** for all presets:
+**7.1 Character sheet** — generate it (to `characters/characters.png`, aspect `4:3`) when the comic is multi-page with recurring characters. Skip for simple presets (e.g., four-panel minimalist) or single-page comics. Compress to JPEG before use-as-`--ref` (`sips -s format jpeg -s formatOptions 80 …` on macOS, `pngquant --quality=65-80 …` elsewhere) to avoid payload failures. The prompt file at `characters/characters.md` must exist before invoking the backend.
 
-| Condition | Action |
-|-----------|--------|
-| Multi-page comic with detailed characters | Generate character sheet (recommended) |
-| Preset with simplified characters (e.g., four-panel minimalist) | Skip — prompt descriptions are sufficient |
-| Single-page comic | Skip unless characters are complex |
+**7.2 Pages** — each page's prompt MUST already be at `prompts/NN-{cover|page}-[slug].md` before invoking the backend; the file is the reproducibility record. Strategy depends on the character sheet:
 
-**When generating character sheet**:
-- **Backup rule**: If `characters/characters.png` exists, rename to `characters/characters-backup-YYYYMMDD-HHMMSS.png`
-- Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session.
-- If the backend is a repo skill (e.g., `baoyu-imagine`), read its `SKILL.md` and follow its documented interface rather than calling its scripts directly
-- Use `characters/characters.md` as the prompt-file input (the file must already exist; hard requirement)
-- Save output to `characters/characters.png`
-- Use aspect ratio `4:3`
+| Character sheet | Backend `--ref` | Strategy |
+|-----------------|-----------------|----------|
+| Exists | Supported | Pass sheet as `--ref` on every page |
+| Exists | Not supported | Prepend character descriptions to every prompt file |
+| Skipped | — | All descriptions inline in prompt |
 
-**Compress character sheet** (recommended when using as `--ref`):
-- Use available image compression skill (if any)
-- Or system tools: `sips -s format jpeg -s formatOptions 80 input.png --out output.jpg` (macOS)
-- Or: `pngquant --quality=65-80 input.png -o output.png`
-- Compression reduces API payload size and avoids `--ref` failures
+**Backup rule**: existing `prompts/…md` and `…png` files → rename with `-backup-YYYYMMDD-HHMMSS` suffix before regenerating. Aspect ratio from storyboard (default `3:4`; preset may override).
 
-**7.2 Generate each page**:
+**`--ref` failure recovery**: compress sheet → retry → still fails → drop `--ref` and embed character descriptions in the prompt text.
 
-| Character Sheet | Skill Capability | Strategy |
-|-----------------|------------------|----------|
-| Exists | Supports `--ref` | Pass `characters/characters.png` with EVERY page |
-| Exists | No `--ref` support | Prepend character descriptions to EVERY prompt file |
-| Skipped | — | Prompt file contains all character descriptions inline |
-
-**`--ref` failure recovery**: If generation fails with `--ref`:
-1. **Compress**: Convert reference image to JPEG with reduced quality:
-   `sips -s format jpeg -s formatOptions 70 characters.png --out characters-compressed.jpg`
-2. **Retry** with compressed image as `--ref`
-3. **If still fails**: Fall back to generating WITHOUT `--ref` (prompt-only, character descriptions embedded in prompt text)
-
-**Backup rules for page generation**:
-- If prompt file exists: rename to `prompts/NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.md`
-- If image file exists: rename to `NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.png`
-- Use the backend chosen in 7.1 for every page (do not re-prompt per page)
-- Each page's prompt MUST already be written at `prompts/NN-{cover|page}-[slug].md` before invoking the backend (hard requirement — the file is the reproducibility record regardless of backend)
-- Use `prompts/01-page-xxx.md` as the prompt-file input
-- Save output to `01-page-xxx.png`
-- Use aspect ratio from storyboard (default `3:4`, preset may override)
-- If character sheet exists and the backend supports reference images, pass as `--ref`
-
-**Full workflow details**: [references/workflow.md](references/workflow.md)
+Full step-by-step workflow (analysis, storyboard, review gates, regeneration variants): [references/workflow.md](references/workflow.md).
 
 ### EXTEND.md Paths ⛔ BLOCKING
 
-**CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to content analysis, do NOT ask about art style, do NOT ask about tone — ONLY complete the preferences setup first.
+If EXTEND.md is not found, first-time setup is **blocking** — complete it before any content analysis or style/tone questions.
 
-| Path | Location |
-|------|----------|
-| `.baoyu-skills/baoyu-comic/EXTEND.md` | Project directory |
-| `$HOME/.baoyu-skills/baoyu-comic/EXTEND.md` | User home |
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-comic/EXTEND.md` | Project |
+| 2 | `$HOME/.baoyu-skills/baoyu-comic/EXTEND.md` | User home |
 
 | Result | Action |
 |--------|--------|
-| Found | Read, parse, display summary → Continue |
-| Not found | ⛔ **BLOCKING**: Run first-time setup ONLY ([references/config/first-time-setup.md](references/config/first-time-setup.md)) → Complete and save EXTEND.md → Then continue |
+| Found | Read, parse, display summary → continue |
+| Not found | ⛔ Run first-time setup ([references/config/first-time-setup.md](references/config/first-time-setup.md)) → save EXTEND.md → continue |
 
-**EXTEND.md Supports**: Watermark | Preferred art/tone/layout | Custom style definitions | Character presets | Language preference
-
-Schema: [references/config/preferences-schema.md](references/config/preferences-schema.md)
+**EXTEND.md supports**: watermark, preferred art/tone/layout, custom style definitions, character presets, language preference. Schema: [references/config/preferences-schema.md](references/config/preferences-schema.md).
 
 ## References
 

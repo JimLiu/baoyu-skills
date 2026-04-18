@@ -74,96 +74,11 @@ references:
 | `--lang` | en, zh, ja, etc. |
 | `--ref <files...>` | Reference images (file paths) for style / palette / composition / subject guidance |
 
-## Layout Gallery
+## Galleries & Combinations
 
-| Layout | Best For |
-|--------|----------|
-| `linear-progression` | Timelines, processes, tutorials |
-| `binary-comparison` | A vs B, before-after, pros-cons |
-| `comparison-matrix` | Multi-factor comparisons |
-| `hierarchical-layers` | Pyramids, priority levels |
-| `tree-branching` | Categories, taxonomies |
-| `hub-spoke` | Central concept with related items |
-| `structural-breakdown` | Exploded views, cross-sections |
-| `bento-grid` | Multiple topics, overview (default) |
-| `iceberg` | Surface vs hidden aspects |
-| `bridge` | Problem-solution |
-| `funnel` | Conversion, filtering |
-| `isometric-map` | Spatial relationships |
-| `dashboard` | Metrics, KPIs |
-| `periodic-table` | Categorized collections |
-| `comic-strip` | Narratives, sequences |
-| `story-mountain` | Plot structure, tension arcs |
-| `jigsaw` | Interconnected parts |
-| `venn-diagram` | Overlapping concepts |
-| `winding-roadmap` | Journey, milestones |
-| `circular-flow` | Cycles, recurring processes |
-| `dense-modules` | High-density modules, data-rich guides |
+21 layouts × 21 styles can combine freely. See [references/gallery.md](references/gallery.md) for the full option lists, recommended combinations by content type, and keyword shortcuts. Read it before Step 3 so recommendations can cite specific layouts/styles by name.
 
-Full definitions: `references/layouts/<layout>.md`
-
-## Style Gallery
-
-| Style | Description |
-|-------|-------------|
-| `craft-handmade` | Hand-drawn, paper craft (default) |
-| `claymation` | 3D clay figures, stop-motion |
-| `kawaii` | Japanese cute, pastels |
-| `storybook-watercolor` | Soft painted, whimsical |
-| `chalkboard` | Chalk on black board |
-| `cyberpunk-neon` | Neon glow, futuristic |
-| `bold-graphic` | Comic style, halftone |
-| `aged-academia` | Vintage science, sepia |
-| `corporate-memphis` | Flat vector, vibrant |
-| `technical-schematic` | Blueprint, engineering |
-| `origami` | Folded paper, geometric |
-| `pixel-art` | Retro 8-bit |
-| `ui-wireframe` | Grayscale interface mockup |
-| `subway-map` | Transit diagram |
-| `ikea-manual` | Minimal line art |
-| `knolling` | Organized flat-lay |
-| `lego-brick` | Toy brick construction |
-| `pop-laboratory` | Blueprint grid, coordinate markers, lab precision |
-| `morandi-journal` | Hand-drawn doodle, warm Morandi tones |
-| `retro-pop-grid` | 1970s retro pop art, Swiss grid, thick outlines |
-| `hand-drawn-edu` | Macaron pastels, hand-drawn wobble, stick figures |
-
-Full definitions: `references/styles/<style>.md`
-
-## Recommended Combinations
-
-| Content Type | Layout + Style |
-|--------------|----------------|
-| Timeline/History | `linear-progression` + `craft-handmade` |
-| Step-by-step | `linear-progression` + `ikea-manual` |
-| A vs B | `binary-comparison` + `corporate-memphis` |
-| Hierarchy | `hierarchical-layers` + `craft-handmade` |
-| Overlap | `venn-diagram` + `craft-handmade` |
-| Conversion | `funnel` + `corporate-memphis` |
-| Cycles | `circular-flow` + `craft-handmade` |
-| Technical | `structural-breakdown` + `technical-schematic` |
-| Metrics | `dashboard` + `corporate-memphis` |
-| Educational | `bento-grid` + `chalkboard` |
-| Journey | `winding-roadmap` + `storybook-watercolor` |
-| Categories | `periodic-table` + `bold-graphic` |
-| Product Guide | `dense-modules` + `morandi-journal` |
-| Technical Guide | `dense-modules` + `pop-laboratory` |
-| Trendy Guide | `dense-modules` + `retro-pop-grid` |
-| Educational Diagram | `hub-spoke` + `hand-drawn-edu` |
-| Process Tutorial | `linear-progression` + `hand-drawn-edu` |
-
-Default: `bento-grid` + `craft-handmade`
-
-## Keyword Shortcuts
-
-When user input contains these keywords, **auto-select** the associated layout and offer associated styles as top recommendations in Step 3. Skip content-based layout inference for matched keywords.
-
-If a shortcut has **Prompt Notes**, append them to the generated prompt (Step 5) as additional style instructions.
-
-| User Keyword | Layout | Recommended Styles | Default Aspect | Prompt Notes |
-|--------------|--------|--------------------|----------------|--------------|
-| 高密度信息大图 / high-density-info | `dense-modules` | `morandi-journal`, `pop-laboratory`, `retro-pop-grid` | portrait | — |
-| 信息图 / infographic | `bento-grid` | `craft-handmade` | landscape | Minimalist: clean canvas, ample whitespace, no complex background textures. Simple cartoon elements and icons only. |
+Default combination: `bento-grid` + `craft-handmade`.
 
 ## Output Structure
 
@@ -190,40 +105,20 @@ Slug: 2-4 words kebab-case from topic. Conflict: append `-YYYYMMDD-HHMMSS`.
 
 **1.1 Load Preferences (EXTEND.md)**
 
-Check EXTEND.md existence (priority order):
+Check EXTEND.md in priority order — the first one found wins:
 
-```bash
-# macOS, Linux, WSL, Git Bash
-test -f .baoyu-skills/baoyu-infographic/EXTEND.md && echo "project"
-test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-infographic/EXTEND.md" && echo "xdg"
-test -f "$HOME/.baoyu-skills/baoyu-infographic/EXTEND.md" && echo "user"
-```
+| Priority | Path | Scope |
+|----------|------|-------|
+| 1 | `.baoyu-skills/baoyu-infographic/EXTEND.md` | Project |
+| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-infographic/EXTEND.md` | XDG |
+| 3 | `$HOME/.baoyu-skills/baoyu-infographic/EXTEND.md` | User home |
 
-```powershell
-# PowerShell (Windows)
-if (Test-Path .baoyu-skills/baoyu-infographic/EXTEND.md) { "project" }
-$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
-if (Test-Path "$xdg/baoyu-skills/baoyu-infographic/EXTEND.md") { "xdg" }
-if (Test-Path "$HOME/.baoyu-skills/baoyu-infographic/EXTEND.md") { "user" }
-```
+| Result | Action |
+|--------|--------|
+| Found | Read, parse, display a one-line summary |
+| Not found | Ask the user with `AskUserQuestion` (see `references/config/first-time-setup.md`) |
 
-┌────────────────────────────────────────────────────┬───────────────────┐
-│                        Path                        │     Location      │
-├────────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-infographic/EXTEND.md          │ Project directory │
-├────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-infographic/EXTEND.md    │ User home         │
-└────────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, display summary                                              │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Ask user with AskUserQuestion (see references/config/first-time-setup.md) │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Preferred layout/style | Default aspect ratio | Custom style definitions | Language preference
+**EXTEND.md supports**: preferred layout/style, default aspect ratio, custom style definitions, language preference.
 
 Schema: `references/config/preferences-schema.md`
 
