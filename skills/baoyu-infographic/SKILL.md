@@ -21,6 +21,49 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
+## Reference Images
+
+Users may supply reference images to guide style, palette, composition, or subject.
+
+**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
+- File path(s) → copy to `refs/NN-ref-{slug}.{ext}` alongside the output
+- Pasted image with no path → ask the user for the path (per the User Input Tools rule above), or extract style traits verbally as a text fallback
+- No reference → skip this section
+
+**Usage modes** (per reference):
+
+| Usage | Effect |
+|-------|--------|
+| `direct` | Pass the file to the backend as a reference image |
+| `style` | Extract style traits (line treatment, texture, mood) and append to the prompt body |
+| `palette` | Extract hex colors from the image and append to the prompt body |
+
+**Record in `prompts/infographic.md` frontmatter** when refs exist:
+
+```yaml
+references:
+  - ref_id: 01
+    filename: 01-ref-brand.png
+    usage: direct
+```
+
+**At generation time**:
+- Verify each referenced file exists on disk
+- If `usage: direct` AND the chosen backend accepts reference images (e.g., `baoyu-imagine` via `--ref`) → pass the file via the backend's ref parameter
+- Otherwise → embed extracted `style`/`palette` traits in the prompt text
+
 ## Options
 
 | Option | Values |
@@ -29,6 +72,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 | `--style` | 21 options (see Style Gallery), default: craft-handmade |
 | `--aspect` | Named: landscape (16:9), portrait (9:16), square (1:1). Custom: any W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
 | `--lang` | en, zh, ja, etc. |
+| `--ref <files...>` | Reference images (file paths) for style / palette / composition / subject guidance |
 
 ## Layout Gallery
 
@@ -244,11 +288,12 @@ Combine:
 
 ### Step 6: Generate Image
 
-1. Select available image generation skill (ask user if multiple)
-2. **Check for existing file**: Before generating, check if `infographic.png` exists
+1. Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session.
+2. Ensure the full final prompt is persisted at `prompts/infographic.md` (already written in Step 5) BEFORE invoking the backend — the file is the reproducibility record.
+3. **Check for existing file**: Before generating, check if `infographic.png` exists
    - If exists: Rename to `infographic-backup-YYYYMMDD-HHMMSS.png`
-3. Call with prompt file and output path
-4. On failure, auto-retry once
+4. Call the chosen backend with the prompt file and output path
+5. On failure, auto-retry once
 
 ### Step 7: Output Summary
 

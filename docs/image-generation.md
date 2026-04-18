@@ -1,30 +1,31 @@
 # Image Generation Guidelines
 
-Skills that require image generation MUST delegate to available image generation skills.
+Skills that require image generation MUST delegate to available image generation tools (runtime-native tools or installed skills).
+
+**Backend selection convention**: see [image-generation-tools.md](image-generation-tools.md) for the runtime-neutral rule. Short version: use whatever backend is available; if multiple, ask the user once; if none, ask how to proceed. This document covers output conventions (naming, paths) that apply regardless of which backend is selected.
 
 ## Skill Selection
 
-**Default**: `skills/baoyu-imagine/SKILL.md` (unless user specifies otherwise).
-
-1. Read skill's SKILL.md for parameters and capabilities
-2. If user requests different skill, check `skills/` for alternatives
-3. Only ask user when multiple viable options exist
+1. Follow the rule in [image-generation-tools.md](image-generation-tools.md): use whatever backend is available; ask only on ambiguity.
+2. Read the chosen backend's documentation for parameters and capabilities.
+3. If user requests a specific backend, honor it.
 
 ## Generation Flow Template
 
 ```markdown
 ### Step N: Generate Images
 
-**Skill Selection**:
-1. Check available skills (`baoyu-imagine` default, or `baoyu-danger-gemini-web`)
-2. Read selected skill's SKILL.md for parameters
-3. If multiple skills available, ask user to choose
+**Backend Selection**:
+1. Detect available image-generation tools/skills (runtime-native + installed)
+2. If one available → use it. If multiple → ask user once. If none → ask how to proceed.
+3. Read the chosen backend's docs for parameters
 
 **Generation Flow**:
-1. Call skill with prompt, output path, and skill-specific parameters
-2. Generate sequentially by default (batch parallel only when user has multiple prompts)
-3. Output progress: "Generated X/N"
-4. On failure, auto-retry once before reporting error
+1. Write the full prompt to `prompts/NN-{type}-[slug].md` BEFORE invoking the backend
+2. Call backend with the prompt (or prompt file), output path, and parameters
+3. Generate sequentially by default (batch parallel only when backend supports it and user has multiple prompts)
+4. Output progress: "Generated X/N"
+5. On failure, auto-retry once before reporting error
 ```
 
 **Batch Parallel** (`baoyu-imagine` only): concurrent workers with per-provider throttling via `batch.max_workers` in EXTEND.md.

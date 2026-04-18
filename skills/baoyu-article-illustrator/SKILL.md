@@ -21,6 +21,24 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
+## Reference Images
+
+Users may supply reference images via `--ref <files...>` or by providing file paths / pasting images in conversation. Refs guide style, palette, composition, or subject for specific illustrations.
+
+Full detection, storage, and processing rules are in [references/workflow.md](references/workflow.md) (Step 1.0 saves to `references/NN-ref-{slug}.{ext}`; Step 5.3 processes per-illustration usage `direct | style | palette`). When the chosen backend supports batch input, `direct`-usage entries in each prompt file's `references:` frontmatter should be propagated into its batch payload so backends can pass them through (e.g. `baoyu-imagine` accepts `ref` per task).
+
 ## Three Dimensions
 
 | Dimension | Controls | Examples |
@@ -128,18 +146,18 @@ Full template: [references/workflow.md](references/workflow.md#step-4-generate-o
 
 ### Step 5: Generate Images
 
-⛔ **BLOCKING: Prompt files MUST be saved before ANY image generation.**
-
-**Execution strategy**: When multiple illustrations have saved prompt files and the task is now plain generation, prefer `baoyu-imagine` batch mode (`build-batch.ts` → `--batchfile`) over spawning subagents. Use subagents only when each image still needs separate prompt iteration or creative exploration.
+⛔ **BLOCKING: Prompt files MUST be saved before ANY image generation.** This is a hard requirement regardless of which backend is chosen — the prompt file is the reproducibility record.
 
 1. For each illustration, create a prompt file per [references/prompt-construction.md](references/prompt-construction.md)
 2. Save to `prompts/NN-{type}-{slug}.md` with YAML frontmatter
 3. Prompts **MUST** use type-specific templates with structured sections (ZONES / LABELS / COLORS / STYLE / ASPECT)
 4. LABELS **MUST** include article-specific data: actual numbers, terms, metrics, quotes
 5. **DO NOT** pass ad-hoc inline prompts to `--prompt` without saving prompt files first
-6. Select generation skill, process references (`direct`/`style`/`palette`)
-7. Apply watermark if EXTEND.md enabled
-8. Generate from saved prompt files; retry once on failure
+6. Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session before any generation.
+7. **Execution strategy**: When multiple illustrations have saved prompt files and the task is now plain generation, prefer the chosen backend's batch interface (if it offers one) over spawning subagents. Use subagents only when each image still needs separate prompt iteration or creative exploration. If the backend has no batch interface, generate sequentially.
+8. Process references (`direct`/`style`/`palette`) per prompt frontmatter
+9. Apply watermark if EXTEND.md enabled
+10. Generate from saved prompt files; retry once on failure
 
 Full procedures: [references/workflow.md](references/workflow.md#step-5-generate-images)
 

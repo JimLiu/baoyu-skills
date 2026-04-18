@@ -46,7 +46,7 @@ Execute: `${BUN_X} skills/<skill>/scripts/main.ts [options]`
 | Rule | Description |
 |------|-------------|
 | **Load project skills first** | Project skills override system/user-level skills with same name |
-| **Default image generation** | Use `skills/baoyu-imagine/SKILL.md` unless user specifies otherwise |
+| **Default image generation** | Use whatever image backend is available in the current runtime; if multiple are available, ask the user which to use. See `## Image Generation Tools` below. |
 
 Priority: project `skills/` → `$HOME/.baoyu-skills/` → system-level.
 
@@ -55,18 +55,22 @@ Priority: project `skills/` → `$HOME/.baoyu-skills/` → system-level.
 Each skill under `skills/` (and `.claude/skills/`) is distributed and consumed independently — the folder may be extracted, copied into another project, or loaded without the rest of this repo. Therefore:
 
 - **Never link from `SKILL.md` or its `references/` to files outside the skill's own directory.** This includes `docs/`, sibling skills, and the repo root. Relative paths like `../../docs/foo.md` break when the skill is used standalone.
-- **Inline any shared convention** (e.g., user-input rules) directly in the skill rather than referencing an out-of-skill doc.
-- Shared docs under `docs/` exist for **repo-author guidance only** — they may be referenced from `CLAUDE.md` and `docs/creating-skills.md`, but NOT from any `SKILL.md`.
+- **Inline any shared convention** (e.g., user-input rules, image-generation backend selection) directly in the skill rather than referencing an out-of-skill doc.
+- Shared docs under `docs/` exist for **repo-author guidance only** — they may be referenced from `CLAUDE.md` and `docs/creating-skills.md`, but NOT from any `SKILL.md`. This applies to `docs/user-input-tools.md`, `docs/image-generation-tools.md`, `docs/image-generation.md`, and any other `docs/` file.
 
 ## User Input Tools
 
 Skills that prompt users for choices MUST declare the tool-selection convention **inline** in exactly one place per `SKILL.md` — a `## User Input Tools` section near the top. Do NOT link out to [docs/user-input-tools.md](docs/user-input-tools.md); that doc is the author-side canonical source — copy its body into each SKILL.md. Concrete `AskUserQuestion` mentions elsewhere in a skill are treated as examples — other runtimes substitute their local equivalent under the rule.
 
+## Image Generation Tools
+
+Skills that render images MUST declare the backend-selection convention **inline** in exactly one place per `SKILL.md` — a `## Image Generation Tools` section near the top (after `## User Input Tools`). Do NOT link out to [docs/image-generation-tools.md](docs/image-generation-tools.md); that doc is the author-side canonical source — copy its body into each SKILL.md. Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) elsewhere in a skill are treated as examples — other runtimes substitute their local equivalent under the rule. The rule is stateless: use whatever backend is available; if multiple, ask the user once; if none, ask how to proceed. Every rendered image's full prompt must be written to a standalone `prompts/NN-*.md` file before any backend is invoked.
+
 ## Deprecated Skills
 
 | Skill | Note |
 |-------|------|
-| `baoyu-image-gen` | Migrated to `baoyu-imagine`. Do NOT add to `.claude-plugin/marketplace.json`. Do NOT update README for this skill. |
+| `baoyu-image-gen` | Migrated to `baoyu-imagine`. Kept as a deprecation stub that prints a migration warning and stops. Keep in sync with `baoyu-imagine` for any cross-cutting changes. |
 | `baoyu-xhs-images` | Migrated to `baoyu-image-cards`. Do NOT add to `.claude-plugin/marketplace.json`. Do NOT update README for this skill. |
 
 ## Release Process
@@ -89,7 +93,9 @@ All skills MUST use `baoyu-` prefix. Details: [docs/creating-skills.md](docs/cre
 
 | Topic | File |
 |-------|------|
-| Image generation guidelines | [docs/image-generation.md](docs/image-generation.md) |
+| Image generation output guidelines | [docs/image-generation.md](docs/image-generation.md) |
+| Image generation backend selection | [docs/image-generation-tools.md](docs/image-generation-tools.md) |
+| User input tool convention | [docs/user-input-tools.md](docs/user-input-tools.md) |
 | Chrome profile platform paths | [docs/chrome-profile.md](docs/chrome-profile.md) |
 | Comic style maintenance | [docs/comic-style-maintenance.md](docs/comic-style-maintenance.md) |
 | ClawHub/OpenClaw publishing | [docs/publishing.md](docs/publishing.md) |

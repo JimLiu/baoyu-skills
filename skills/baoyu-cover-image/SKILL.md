@@ -21,6 +21,18 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
 ## Options
 
 | Option | Description |
@@ -183,12 +195,13 @@ Save to `prompts/cover.md`. Template: [references/workflow/prompt-template.md](r
 ### Step 4: Generate Image
 
 1. **Backup existing** `cover.png` if regenerating
-2. **Check image generation skills**; if multiple, ask preference
-3. **Process references** from prompt frontmatter:
+2. **Select backend** via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session before any generation.
+3. **Write the full final prompt** to `prompts/01-cover-[slug].md` (hard requirement) BEFORE invoking the backend.
+4. **Process references** from prompt frontmatter:
    - `direct` usage → pass via `--ref` (use ref-capable backend)
    - `style`/`palette` → extract traits, append to prompt
-4. **Generate**: Call skill with prompt file, output path, aspect ratio
-5. On failure: auto-retry once
+5. **Generate**: Call the chosen backend with the prompt file, output path, aspect ratio
+6. On failure: auto-retry once
 
 ### Step 5: Completion Report
 

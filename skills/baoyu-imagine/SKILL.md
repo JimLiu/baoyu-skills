@@ -473,7 +473,7 @@ Execution choice:
 | One image, or 1-2 simple images | Sequential | Lower coordination overhead and easier debugging |
 | Multiple images already have saved prompt files | Batch (`--batchfile`) | Reuses finalized prompts, applies shared throttling/retries, and gives predictable throughput |
 | Each image still needs separate reasoning, prompt writing, or style exploration | Subagents | The work is still exploratory, so each image may need independent analysis before generation |
-| Output comes from `baoyu-article-illustrator` with `outline.md` + `prompts/` | Batch (`build-batch.ts` -> `--batchfile`) | That workflow already produces prompt files, so direct batch execution is the intended path |
+| Input is an `outline.md` + `prompts/` directory (e.g. from `baoyu-article-illustrator`) | Batch — use `scripts/build-batch.ts` to assemble the `--batchfile` payload | The outline + prompt files already contain everything needed for batch execution |
 
 Rule of thumb:
 

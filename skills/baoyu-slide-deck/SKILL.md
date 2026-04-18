@@ -25,6 +25,49 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
+## Reference Images
+
+Users may supply reference images to guide slide style, palette, layout, or subject.
+
+**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
+- File path(s) → copy to `{slide-deck-dir}/refs/NN-ref-{slug}.{ext}` alongside the output
+- Pasted image with no path → ask the user for the path (per the User Input Tools rule above), or extract style traits verbally as a text fallback
+- No reference → skip this section
+
+**Usage modes** (per reference):
+
+| Usage | Effect |
+|-------|--------|
+| `direct` | Pass the file to the backend as a reference image for each slide's generation |
+| `style` | Extract style traits (line treatment, texture, mood) and append to every slide's prompt body |
+| `palette` | Extract hex colors from the image and append to every slide's prompt body |
+
+**Record in each slide's `prompts/NN-slide-[slug].md` frontmatter** when refs exist:
+
+```yaml
+references:
+  - ref_id: 01
+    filename: 01-ref-brand.png
+    usage: direct
+```
+
+**At generation time**:
+- Verify each referenced file exists on disk
+- If `usage: direct` AND the chosen backend accepts reference images (e.g., `baoyu-imagine` via `--ref`) → pass the file via the backend's ref parameter on every slide
+- Otherwise → embed extracted `style`/`palette` traits in each slide prompt
+
 ## Script Directory
 
 **Agent Execution Instructions**:
@@ -49,6 +92,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 | `--prompts-only` | Generate outline + prompts, skip images |
 | `--images-only` | Generate images from existing prompts directory |
 | `--regenerate <N>` | Regenerate specific slide(s): `--regenerate 3` or `--regenerate 2,5,8` |
+| `--ref <files...>` | Reference images (file paths) applied to every slide for style / palette / composition / subject guidance |
 
 **Slide Count by Content Length**:
 | Content | Slides |
@@ -557,13 +601,14 @@ options:
 **For `--regenerate N`**: Only regenerate specified slide(s).
 
 **Standard flow**:
-1. Select available image generation skill
-2. Generate session ID: `slides-{topic-slug}-{timestamp}`
-3. For each slide:
+1. Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session.
+2. Ensure every `prompts/NN-slide-[slug].md` file is already written (hard requirement — the prompt files are the reproducibility record regardless of backend).
+3. Generate session ID: `slides-{topic-slug}-{timestamp}`
+4. For each slide:
    - **Backup rule**: If image file exists, rename to `NN-slide-{slug}-backup-YYYYMMDD-HHMMSS.png`
-   - Generate image sequentially with same session ID
-4. Report progress: "Generated X/N" (in user's language)
-5. Auto-retry once on failure before reporting error
+   - Generate image sequentially with same session ID (session ID is passed only when the chosen backend supports it)
+5. Report progress: "Generated X/N" (in user's language)
+6. Auto-retry once on failure before reporting error
 
 ### Step 8: Merge to PPTX and PDF
 

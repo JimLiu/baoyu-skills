@@ -331,7 +331,7 @@ Prompt Files:
 **DO NOT** pass ad-hoc inline text to `--prompt` without first saving prompt files. The generation command should either use `--promptfiles prompts/NN-{type}-{slug}.md` or read the saved file content for `--prompt`.
 
 **Execution choice**:
-- If multiple illustrations already have saved prompt files and the task is now plain generation, prefer `baoyu-imagine` batch mode (`build-batch.ts` -> `main.ts --batchfile`)
+- If multiple illustrations already have saved prompt files and the task is now plain generation, prefer the chosen backend's batch interface (if it offers one); otherwise generate sequentially
 - Use subagents only when each illustration still needs separate prompt rewriting, style exploration, or other per-image reasoning before generation
 
 **CRITICAL - References in Frontmatter**:

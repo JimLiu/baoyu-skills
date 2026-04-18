@@ -153,3 +153,23 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
 ```
+
+## Image Generation Tools Section (Required for image-gen skills)
+
+Every SKILL.md that renders images — whether by calling an image-generation API directly or by delegating to another skill — MUST include exactly one `## Image Generation Tools` section near the top (after `## User Input Tools`, before the main workflow). The rule must be **inlined** — do NOT link to `docs/image-generation-tools.md` (skills are self-contained; see [CLAUDE.md → Skill Self-Containment](../CLAUDE.md)). The author-side canonical reference lives at [image-generation-tools.md](image-generation-tools.md); copy its body into each new SKILL.md.
+
+Standard snippet (copy verbatim):
+
+```markdown
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+```

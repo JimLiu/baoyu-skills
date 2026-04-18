@@ -11,6 +11,60 @@ metadata:
 
 Break down complex content into eye-catching Xiaohongshu image card series with multiple style options.
 
+## User Input Tools
+
+When this skill prompts the user, follow this tool-selection rule (priority order):
+
+1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
+2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
+3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
+
+Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
+
+## Image Generation Tools
+
+When this skill needs to render an image:
+
+- **Use whatever image-generation tool or skill is available** in the current runtime — e.g., Codex `imagegen`, Hermes `image_generate`, `baoyu-imagine`, or any equivalent the user has installed.
+- **If multiple are available**, ask the user **once** at the start which to use (batch with any other initial questions).
+- **If none are available**, tell the user and ask how to proceed.
+
+**Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
+
+Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) above are examples — substitute the local equivalents under the same rule.
+
+## Reference Images
+
+Users may supply reference images to guide the series' style, palette, or recurring subject. This is **separate from** the internal "image-1 as anchor" chain described in Step 3 — user-supplied refs are applied on top of that chain.
+
+**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
+- File path(s) → copy to `refs/NN-ref-{slug}.{ext}` alongside the output
+- Pasted image with no path → ask the user for the path (per the User Input Tools rule above), or extract style traits verbally as a text fallback
+- No reference → skip this section
+
+**Usage modes** (per reference):
+
+| Usage | Effect |
+|-------|--------|
+| `direct` | Pass the file to the backend as a reference image (typically on image 1 only, so the anchor picks it up and propagates through the chain) |
+| `style` | Extract style traits (line treatment, texture, mood) and append to every card's prompt body |
+| `palette` | Extract hex colors and append to every card's prompt body |
+
+**Record in prompt frontmatter** of each affected card:
+
+```yaml
+references:
+  - ref_id: 01
+    filename: 01-ref-brand.png
+    usage: direct
+```
+
+**At generation time**:
+- Verify each referenced file exists on disk
+- Image 1: if `usage: direct` AND the chosen backend accepts reference images → pass user refs via the backend's ref parameter; this becomes the visual anchor for the chain
+- Images 2+: continue using image-1 as `--ref` per the chain rule in Step 3 (do not re-stack user refs on top, to avoid conflicting signals)
+- For `style`/`palette` usage → embed extracted traits in every card's prompt text
+
 ## Options
 
 | Option | Description |
@@ -20,6 +74,7 @@ Break down complex content into eye-catching Xiaohongshu image card series with 
 | `--palette <name>` | Color palette override (see Palette Gallery) |
 | `--preset <name>` | Style + layout + optional palette shorthand (see [Style Presets](references/style-presets.md)) |
 | `--yes` | Non-interactive mode: skip all confirmations. Uses EXTEND.md preferences if found, otherwise uses defaults (no watermark, auto style/layout). Auto-confirms recommended plan (Path A). Suitable for scheduled tasks and automation. |
+| `--ref <files...>` | Reference images (file paths) applied to image 1 as the anchor for style / palette / subject guidance. See [Reference Images](#reference-images) above. |
 
 ## Dimensions
 
@@ -495,9 +550,10 @@ The watermark should be legible but not distracting from the main content.
 ```
 Reference: `references/config/watermark-guide.md`
 
-**Image Generation Skill Selection**:
-- Check available image generation skills
-- If multiple skills available: ask user preference (interactive) or use first available skill (`--yes` mode)
+**Backend Selection**:
+- Follow the `## Image Generation Tools` rule above: use whatever is available; if multiple, ask the user once. Do this once per session before any generation.
+- In `--yes` mode, skip the prompt and use the EXTEND.md preference; fall back to the first available backend if none configured.
+- Each card's full final prompt MUST be written to `prompts/NN-{type}-[slug].md` BEFORE invoking the backend (hard requirement).
 
 **Session Management**:
 If image generation skill supports `--sessionId`:
