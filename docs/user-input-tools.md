@@ -12,6 +12,6 @@ Skills in this repo are loaded by multiple agent runtimes (Claude Code, other ag
 
 ## How Skills Declare This
 
-Each `SKILL.md` that uses interactive user input includes **exactly one** `## User Input Tools` section (typically near the top, right after the intro) that links here. The rule then governs every user-input interaction in that skill and its `references/` files.
+Each `SKILL.md` that uses interactive user input includes **exactly one** `## User Input Tools` section (typically near the top, right after the intro) that **inlines** this rule. Do NOT link here from a SKILL.md — skills are self-contained (see [CLAUDE.md → Skill Self-Containment](../CLAUDE.md)). This document is the author-side canonical source; copy its body into each SKILL.md. The rule then governs every user-input interaction in that skill and its `references/` files.
 
 Specific mentions of a concrete tool (e.g., `AskUserQuestion`) elsewhere in a skill are **concrete examples** — agents in other runtimes apply the rule above and substitute the local equivalent. Tool-specific parameters (e.g., `header:`, `multiSelect:`) are illustrative; runtimes without those knobs can omit them.
