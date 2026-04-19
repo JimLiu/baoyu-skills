@@ -57,6 +57,8 @@ options:
     description: "MiniMax image generation with subject-reference character workflows"
   - label: "Replicate"
     description: "Community models - nano-banana-pro, flexible model selection"
+  - label: "Z.AI"
+    description: "GLM-Image - text-to-image with recommended aspect sizes"
 ```
 
 ### Question 2: Default Google Model
@@ -119,6 +121,22 @@ options:
     description: "Faster variant, use aspect ratio instead of custom size"
 ```
 
+### Question 2e: Default Z.AI Model
+
+Only show if user selected Z.AI.
+
+```yaml
+header: "Z.AI Model"
+question: "Default Z.AI image generation model?"
+options:
+  - label: "glm-image (Recommended)"
+    description: "Latest GLM-Image, best aspect-ratio coverage and text rendering"
+  - label: "cogview-4-250304"
+    description: "Legacy CogView-4 model with 16-pixel size stepping"
+  - label: "cogview-4"
+    description: "Previous CogView-4 snapshot for compatibility"
+```
+
 ### Question 3: Default Quality
 
 ```yaml
@@ -167,6 +185,7 @@ default_model:
   dashscope: null
   minimax: [selected minimax model or null]
   replicate: null
+  zai: [selected zai model or null]
 ---
 ```
 
@@ -287,6 +306,27 @@ Notes for MiniMax setup:
 - `image-01-live` is useful when the user prefers faster generation and can work with aspect-ratio-based sizing.
 - MiniMax subject reference currently uses `subject_reference[].type = character`; docs recommend front-facing portrait references in JPG/JPEG/PNG under 10MB.
 
+### Z.AI Model Selection
+
+```yaml
+header: "Z.AI Model"
+question: "Choose a default Z.AI image generation model?"
+options:
+  - label: "glm-image (Recommended)"
+    description: "Latest GLM-Image; pixels round to multiples of 32 and cap at 2^22"
+  - label: "cogview-4-250304"
+    description: "Legacy CogView-4 snapshot with 16-pixel size stepping"
+  - label: "cogview-4"
+    description: "Earlier CogView-4 snapshot for compatibility"
+```
+
+Notes for Z.AI setup:
+
+- Set `ZAI_API_KEY` (or legacy `BIGMODEL_API_KEY`) from https://docs.z.ai/.
+- `glm-image` supports recommended aspect sizes (1280x1280, 1728x960, 1568x1056, …); uncommon ratios auto-fit to the 2^22 pixel budget on multiples of 32.
+- Legacy CogView models use 16-pixel stepping and cap at 2^21 pixels per image.
+- Z.AI does not accept reference images or `n > 1` in `baoyu-image-gen`; use Google/OpenAI providers for those workflows.
+
 ### Update EXTEND.md
 
 After user selects a model:
@@ -304,6 +344,7 @@ default_model:
   dashscope: [value or null]
   minimax: [value or null]
   replicate: [value or null]
+  zai: [value or null]
 ```
 
 Only set the selected provider's model; leave others as their current value or null.
