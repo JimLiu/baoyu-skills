@@ -22,7 +22,7 @@ Vibrant neon colors on dark background. High-energy, futuristic, eye-catching.
 
 ## Semantic Constraint
 
-Vibrant neon color palette on dark background. Colors should glow against the dark base. High contrast, futuristic feel. Use neon sparingly — too many glowing elements become chaotic. Let dark background breathe.
+Vibrant neon color palette on dark background. Colors should glow against the dark base. High contrast, futuristic feel. Use neon sparingly — too many glowing elements become chaotic. Let dark background breathe. Do NOT render color names, hex codes, or role labels as visible text in the image.
 
 ## Best Paired With
 

@@ -21,3 +21,7 @@ Regardless of which backend is chosen, every skill that renders images MUST writ
 Each `SKILL.md` that renders images includes **exactly one** `## Image Generation Tools` section (near the top, after `## User Input Tools` and before the main workflow) that **inlines** this rule. Skills are self-contained and cannot link to `docs/` — each skill folder must ship the rule inside its own `SKILL.md`. See [CLAUDE.md → Skill Self-Containment](../CLAUDE.md).
 
 Concrete tool names (`imagegen`, `image_generate`, `baoyu-imagine`) in this document and in SKILL.md are **examples** — agents in other runtimes apply the rule above and substitute the local equivalent. Skill-specific parameters for these backends are illustrative; runtimes without those knobs can omit them.
+
+## Backend Skills Are Exempt
+
+Skills that **are themselves** image-generation backends — currently `baoyu-imagine`, `baoyu-image-gen` (deprecated), and `baoyu-danger-gemini-web` — do NOT include a `## Image Generation Tools` section. They render directly via their own provider integrations and have no need to "select a backend." The rule applies only to consumer skills that delegate rendering to whatever backend the runtime exposes.

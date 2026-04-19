@@ -22,7 +22,7 @@ Warm earth tones on soft peach background. Cozy, inviting, no cool colors.
 
 ## Semantic Constraint
 
-Warm-only color palette, no cool colors (no blue, green, purple). Earth tones throughout. Evokes comfort, warmth, and trust. All colors should feel like autumn sunlight.
+Warm-only color palette, no cool colors (no blue, green, purple). Earth tones throughout. Evokes comfort, warmth, and trust. All colors should feel like autumn sunlight. Do NOT render color names, hex codes, or role labels as visible text in the image.
 
 ## Best Paired With
 

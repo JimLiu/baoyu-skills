@@ -1,6 +1,6 @@
 ---
 name: baoyu-image-gen
-description: AI image generation with OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, MiniMax, Jimeng, Seedream and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
+description: "[Deprecated: use baoyu-imagine] AI image generation with OpenAI, Azure OpenAI, Google, OpenRouter, DashScope, Z.AI GLM-Image, MiniMax, Jimeng, Seedream and Replicate APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images."
 version: 1.56.4
 metadata:
   openclaw:
@@ -38,14 +38,12 @@ Check these paths in order; first hit wins:
 
 | Path | Scope |
 |------|-------|
-| `.baoyu-skills/baoyu-imagine/EXTEND.md` | Project |
-| `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-imagine/EXTEND.md` | XDG |
-| `$HOME/.baoyu-skills/baoyu-imagine/EXTEND.md` | User home |
+| `.baoyu-skills/baoyu-image-gen/EXTEND.md` | Project |
+| `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-image-gen/EXTEND.md` | XDG |
+| `$HOME/.baoyu-skills/baoyu-image-gen/EXTEND.md` | User home |
 
 - **Found** → load, parse, apply. If `default_model.[provider]` is null → ask model only.
 - **Not found** → run first-time setup (`references/config/first-time-setup.md`) using AskUserQuestion to collect provider + model + quality + save location. Save EXTEND.md, then continue. Do not generate images before this completes.
-
-Legacy compatibility: if `.baoyu-skills/baoyu-image-gen/EXTEND.md` exists and the new path doesn't, the runtime renames it to `baoyu-imagine`. If both exist, the runtime leaves them alone and uses the new path.
 
 **EXTEND.md keys**: default provider, default quality, default aspect ratio, default image size, OpenAI image API dialect, default models, batch worker cap, provider-specific batch limits. Schema: `references/config/preferences-schema.md`.
 
