@@ -1,6 +1,8 @@
+import path from "node:path";
+import { readFile } from "node:fs/promises";
 import type { CliArgs, Quality } from "../types";
 
-type DashScopeModelFamily = "qwen2" | "qwenFixed" | "legacy";
+type DashScopeModelFamily = "qwen2" | "qwenFixed" | "wan27" | "legacy";
 
 type DashScopeModelSpec = {
   family: DashScopeModelFamily;
@@ -17,6 +19,16 @@ const QWEN_NEGATIVE_PROMPT =
 const QWEN_2_TARGET_PIXELS: Record<Quality, number> = {
   normal: 1024 * 1024,
   "2k": 1536 * 1536,
+};
+
+const MIN_WAN27_TOTAL_PIXELS = 768 * 768;
+const MAX_WAN27_PRO_T2I_PIXELS = 4096 * 4096;
+const MAX_WAN27_GENERAL_PIXELS = 2048 * 2048;
+const WAN27_MAX_REFERENCE_IMAGES = 9;
+
+const WAN27_TARGET_PIXELS: Record<Quality, number> = {
+  normal: 1024 * 1024,
+  "2k": 2048 * 2048,
 };
 
 const QWEN_2_RECOMMENDED: Record<string, Record<Quality, string>> = {
@@ -73,6 +85,11 @@ const QWEN_FIXED_SPEC: DashScopeModelSpec = {
   defaultSize: QWEN_FIXED_SIZES_BY_RATIO["16:9"],
 };
 
+const WAN27_SPEC: DashScopeModelSpec = {
+  family: "wan27",
+  defaultSize: "2048*2048",
+};
+
 const LEGACY_SPEC: DashScopeModelSpec = {
   family: "legacy",
   defaultSize: "1536*1536",
@@ -88,10 +105,29 @@ const MODEL_SPEC_ALIASES: Record<string, DashScopeModelSpec> = {
   "qwen-image-plus": QWEN_FIXED_SPEC,
   "qwen-image-plus-2026-01-09": QWEN_FIXED_SPEC,
   "qwen-image": QWEN_FIXED_SPEC,
+  "wan2.7-image-pro": WAN27_SPEC,
+  "wan2.7-image": WAN27_SPEC,
 };
 
 export function getDefaultModel(): string {
   return process.env.DASHSCOPE_IMAGE_MODEL || DEFAULT_MODEL;
+}
+
+function getReferenceImageMime(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".bmp") return "image/bmp";
+  return "image/png";
+}
+
+async function loadReferenceImage(refPath: string): Promise<string> {
+  if (refPath.startsWith("http://") || refPath.startsWith("https://")) {
+    return refPath;
+  }
+  const fullPath = path.resolve(refPath);
+  const bytes = await readFile(fullPath);
+  return `data:${getReferenceImageMime(fullPath)};base64,${bytes.toString("base64")}`;
 }
 
 function getApiKey(): string | null {
@@ -276,6 +312,76 @@ export function getQwen2SizeFromAspectRatio(ar: string | null, quality: CliArgs[
   return formatSize(fitted.width, fitted.height);
 }
 
+function isWan27ProModel(model: string): boolean {
+  return model.trim().toLowerCase() === "wan2.7-image-pro";
+}
+
+function getWan27MaxPixels(model: string, hasReferenceImages: boolean): number {
+  if (isWan27ProModel(model) && !hasReferenceImages) {
+    return MAX_WAN27_PRO_T2I_PIXELS;
+  }
+  return MAX_WAN27_GENERAL_PIXELS;
+}
+
+export function getWan27SizeFromAspectRatio(
+  ar: string | null,
+  quality: CliArgs["quality"],
+  maxPixels: number,
+): string {
+  const normalizedQuality = normalizeQuality(quality);
+  const targetPixels = Math.min(WAN27_TARGET_PIXELS[normalizedQuality], maxPixels);
+
+  if (!ar) {
+    const side = roundToStep(Math.sqrt(targetPixels));
+    return formatSize(side, side);
+  }
+
+  const parsed = parseAspectRatio(ar);
+  if (!parsed) {
+    const side = roundToStep(Math.sqrt(targetPixels));
+    return formatSize(side, side);
+  }
+
+  const ratio = parsed.width / parsed.height;
+  if (ratio < 1 / 8 || ratio > 8) {
+    throw new Error(
+      `DashScope wan2.7 image models support aspect ratios in [1:8, 8:1]. Received "${ar}".`
+    );
+  }
+
+  const rawWidth = Math.sqrt(targetPixels * ratio);
+  const rawHeight = Math.sqrt(targetPixels / ratio);
+  const fitted = fitToPixelBudget(
+    rawWidth,
+    rawHeight,
+    MIN_WAN27_TOTAL_PIXELS,
+    maxPixels,
+  );
+
+  return formatSize(fitted.width, fitted.height);
+}
+
+function validateWan27Size(size: string, maxPixels: number, model: string): string {
+  const normalized = normalizeSize(size);
+  const parsed = validateSizeFormat(normalized);
+  const totalPixels = parsed.width * parsed.height;
+  if (totalPixels < MIN_WAN27_TOTAL_PIXELS || totalPixels > maxPixels) {
+    const limit = maxPixels === MAX_WAN27_PRO_T2I_PIXELS ? "4096*4096" : "2048*2048";
+    throw new Error(
+      `DashScope ${model} requires total pixels between 768*768 and ${limit} ` +
+      `for the current request. Received ${normalized} (${totalPixels} pixels).`
+    );
+  }
+  const ratio = parsed.width / parsed.height;
+  if (ratio < 1 / 8 || ratio > 8) {
+    throw new Error(
+      `DashScope wan2.7 image models support aspect ratios in [1:8, 8:1]. ` +
+      `Received ${normalized} (ratio ${ratio.toFixed(3)}).`
+    );
+  }
+  return normalized;
+}
+
 function getQwenFixedSizeFromAspectRatio(ar: string | null, quality: CliArgs["quality"]): string {
   if (quality === "normal") {
     console.warn(
@@ -331,9 +437,16 @@ function validateQwenFixedSize(size: string): string {
 
 export function resolveSizeForModel(
   model: string,
-  args: Pick<CliArgs, "size" | "aspectRatio" | "quality">,
+  args: Pick<CliArgs, "size" | "aspectRatio" | "quality"> & { referenceImages?: string[] },
 ): string {
   const spec = getModelSpec(model);
+  const referenceCount = args.referenceImages?.length ?? 0;
+
+  if (spec.family === "wan27") {
+    const maxPixels = getWan27MaxPixels(model, referenceCount > 0);
+    if (args.size) return validateWan27Size(args.size, maxPixels, model);
+    return getWan27SizeFromAspectRatio(args.aspectRatio, args.quality, maxPixels);
+  }
 
   if (args.size) {
     if (spec.family === "qwen2") return validateQwen2Size(args.size);
@@ -357,6 +470,13 @@ function buildParameters(
   family: DashScopeModelFamily,
   size: string,
 ): Record<string, unknown> {
+  if (family === "wan27") {
+    return {
+      size,
+      watermark: false,
+    };
+  }
+
   const parameters: Record<string, unknown> = {
     prompt_extend: false,
     size,
@@ -419,15 +539,30 @@ export async function generateImage(
   const apiKey = getApiKey();
   if (!apiKey) throw new Error("DASHSCOPE_API_KEY is required");
 
-  if (args.referenceImages.length > 0) {
+  const spec = getModelSpec(model);
+
+  if (args.referenceImages.length > 0 && spec.family !== "wan27") {
     throw new Error(
-      "Reference images are not supported with DashScope provider in baoyu-imagine. Use --provider google with a Gemini multimodal model."
+      "Reference images are not supported with this DashScope model. Use a wan2.7 image model (--model wan2.7-image-pro or wan2.7-image), or switch to --provider google with a Gemini multimodal model."
     );
   }
 
-  const spec = getModelSpec(model);
+  if (args.referenceImages.length > WAN27_MAX_REFERENCE_IMAGES) {
+    throw new Error(
+      `DashScope wan2.7 image models accept at most ${WAN27_MAX_REFERENCE_IMAGES} reference images. Received ${args.referenceImages.length}.`
+    );
+  }
+
   const size = resolveSizeForModel(model, args);
   const url = `${getBaseUrl()}/api/v1/services/aigc/multimodal-generation/generation`;
+
+  const content: Array<Record<string, unknown>> = [];
+  if (spec.family === "wan27" && args.referenceImages.length > 0) {
+    for (const refPath of args.referenceImages) {
+      content.push({ image: await loadReferenceImage(refPath) });
+    }
+  }
+  content.push({ text: prompt });
 
   const body = {
     model,
@@ -435,7 +570,7 @@ export async function generateImage(
       messages: [
         {
           role: "user",
-          content: [{ text: prompt }],
+          content,
         },
       ],
     },

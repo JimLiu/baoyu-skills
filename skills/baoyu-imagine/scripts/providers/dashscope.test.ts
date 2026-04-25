@@ -6,6 +6,7 @@ import {
   getModelFamily,
   getQwen2SizeFromAspectRatio,
   getSizeFromAspectRatio,
+  getWan27SizeFromAspectRatio,
   normalizeSize,
   parseAspectRatio,
   parseSize,
@@ -51,9 +52,11 @@ test("DashScope aspect-ratio parsing accepts numeric ratios only", () => {
   assert.equal(parseAspectRatio("-1:2"), null);
 });
 
-test("DashScope model family routing distinguishes qwen-2.0, fixed-size qwen, and legacy models", () => {
+test("DashScope model family routing distinguishes qwen-2.0, fixed-size qwen, wan2.7, and legacy models", () => {
   assert.equal(getModelFamily("qwen-image-2.0-pro"), "qwen2");
   assert.equal(getModelFamily("qwen-image"), "qwenFixed");
+  assert.equal(getModelFamily("wan2.7-image"), "wan27");
+  assert.equal(getModelFamily("wan2.7-image-pro"), "wan27");
   assert.equal(getModelFamily("z-image-turbo"), "legacy");
   assert.equal(getModelFamily("wanx-v1"), "legacy");
 });
@@ -145,4 +148,121 @@ test("resolveSizeForModel enforces fixed sizes for qwen-image-max/plus/image", (
 test("DashScope size normalization converts WxH into provider format", () => {
   assert.equal(normalizeSize("1024x1024"), "1024*1024");
   assert.equal(normalizeSize("2048*1152"), "2048*1152");
+});
+
+test("Wan 2.7 derives sizes that match the requested ratio at the chosen pixel budget", () => {
+  const square2k = getWan27SizeFromAspectRatio(null, "2k", 2048 * 2048);
+  const parsedSquare = parseSize(square2k);
+  assert.ok(parsedSquare);
+  assert.equal(parsedSquare.width, parsedSquare.height);
+  assert.ok(parsedSquare.width * parsedSquare.height <= 2048 * 2048);
+
+  const widescreen = getWan27SizeFromAspectRatio("16:9", "2k", 2048 * 2048);
+  const parsedWide = parseSize(widescreen);
+  assert.ok(parsedWide);
+  assert.ok(Math.abs(parsedWide.width / parsedWide.height - 16 / 9) < 0.05);
+  assert.ok(parsedWide.width * parsedWide.height <= 2048 * 2048);
+
+  const pro4k = getWan27SizeFromAspectRatio("16:9", "2k", 4096 * 4096);
+  const parsed4k = parseSize(pro4k);
+  assert.ok(parsed4k);
+  assert.ok(parsed4k.width * parsed4k.height > 2048 * 2048);
+  assert.ok(parsed4k.width * parsed4k.height <= 4096 * 4096);
+});
+
+test("Wan 2.7 rejects aspect ratios outside the [1:8, 8:1] range", () => {
+  assert.throws(
+    () => getWan27SizeFromAspectRatio("9:1", "2k", 2048 * 2048),
+    /1:8, 8:1/,
+  );
+  assert.throws(
+    () => getWan27SizeFromAspectRatio("1:9", "normal", 2048 * 2048),
+    /1:8, 8:1/,
+  );
+});
+
+test("resolveSizeForModel routes wan2.7-image to the 2K-capped derivation", () => {
+  const size = resolveSizeForModel("wan2.7-image", {
+    size: null,
+    aspectRatio: "16:9",
+    quality: "2k",
+  });
+  const parsed = parseSize(size);
+  assert.ok(parsed);
+  assert.ok(parsed.width * parsed.height <= 2048 * 2048);
+  assert.ok(Math.abs(parsed.width / parsed.height - 16 / 9) < 0.05);
+});
+
+test("resolveSizeForModel allows wan2.7-image-pro 4K only when there are no reference images", () => {
+  assert.equal(
+    resolveSizeForModel("wan2.7-image-pro", {
+      size: "4096*4096",
+      aspectRatio: null,
+      quality: "2k",
+    }),
+    "4096*4096",
+  );
+
+  assert.throws(
+    () =>
+      resolveSizeForModel("wan2.7-image-pro", {
+        size: "4096*4096",
+        aspectRatio: null,
+        quality: "2k",
+        referenceImages: ["a.png"],
+      }),
+    /total pixels between 768\*768 and 2048\*2048/,
+  );
+
+  const proWithRef = resolveSizeForModel("wan2.7-image-pro", {
+    size: null,
+    aspectRatio: "1:1",
+    quality: "2k",
+    referenceImages: ["a.png"],
+  });
+  const parsedRef = parseSize(proWithRef);
+  assert.ok(parsedRef);
+  assert.ok(parsedRef.width * parsedRef.height <= 2048 * 2048);
+});
+
+test("resolveSizeForModel validates explicit wan2.7 sizes by pixel budget and ratio", () => {
+  assert.equal(
+    resolveSizeForModel("wan2.7-image-pro", {
+      size: "3840x2160",
+      aspectRatio: null,
+      quality: "2k",
+    }),
+    "3840*2160",
+  );
+
+  assert.throws(
+    () =>
+      resolveSizeForModel("wan2.7-image-pro", {
+        size: "3840x2160",
+        aspectRatio: null,
+        quality: "2k",
+        referenceImages: ["a.png"],
+      }),
+    /total pixels between 768\*768 and 2048\*2048/,
+  );
+
+  assert.throws(
+    () =>
+      resolveSizeForModel("wan2.7-image", {
+        size: "4096x4096",
+        aspectRatio: null,
+        quality: "2k",
+      }),
+    /total pixels between 768\*768 and 2048\*2048/,
+  );
+
+  assert.throws(
+    () =>
+      resolveSizeForModel("wan2.7-image-pro", {
+        size: "3072*256",
+        aspectRatio: null,
+        quality: "2k",
+      }),
+    /1:8, 8:1/,
+  );
 });

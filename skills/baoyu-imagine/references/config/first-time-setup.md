@@ -271,6 +271,10 @@ options:
     description: "Legacy Qwen model with five fixed output sizes"
   - label: "qwen-image-plus"
     description: "Legacy Qwen model, same current capability as qwen-image"
+  - label: "wan2.7-image-pro"
+    description: "Wan 2.7 Pro — supports up to 4K text-to-image and reference-image editing"
+  - label: "wan2.7-image"
+    description: "Wan 2.7 base — faster generation, up to 2K, supports reference-image editing"
   - label: "z-image-turbo"
     description: "Legacy DashScope model for compatibility"
   - label: "z-image-ultra"
@@ -281,6 +285,7 @@ Notes for DashScope setup:
 
 - Prefer `qwen-image-2.0-pro` when the user needs custom `--size`, uncommon ratios like `21:9`, or strong Chinese/English text rendering.
 - `qwen-image-max` / `qwen-image-plus` / `qwen-image` only support five fixed sizes: `1664*928`, `1472*1104`, `1328*1328`, `1104*1472`, `928*1664`.
+- `wan2.7-image-pro` and `wan2.7-image` are the only DashScope models that accept `--ref`. Pick one of these when the user wants reference-image editing or multi-image fusion via DashScope.
 - In `baoyu-imagine`, `quality` is a compatibility preset. It is not a native DashScope parameter.
 
 ### Z.AI Model Selection

@@ -308,7 +308,7 @@ test("detectProvider rejects non-ref-capable providers and prefers Google first 
     () =>
       detectProvider(
         makeArgs({
-          provider: "dashscope",
+          provider: "zai",
           referenceImages: ["ref.png"],
         }),
       ),
@@ -423,6 +423,33 @@ test("detectProvider infers Seedream from model id and allows Seedream reference
       }),
     ),
     "seedream",
+  );
+});
+
+test("detectProvider allows DashScope reference-image workflows when explicitly chosen for wan2.7 models", (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: "dashscope-key",
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+  });
+
+  assert.equal(
+    detectProvider(
+      makeArgs({
+        provider: "dashscope",
+        model: "wan2.7-image-pro",
+        referenceImages: ["ref.png"],
+      }),
+    ),
+    "dashscope",
   );
 });
 

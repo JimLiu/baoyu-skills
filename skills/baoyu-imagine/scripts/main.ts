@@ -85,7 +85,7 @@ Options:
   --quality normal|2k       Quality preset (default: 2k)
   --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
   --imageApiDialect <id>    OpenAI-compatible image dialect: openai-native|ratio-metadata
-  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate supported families, MiniMax, or Seedream 4.0/4.5/5.0)
+  --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate supported families, MiniMax, Seedream 4.0/4.5/5.0, or DashScope wan2.7-image*)
   --n <count>               Number of images for the current task (default: 1; Replicate currently requires 1)
   --json                    JSON output
   -h, --help                Show help
@@ -698,10 +698,11 @@ export function detectProvider(args: CliArgs): Provider {
     args.provider !== "openrouter" &&
     args.provider !== "replicate" &&
     args.provider !== "seedream" &&
-    args.provider !== "minimax"
+    args.provider !== "minimax" &&
+    args.provider !== "dashscope"
   ) {
     throw new Error(
-      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal), --provider openai (GPT Image edits), --provider azure (Azure OpenAI), --provider openrouter (OpenRouter multimodal), --provider replicate, --provider seedream for supported Seedream models, or --provider minimax for MiniMax subject-reference workflows."
+      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal), --provider openai (GPT Image edits), --provider azure (Azure OpenAI), --provider openrouter (OpenRouter multimodal), --provider replicate, --provider dashscope with a wan2.7 image model, --provider seedream for supported Seedream models, or --provider minimax for MiniMax subject-reference workflows."
     );
   }
 
