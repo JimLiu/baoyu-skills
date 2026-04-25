@@ -473,6 +473,7 @@ function buildParameters(
   if (family === "wan27") {
     return {
       size,
+      n: 1,
       watermark: false,
     };
   }
@@ -550,6 +551,12 @@ export async function generateImage(
   if (args.referenceImages.length > WAN27_MAX_REFERENCE_IMAGES) {
     throw new Error(
       `DashScope wan2.7 image models accept at most ${WAN27_MAX_REFERENCE_IMAGES} reference images. Received ${args.referenceImages.length}.`
+    );
+  }
+
+  if (spec.family === "wan27" && args.n !== 1) {
+    throw new Error(
+      "DashScope wan2.7 image models in baoyu-imagine support exactly one output image per request (extra images would be billed but discarded). Remove --n or use --n 1."
     );
   }
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 
 import {
+  generateImage,
   getDefaultModel,
   getModelFamily,
   getQwen2SizeFromAspectRatio,
@@ -12,6 +13,31 @@ import {
   parseSize,
   resolveSizeForModel,
 } from "./dashscope.ts";
+import type { CliArgs } from "../types.ts";
+
+function makeCliArgs(overrides: Partial<CliArgs> = {}): CliArgs {
+  return {
+    prompt: null,
+    promptFiles: [],
+    imagePath: null,
+    provider: "dashscope",
+    model: null,
+    aspectRatio: null,
+    aspectRatioSource: null,
+    size: null,
+    quality: "2k",
+    imageSize: null,
+    imageSizeSource: null,
+    imageApiDialect: null,
+    referenceImages: [],
+    n: 1,
+    batchFile: null,
+    jobs: null,
+    json: false,
+    help: false,
+    ...overrides,
+  };
+}
 
 function useEnv(
   t: TestContext,
@@ -223,6 +249,54 @@ test("resolveSizeForModel allows wan2.7-image-pro 4K only when there are no refe
   const parsedRef = parseSize(proWithRef);
   assert.ok(parsedRef);
   assert.ok(parsedRef.width * parsedRef.height <= 2048 * 2048);
+});
+
+test("Wan 2.7 request body forces n=1 and omits prompt_extend / negative_prompt", async (t) => {
+  useEnv(t, { DASHSCOPE_API_KEY: "fake-key" });
+
+  const originalFetch = globalThis.fetch;
+  let capturedBody: any = null;
+  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+    capturedBody = JSON.parse(String(init?.body));
+    return new Response(
+      JSON.stringify({
+        output: {
+          choices: [
+            {
+              message: {
+                content: [{ image: "data:image/png;base64,iVBORw0KGgo=" }],
+              },
+            },
+          ],
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as typeof fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  await generateImage("hello", "wan2.7-image-pro", makeCliArgs({ aspectRatio: "1:1" }));
+
+  assert.equal(capturedBody.model, "wan2.7-image-pro");
+  assert.deepEqual(Object.keys(capturedBody.parameters).sort(), ["n", "size", "watermark"]);
+  assert.equal(capturedBody.parameters.n, 1);
+  assert.equal(capturedBody.parameters.watermark, false);
+  assert.equal(typeof capturedBody.parameters.size, "string");
+  assert.ok(!("prompt_extend" in capturedBody.parameters));
+  assert.ok(!("negative_prompt" in capturedBody.parameters));
+
+  assert.deepEqual(capturedBody.input.messages[0].content, [{ text: "hello" }]);
+});
+
+test("Wan 2.7 rejects --n > 1 to prevent silent multi-image billing", async (t) => {
+  useEnv(t, { DASHSCOPE_API_KEY: "fake-key" });
+
+  await assert.rejects(
+    () => generateImage("hi", "wan2.7-image-pro", makeCliArgs({ n: 2 })),
+    /support exactly one output image/,
+  );
 });
 
 test("resolveSizeForModel validates explicit wan2.7 sizes by pixel budget and ratio", () => {

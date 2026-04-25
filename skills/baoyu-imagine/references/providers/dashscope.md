@@ -26,6 +26,7 @@ Read when the user picks `--provider dashscope`, sets `default_model.dashscope`,
 - Supports up to 9 reference images in `--ref` (image editing / multi-image fusion)
 - Reference images are sent inline as base64 (or passed through if the path is an `http(s)://` URL)
 - API does NOT use `prompt_extend`; the skill omits it for this family
+- The Wan 2.7 API defaults `n` to **4** in non-collage mode and bills per generated image. baoyu-imagine forces `n: 1` and rejects `--n > 1` to avoid silently paying for and discarding extra images.
 
 **Legacy** — `z-image-turbo`, `z-image-ultra`, `wanx-v1`. Only use when the user explicitly asks for legacy behavior.
 
@@ -58,7 +59,7 @@ Read when the user picks `--provider dashscope`, sets `default_model.dashscope`,
 
 ## Not Exposed
 
-DashScope APIs also support `negative_prompt`, `prompt_extend`, `watermark`, `thinking_mode`, `seed`, `bbox_list`, `enable_sequential`, and `color_palette`. `baoyu-imagine` does not expose them as CLI flags today; the wan2.7 family relies on the API defaults (e.g. `thinking_mode=true`).
+DashScope APIs also support `negative_prompt`, `prompt_extend`, `watermark`, `thinking_mode`, `seed`, `bbox_list`, `enable_sequential`, and `color_palette`. `baoyu-imagine` does not expose them as CLI flags today; the wan2.7 family relies on the API defaults (e.g. `thinking_mode=true`). The skill always sends `n=1` for wan2.7 — if you want grid/collage mode you currently need to call the API directly.
 
 ## Official References
 
