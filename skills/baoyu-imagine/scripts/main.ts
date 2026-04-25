@@ -776,8 +776,24 @@ export function detectProvider(args: CliArgs): Provider {
   );
 }
 
-export async function validateReferenceImages(referenceImages: string[]): Promise<void> {
+export type ReferenceImageValidationOptions = {
+  allowRemoteUrls?: boolean;
+};
+
+function isRemoteReferenceImage(refPath: string): boolean {
+  return /^https?:\/\//i.test(refPath);
+}
+
+function shouldAllowRemoteReferenceImages(provider: Provider | null): boolean {
+  return provider === "dashscope";
+}
+
+export async function validateReferenceImages(
+  referenceImages: string[],
+  options: ReferenceImageValidationOptions = {},
+): Promise<void> {
   for (const refPath of referenceImages) {
+    if (options.allowRemoteUrls && isRemoteReferenceImage(refPath)) continue;
     const fullPath = path.resolve(refPath);
     try {
       await access(fullPath);
@@ -804,6 +820,11 @@ export function isRetryableGenerationError(error: unknown): boolean {
     "API error (404)",
     "temporarily disabled",
     "supports saving exactly one image",
+    "supports only",
+    "support exactly one output image",
+    "support aspect ratios in",
+    "requires total pixels between",
+    "accept at most",
   ];
   return !nonRetryableMarkers.some((marker) => msg.includes(marker));
 }
@@ -859,7 +880,11 @@ async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConf
   const prompt = (await loadPromptForArgs(args)) ?? (await readPromptFromStdin());
   if (!prompt) throw new Error("Prompt is required");
   if (!args.imagePath) throw new Error("--image is required");
-  if (args.referenceImages.length > 0) await validateReferenceImages(args.referenceImages);
+  if (args.referenceImages.length > 0) {
+    await validateReferenceImages(args.referenceImages, {
+      allowRemoteUrls: shouldAllowRemoteReferenceImages(args.provider),
+    });
+  }
 
   const provider = detectProvider(args);
   const providerModule = await loadProviderModule(provider);
@@ -908,6 +933,10 @@ export function resolveBatchPath(batchDir: string, filePath: string): string {
   return path.isAbsolute(filePath) ? filePath : path.resolve(batchDir, filePath);
 }
 
+function resolveBatchReferencePath(batchDir: string, filePath: string): string {
+  return isRemoteReferenceImage(filePath) ? filePath : resolveBatchPath(batchDir, filePath);
+}
+
 export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir: string): CliArgs {
   return {
     ...baseArgs,
@@ -923,7 +952,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
     imageSize: task.imageSize ?? baseArgs.imageSize ?? null,
     imageSizeSource: task.imageSize != null ? "task" : (baseArgs.imageSizeSource ?? null),
     imageApiDialect: task.imageApiDialect ?? baseArgs.imageApiDialect ?? null,
-    referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchPath(batchDir, filePath)) : [],
+    referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchReferencePath(batchDir, filePath)) : [],
     n: task.n ?? baseArgs.n,
     batchFile: null,
     jobs: baseArgs.jobs,
@@ -947,7 +976,11 @@ async function prepareBatchTasks(
     const prompt = await loadPromptForArgs(taskArgs);
     if (!prompt) throw new Error(`Task ${i + 1} is missing prompt or promptFiles.`);
     if (!taskArgs.imagePath) throw new Error(`Task ${i + 1} is missing image output path.`);
-    if (taskArgs.referenceImages.length > 0) await validateReferenceImages(taskArgs.referenceImages);
+    if (taskArgs.referenceImages.length > 0) {
+      await validateReferenceImages(taskArgs.referenceImages, {
+        allowRemoteUrls: shouldAllowRemoteReferenceImages(taskArgs.provider),
+      });
+    }
 
     const provider = detectProvider(taskArgs);
     const providerModule = await loadProviderModule(provider);

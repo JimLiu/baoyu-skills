@@ -19,6 +19,7 @@ import {
   parseArgs,
   parseOpenAIImageApiDialect,
   parseSimpleYaml,
+  validateReferenceImages,
 } from "./main.ts";
 
 function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
@@ -120,6 +121,15 @@ test("parseArgs falls back to positional prompt and rejects invalid provider", (
   assert.throws(
     () => parseArgs(["--provider", "stability"]),
     /Invalid provider/,
+  );
+});
+
+test("validateReferenceImages can skip remote URLs for providers that support them", async () => {
+  await validateReferenceImages(["https://example.com/ref.png"], { allowRemoteUrls: true });
+
+  await assert.rejects(
+    () => validateReferenceImages(["https://example.com/ref.png"]),
+    /Reference image not found/,
   );
 });
 
@@ -531,7 +541,7 @@ test("loadBatchTasks and createTaskArgs resolve batch-relative paths", async (t)
           id: "hero",
           promptFiles: ["prompts/hero.md"],
           image: "out/hero",
-          ref: ["refs/hero.png"],
+          ref: ["refs/hero.png", "https://example.com/ref.png"],
           ar: "16:9",
         },
       ],
@@ -560,6 +570,7 @@ test("loadBatchTasks and createTaskArgs resolve batch-relative paths", async (t)
   assert.equal(taskArgs.imagePath, path.join(loaded.batchDir, "out/hero"));
   assert.deepEqual(taskArgs.referenceImages, [
     path.join(loaded.batchDir, "refs/hero.png"),
+    "https://example.com/ref.png",
   ]);
   assert.equal(taskArgs.provider, "replicate");
   assert.equal(taskArgs.aspectRatio, "16:9");
@@ -581,6 +592,30 @@ test("path normalization, worker count, and retry classification follow expected
   assert.equal(
     isRetryableGenerationError(
       new Error("Replicate returned 2 outputs, but baoyu-imagine currently supports saving exactly one image per request."),
+    ),
+    false,
+  );
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("DashScope wan2.7 image models accept at most 9 reference images. Received 10."),
+    ),
+    false,
+  );
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("DashScope wan2.7 image models in baoyu-imagine support exactly one output image per request."),
+    ),
+    false,
+  );
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("DashScope wan2.7 image models support aspect ratios in [1:8, 8:1]."),
+    ),
+    false,
+  );
+  assert.equal(
+    isRetryableGenerationError(
+      new Error("DashScope wan2.7-image requires total pixels between 768*768 and 2048*2048."),
     ),
     false,
   );

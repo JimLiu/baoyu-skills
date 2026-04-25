@@ -122,7 +122,7 @@ function getReferenceImageMime(filePath: string): string {
 }
 
 async function loadReferenceImage(refPath: string): Promise<string> {
-  if (refPath.startsWith("http://") || refPath.startsWith("https://")) {
+  if (/^https?:\/\//i.test(refPath)) {
     return refPath;
   }
   const fullPath = path.resolve(refPath);
@@ -209,6 +209,10 @@ function roundToStep(value: number): number {
   return Math.max(SIZE_STEP, Math.round(value / SIZE_STEP) * SIZE_STEP);
 }
 
+function floorToStep(value: number): number {
+  return Math.max(SIZE_STEP, Math.floor(value / SIZE_STEP) * SIZE_STEP);
+}
+
 function fitToPixelBudget(
   width: number,
   height: number,
@@ -254,6 +258,21 @@ function fitToPixelBudget(
   }
 
   return { width: roundedWidth, height: roundedHeight };
+}
+
+function clampWan27DerivedSizeToRatioBounds(
+  size: { width: number; height: number },
+): { width: number; height: number } {
+  let { width, height } = size;
+  const ratio = width / height;
+
+  if (ratio > 8) {
+    width = floorToStep(height * 8);
+  } else if (ratio < 1 / 8) {
+    height = floorToStep(width * 8);
+  }
+
+  return { width, height };
 }
 
 export function getSizeFromAspectRatio(ar: string | null, quality: CliArgs["quality"]): string {
@@ -357,8 +376,9 @@ export function getWan27SizeFromAspectRatio(
     MIN_WAN27_TOTAL_PIXELS,
     maxPixels,
   );
+  const bounded = clampWan27DerivedSizeToRatioBounds(fitted);
 
-  return formatSize(fitted.width, fitted.height);
+  return formatSize(bounded.width, bounded.height);
 }
 
 function validateWan27Size(size: string, maxPixels: number, model: string): string {

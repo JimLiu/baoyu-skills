@@ -207,6 +207,18 @@ test("Wan 2.7 rejects aspect ratios outside the [1:8, 8:1] range", () => {
   );
 });
 
+test("Wan 2.7 derived sizes stay inside the boundary ratio limits after rounding", () => {
+  for (const ar of ["8:1", "1:8"]) {
+    const size = getWan27SizeFromAspectRatio(ar, "2k", 2048 * 2048);
+    const parsed = parseSize(size);
+    assert.ok(parsed);
+    const ratio = parsed.width / parsed.height;
+    assert.ok(ratio >= 1 / 8);
+    assert.ok(ratio <= 8);
+    assert.ok(parsed.width * parsed.height <= 2048 * 2048);
+  }
+});
+
 test("resolveSizeForModel routes wan2.7-image to the 2K-capped derivation", () => {
   const size = resolveSizeForModel("wan2.7-image", {
     size: null,
@@ -288,6 +300,44 @@ test("Wan 2.7 request body forces n=1 and omits prompt_extend / negative_prompt"
   assert.ok(!("negative_prompt" in capturedBody.parameters));
 
   assert.deepEqual(capturedBody.input.messages[0].content, [{ text: "hello" }]);
+});
+
+test("Wan 2.7 request body forwards remote reference image URLs", async (t) => {
+  useEnv(t, { DASHSCOPE_API_KEY: "fake-key" });
+
+  const originalFetch = globalThis.fetch;
+  let capturedBody: any = null;
+  globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+    capturedBody = JSON.parse(String(init?.body));
+    return new Response(
+      JSON.stringify({
+        output: {
+          choices: [
+            {
+              message: {
+                content: [{ image: "data:image/png;base64,iVBORw0KGgo=" }],
+              },
+            },
+          ],
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }) as typeof fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  await generateImage(
+    "combine these",
+    "wan2.7-image-pro",
+    makeCliArgs({ referenceImages: ["https://example.com/ref.png"] }),
+  );
+
+  assert.deepEqual(capturedBody.input.messages[0].content, [
+    { image: "https://example.com/ref.png" },
+    { text: "combine these" },
+  ]);
 });
 
 test("Wan 2.7 rejects --n > 1 to prevent silent multi-image billing", async (t) => {
