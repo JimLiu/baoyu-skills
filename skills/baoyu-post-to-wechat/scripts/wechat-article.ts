@@ -31,7 +31,95 @@ interface ArticleOptions {
   cdpPort?: number;
 }
 
+async function sendQrToTelegram(session: ChromeSession): Promise<void> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+
+  try {
+    // Try to extract QR image from DOM first (avoids full-page screenshot noise)
+    const domResult = await session.cdp.send<{ result: { value: string } }>('Runtime.evaluate', {
+      expression: `
+        (function() {
+          const selectors = [
+            '.login__type__container__scan img',
+            '.login_img img',
+            '#login_container img',
+            '.qrcode img',
+            'img[src*="qrcode"]',
+            'img[src*="login"]',
+          ];
+          for (const sel of selectors) {
+            const el = document.querySelector(sel);
+            if (el?.src && !el.src.startsWith('data:,')) return el.src.startsWith('data:') ? el.src : 'url:' + el.src;
+          }
+          const canvas = document.querySelector('canvas');
+          if (canvas) try { return canvas.toDataURL('image/png'); } catch {}
+          return '';
+        })()
+      `,
+      returnByValue: true,
+    }, { sessionId: session.sessionId });
+
+    const raw = (domResult.result.value as string) ?? '';
+    let imgBuffer: Buffer;
+
+    if (raw.startsWith('data:image')) {
+      imgBuffer = Buffer.from(raw.split(',')[1] ?? '', 'base64');
+    } else if (raw.startsWith('url:')) {
+      // Fetch inside Chrome to carry WeChat session cookies
+      const imgUrl = raw.slice(4);
+      const inBrowserFetch = await session.cdp.send<{ result: { value: string } }>('Runtime.evaluate', {
+        expression: `
+          (async () => {
+            const resp = await fetch(${JSON.stringify(imgUrl)}, { credentials: 'include' });
+            const buf = await resp.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let b = '';
+            for (let i = 0; i < bytes.length; i++) b += String.fromCharCode(bytes[i]);
+            return btoa(b);
+          })()
+        `,
+        returnByValue: true,
+        awaitPromise: true,
+      }, { sessionId: session.sessionId });
+      imgBuffer = Buffer.from((inBrowserFetch.result.value as string) ?? '', 'base64');
+    } else {
+      // Fallback: full-page screenshot
+      const screenshotResp = await session.cdp.send<{ data: string }>(
+        'Page.captureScreenshot', { format: 'png' }, { sessionId: session.sessionId }
+      );
+      imgBuffer = Buffer.from(screenshotResp.data ?? '', 'base64');
+    }
+
+    const boundary = `tgboundary${Date.now()}`;
+    const parts: Buffer[] = [
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${chatId}\r\n`),
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\nWeChat QR code — please scan to log in\r\n`),
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="photo"; filename="qr.png"\r\nContent-Type: image/png\r\n\r\n`),
+      imgBuffer,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ];
+    const tgResp = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: Buffer.concat(parts),
+    });
+    const tgJson = await tgResp.json() as { ok: boolean; description?: string };
+    if (tgJson.ok) {
+      console.log('[wechat] QR code sent to Telegram.');
+    } else {
+      console.error('[wechat] Telegram send failed:', tgJson.description);
+    }
+  } catch (err) {
+    console.error('[wechat] Failed to send QR to Telegram:', err);
+  }
+}
+
 async function waitForLogin(session: ChromeSession, timeoutMs = 120_000): Promise<boolean> {
+  // Wait for QR to render, then notify via Telegram if configured
+  await sleep(2000);
+  await sendQrToTelegram(session);
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const url = await evaluate<string>(session, 'window.location.href');
@@ -557,7 +645,8 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
 
     const url = await evaluate<string>(session, 'window.location.href');
     if (!url.includes('/cgi-bin/')) {
-      console.log('[wechat] Not logged in. Please scan QR code...');
+      const hasTelegram = !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
+      console.log(`[wechat] Not logged in. Please scan QR code...${hasTelegram ? ' (sending to Telegram)' : ''}`);
       const loggedIn = await waitForLogin(session);
       if (!loggedIn) throw new Error('Login timeout');
     }

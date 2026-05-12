@@ -245,7 +245,7 @@ Files created:
 |-------|-----|
 | Missing API credentials | Follow guided setup in Step 2 |
 | Access token error | Verify credentials valid and not expired |
-| Not logged in (browser) | First run opens browser — scan QR to log in |
+| Not logged in (browser) | First run opens browser — scan QR to log in. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` to receive the QR image via Telegram |
 | Chrome not found | Set `WECHAT_BROWSER_CHROME_PATH` |
 | Title/summary missing | Use auto-generation or provide manually |
 | No cover image | Add frontmatter cover or place `imgs/cover.png` in article directory |
