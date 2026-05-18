@@ -2,6 +2,12 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.117.2 - 2026-05-17
+
+### Documentation
+- `baoyu-cover-image`: ban programmatic text repair on generated bitmaps — disallow ImageMagick / Pillow / Canvas / SVG / HTML overlays to cover, rewrite, or replace title/subtitle text; regenerate from a corrected prompt or switch to a lower-text or no-title variant instead
+- `baoyu-article-illustrator`, `baoyu-comic`, `baoyu-image-cards`, `baoyu-xhs-images`, `baoyu-infographic`, `baoyu-slide-deck`: sync the same text-repair ban with skill-specific text categories (labels/captions, dialogue/sound effects, titles/body/tags, headings/data values, slide titles/bullets)
+
 ## 1.117.1 - 2026-05-16
 
 ### Fixes

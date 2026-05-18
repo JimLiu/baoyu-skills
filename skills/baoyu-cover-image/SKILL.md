@@ -36,6 +36,8 @@ When this skill needs to render an image, resolve the backend in this order:
 
 **⛔ Never substitute SVG, HTML, canvas, or other code-based rendering for raster image generation.** Codex `imagegen`'s own description says it should be used "when the output should be a bitmap asset rather than repo-native code or vector." If you cannot resolve a raster backend via step 3, fall through to step 4 and ask the user — do **not** silently emit SVG, write inline `<svg>` markup, or produce HTML/CSS art as a substitute. This applies even if the article/section seems "diagram-like": the consumer skill calling this rule has already decided that a raster image is what it needs.
 
+**⛔ Never repair rendered text by painting over a generated bitmap.** Do not use ImageMagick, Pillow, Canvas, SVG, HTML/CSS, OCR scripts, or any other programmatic overlay to cover, rewrite, erase, stroke, or replace title/subtitle text inside an already generated cover image. If text is wrong or unclear, regenerate from a corrected prompt, switch to a lower-text or no-title variant, or ask the user which imperfect candidate to keep.
+
 Setting `preferred_image_backend: ask` forces the step-3 prompt every run regardless of available backends. Users change the pinned backend via the `## Changing Preferences` section below.
 
 **Prompt file requirement (hard)**: write each image's full, final prompt to a standalone file under `prompts/` (naming: `NN-{type}-[slug].md`) BEFORE invoking any backend. The backend receives the prompt file (or its content); the file is the reproducibility record and lets you switch backends without regenerating prompts.
@@ -240,6 +242,12 @@ Files:
 |--------|-------|
 | **Regenerate** | Backup → Update prompt file FIRST → Regenerate |
 | **Change dimension** | Backup → Confirm new value → Update prompt → Regenerate |
+
+Text correction policy:
+
+- If the title/subtitle is misspelled, garbled, hard to read, or visually weak, do not patch the bitmap with code.
+- For text-correction regenerations, write a new prompt file and a new output path so the flawed candidate is preserved for comparison.
+- Post-processing is limited to crop, resize, compression, or format conversion that does not alter text or the main composition.
 
 ## Composition Principles
 

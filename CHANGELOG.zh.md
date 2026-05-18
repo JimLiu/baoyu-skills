@@ -2,6 +2,12 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.117.2 - 2026-05-17
+
+### 文档
+- `baoyu-cover-image`：禁止用代码修补已生成的位图文字 —— 不再使用 ImageMagick / Pillow / Canvas / SVG / HTML 叠层覆盖、重写或替换标题/副标题文字，文字异常时应改 prompt 重新生成或换用少字/无标题版本
+- `baoyu-article-illustrator`、`baoyu-comic`、`baoyu-image-cards`、`baoyu-xhs-images`、`baoyu-infographic`、`baoyu-slide-deck`：同步上述文字修补禁令，各自针对该 skill 的文字类别（标签/说明、对白/拟声词、标题/正文/标签、标题/数据、幻灯片标题/要点）
+
 ## 1.117.1 - 2026-05-16
 
 ### 修复
