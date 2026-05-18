@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadWechatExtendConfig, resolveAccount, loadCredentials } from "./wechat-extend-config.ts";
+import { publishRemoteDraft, type RemotePublishConfig } from "./wechat-remote-publish.ts";
 import {
   type WechatUploadAsset,
   prepareWechatBodyImageUpload,
@@ -438,14 +439,18 @@ function renderMarkdownWithPlaceholders(
   const mdToWechatScript = path.join(__dirname, "md-to-wechat.ts");
   const baseDir = path.dirname(markdownPath);
 
-  const args = ["-y", "bun", mdToWechatScript, markdownPath];
+  const bunCheck = spawnSync("bun", ["--version"], { stdio: "ignore" });
+  const command = bunCheck.status === 0 ? "bun" : "npx";
+  const args = command === "bun"
+    ? [mdToWechatScript, markdownPath]
+    : ["-y", "bun", mdToWechatScript, markdownPath];
   if (title) args.push("--title", title);
   if (theme) args.push("--theme", theme);
   if (color) args.push("--color", color);
   if (!citeStatus) args.push("--no-cite");
 
   console.error(`[wechat-api] Rendering markdown with placeholders via md-to-wechat: ${theme}${color ? `, color: ${color}` : ""}, citeStatus: ${citeStatus}`);
-  const result = spawnSync("npx", args, {
+  const result = spawnSync(command, args, {
     stdio: ["inherit", "pipe", "pipe"],
     cwd: baseDir,
   });
@@ -492,6 +497,13 @@ Options:
   --color <name|hex>  Primary color (blue, green, vermilion, etc. or hex)
   --cover <path>      Cover image path (local or URL)
   --account <alias>   Select account by alias (for multi-account setups)
+  --remote            Publish from a configured remote server IP over SSH
+  --remote-host <host>       Remote server host/IP
+  --remote-user <user>       SSH user (default: root)
+  --remote-port <port>       SSH port (default: 22)
+  --remote-workdir <path>    Remote work directory (default: /tmp/baoyu-wechat-remote-publish)
+  --remote-ssh-option <arg>  Extra SSH/SCP option, can repeat
+  --no-remote-cleanup        Keep remote temp directory after publish
   --no-cite           Disable bottom citations for ordinary external links in markdown mode
   --dry-run           Parse and render only, don't publish
   --help              Show this help
@@ -537,6 +549,13 @@ interface CliArgs {
   color?: string;
   cover?: string;
   account?: string;
+  remote: boolean;
+  remoteHost?: string;
+  remoteUser?: string;
+  remotePort?: number;
+  remoteWorkdir?: string;
+  remoteCleanup?: boolean;
+  remoteSshOptions: string[];
   citeStatus: boolean;
   dryRun: boolean;
 }
@@ -551,6 +570,8 @@ function parseArgs(argv: string[]): CliArgs {
     isHtml: false,
     articleType: "news",
     theme: "default",
+    remote: false,
+    remoteSshOptions: [],
     citeStatus: true,
     dryRun: false,
   };
@@ -576,6 +597,27 @@ function parseArgs(argv: string[]): CliArgs {
       args.cover = argv[++i];
     } else if (arg === "--account" && argv[i + 1]) {
       args.account = argv[++i];
+    } else if (arg === "--remote") {
+      args.remote = true;
+    } else if (arg === "--remote-host" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteHost = argv[++i];
+    } else if (arg === "--remote-user" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteUser = argv[++i];
+    } else if (arg === "--remote-port" && argv[i + 1]) {
+      args.remote = true;
+      const port = Number.parseInt(argv[++i]!, 10);
+      if (Number.isInteger(port) && port > 0) args.remotePort = port;
+    } else if (arg === "--remote-workdir" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteWorkdir = argv[++i];
+    } else if (arg === "--remote-ssh-option" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteSshOptions.push(argv[++i]!);
+    } else if (arg === "--no-remote-cleanup") {
+      args.remote = true;
+      args.remoteCleanup = false;
     } else if (arg === "--cite") {
       args.citeStatus = true;
     } else if (arg === "--no-cite") {
@@ -597,6 +639,37 @@ function parseArgs(argv: string[]): CliArgs {
   args.isHtml = args.filePath.toLowerCase().endsWith(".html");
 
   return args;
+}
+
+function parseEnvPort(value?: string): number | undefined {
+  const parsed = Number.parseInt(value || "", 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseEnvBool(value?: string): boolean | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  return undefined;
+}
+
+function parseEnvList(value?: string): string[] | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed.split(/\s+/).filter(Boolean) : undefined;
+}
+
+function buildRemoteConfig(args: CliArgs, resolved: ReturnType<typeof resolveAccount>): RemotePublishConfig {
+  return {
+    host: args.remoteHost || resolved.remote_publish_host || process.env.WECHAT_REMOTE_HOST || "",
+    user: args.remoteUser || resolved.remote_publish_user || process.env.WECHAT_REMOTE_USER,
+    port: args.remotePort || resolved.remote_publish_port || parseEnvPort(process.env.WECHAT_REMOTE_PORT),
+    workdir: args.remoteWorkdir || resolved.remote_publish_workdir || process.env.WECHAT_REMOTE_WORKDIR,
+    cleanup: args.remoteCleanup ?? resolved.remote_publish_cleanup ?? parseEnvBool(process.env.WECHAT_REMOTE_CLEANUP),
+    sshOptions: args.remoteSshOptions.length > 0
+      ? args.remoteSshOptions
+      : resolved.remote_publish_ssh_options || parseEnvList(process.env.WECHAT_REMOTE_SSH_OPTIONS),
+  };
 }
 
 function extractHtmlTitle(html: string): string {
@@ -709,8 +782,6 @@ async function main(): Promise<void> {
     console.error(`[wechat-api] Skipped incomplete credential source: ${skippedSource}`);
   }
   console.error(`[wechat-api] Credentials source: ${creds.source}`);
-  console.error("[wechat-api] Fetching access token...");
-  const accessToken = await fetchAccessToken(creds.appId, creds.appSecret);
 
   const rawCoverPath = args.cover ||
     frontmatter.coverImage ||
@@ -721,6 +792,37 @@ async function main(): Promise<void> {
     ? path.resolve(process.cwd(), rawCoverPath)
     : rawCoverPath;
   const needNewsCoverFallback = args.articleType === "news" && !coverPath;
+
+  if (args.remote || resolved.default_publish_method === "remote-api") {
+    const remote = buildRemoteConfig(args, resolved);
+    console.error(`[wechat-api] Remote publish host: ${remote.host || "(not configured)"}`);
+    const remoteResult = await publishRemoteDraft({
+      remote,
+      appId: creds.appId,
+      appSecret: creds.appSecret,
+      title,
+      author,
+      digest,
+      html: htmlContent,
+      baseDir,
+      contentImages,
+      coverPath,
+      articleType: args.articleType,
+      needOpenComment: resolved.need_open_comment,
+      onlyFansCanComment: resolved.only_fans_can_comment,
+    });
+    console.log(JSON.stringify({
+      media_id: remoteResult.mediaId,
+      title: remoteResult.title,
+      method: "remote-api",
+      body_images: remoteResult.bodyImages,
+      image_media_ids: remoteResult.imageMediaIds,
+    }, null, 2));
+    return;
+  }
+
+  console.error("[wechat-api] Fetching access token...");
+  const accessToken = await fetchAccessToken(creds.appId, creds.appSecret);
 
   console.error("[wechat-api] Uploading body images...");
   const { html: processedHtml, firstCoverMediaId, imageMediaIds } = await uploadImagesInHtml(

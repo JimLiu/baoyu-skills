@@ -69,6 +69,12 @@ default_author: 宝玉
 need_open_comment: 1
 only_fans_can_comment: 0
 chrome_profile_path: /path/to/chrome/profile
+remote_publish_host:
+remote_publish_user: root
+remote_publish_port: 22
+remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+remote_publish_cleanup: 1
+remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
 ```
 
 **Theme options**: default, grace, simple, modern. **Color presets**: blue, green, vermilion, yellow, purple, sky, rose, olive, black, gray, pink, red, orange (or hex).
@@ -149,6 +155,7 @@ Ask method unless specified in EXTEND.md or CLI:
 | Method | Speed | Requires |
 |--------|-------|----------|
 | `api` (Recommended) | Fast | API credentials |
+| `remote-api` | Fast | API credentials + SSH server whose IP is whitelisted in WeChat |
 | `browser` | Slow | Chrome + logged-in session |
 
 **API selected + missing credentials** → run guided setup per `references/api-setup.md` (writes to `.baoyu-skills/.env`).
@@ -188,6 +195,14 @@ Always pass `--theme` even if it's `default`. Only pass `--color` when explicitl
 - `article_type`: `news` (default) or `newspic`
 - For `news`, include `thumb_media_id` (cover required)
 - Always include `need_open_comment` (default `1`) and `only_fans_can_comment` (default `0`) in the request body, even if the CLI doesn't expose them
+
+**Remote API method** (accepts `.md` or `.html`):
+
+```bash
+${BUN_X} {baseDir}/scripts/wechat-api.ts <file> --theme <theme> --remote [--remote-host <host>] [--remote-user <user>] [--remote-port <port>] [--remote-workdir <path>] [--remote-ssh-option <arg>]
+```
+
+Use this when WeChat API IP whitelist allows only a cloud server: conversion still happens locally, then temporary HTML/image payloads plus a small Python publisher are copied to the remote server with `ssh`/`scp`; the remote server calls WeChat APIs and then deletes the temporary directory by default. Requires SSH key login. Never store SSH passwords in EXTEND.md.
 
 **Browser method** (accepts `--markdown` or `--html`):
 
@@ -237,6 +252,7 @@ Files created:
 | Comment control | ✗ | ✓ | ✗ |
 | Requires Chrome | ✓ | ✗ | ✓ |
 | Requires API credentials | ✗ | ✓ | ✗ |
+| Supports remote server IP publishing | ✗ | ✓ (`--remote`) | ✗ |
 | Speed | Medium | Fast | Slow |
 
 ## Troubleshooting
@@ -245,6 +261,8 @@ Files created:
 |-------|-----|
 | Missing API credentials | Follow guided setup in Step 2 |
 | Access token error | Verify credentials valid and not expired |
+| Remote publish host missing | Set `remote_publish_host` in EXTEND.md or pass `--remote-host` |
+| Remote publish SSH fails | Verify SSH key login, `remote_publish_user`, `remote_publish_port`, and `remote_publish_ssh_options` |
 | Not logged in (browser) | First run opens browser — scan QR to log in. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` to receive the QR image via Telegram |
 | Chrome not found | Set `WECHAT_BROWSER_CHROME_PATH` |
 | Title/summary missing | Use auto-generation or provide manually |

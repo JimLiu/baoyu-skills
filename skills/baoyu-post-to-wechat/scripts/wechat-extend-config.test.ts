@@ -5,7 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import test, { type TestContext } from "node:test";
 
-import { loadCredentials } from "./wechat-extend-config.ts";
+import { loadCredentials, loadWechatExtendConfig, resolveAccount } from "./wechat-extend-config.ts";
 
 function useCwd(t: TestContext, cwd: string): void {
   const previous = process.cwd();
@@ -73,6 +73,12 @@ async function writeEnvFile(root: string, content: string): Promise<void> {
   await fs.writeFile(envPath, content);
 }
 
+async function writeExtendFile(root: string, content: string): Promise<void> {
+  const extendPath = path.join(root, ".baoyu-skills", "baoyu-post-to-wechat", "EXTEND.md");
+  await fs.mkdir(path.dirname(extendPath), { recursive: true });
+  await fs.writeFile(extendPath, content);
+}
+
 test("loadCredentials selects the first complete source without mixing values across sources", async (t) => {
   const cwdRoot = await makeTempDir("wechat-creds-cwd-");
   const homeRoot = await makeTempDir("wechat-creds-home-");
@@ -136,4 +142,46 @@ test("loadCredentials reports skipped incomplete sources when no complete pair e
     () => loadCredentials(),
     /Incomplete credential sources skipped:\n- process\.env missing WECHAT_APP_SECRET\n- <cwd>\/\.baoyu-skills\/\.env missing WECHAT_APP_ID/,
   );
+});
+
+test("loadWechatExtendConfig resolves remote publish settings globally and per account", async (t) => {
+  const cwdRoot = await makeTempDir("wechat-extend-cwd-");
+  const homeRoot = await makeTempDir("wechat-extend-home-");
+
+  useCwd(t, cwdRoot);
+  useHome(t, homeRoot);
+
+  await writeExtendFile(cwdRoot, `
+default_publish_method: remote-api
+remote_publish_host: global.example.com
+remote_publish_user: deploy
+remote_publish_port: 2222
+remote_publish_workdir: /tmp/global-wechat
+remote_publish_cleanup: 0
+remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+
+accounts:
+  - name: Tech
+    alias: tech
+    default: true
+    remote_publish_host: account.example.com
+    remote_publish_user: root
+    remote_publish_port: 2200
+`);
+
+  const config = loadWechatExtendConfig();
+  const resolved = resolveAccount(config);
+
+  assert.equal(resolved.default_publish_method, "remote-api");
+  assert.equal(resolved.remote_publish_host, "account.example.com");
+  assert.equal(resolved.remote_publish_user, "root");
+  assert.equal(resolved.remote_publish_port, 2200);
+  assert.equal(resolved.remote_publish_workdir, "/tmp/global-wechat");
+  assert.equal(resolved.remote_publish_cleanup, false);
+  assert.deepEqual(resolved.remote_publish_ssh_options, [
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "StrictHostKeyChecking=accept-new",
+  ]);
 });

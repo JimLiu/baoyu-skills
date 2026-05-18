@@ -613,6 +613,7 @@ Post content to WeChat Official Account (微信公众号). Two modes available:
 | Method | Speed | Requirements |
 |--------|-------|--------------|
 | API (Recommended) | Fast | API credentials |
+| Remote API | Fast | API credentials + SSH server IP whitelisted in WeChat |
 | Browser | Slow | Chrome, login session |
 
 **API Configuration** (for faster publishing):
@@ -628,6 +629,19 @@ To obtain credentials:
 2. Go to: 我的业务 → 公众号 → 开发密钥
 3. Create development key and copy AppID/AppSecret
 4. Add your machine's IP to the whitelist
+
+**Remote API Publishing**: If the WeChat API whitelist only allows a cloud server, set `default_publish_method: remote-api` and configure SSH:
+
+```yaml
+remote_publish_host: your.server.ip
+remote_publish_user: root
+remote_publish_port: 22
+remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+remote_publish_cleanup: 1
+remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+```
+
+The local machine still converts Markdown/HTML, then uploads temporary payloads to the remote server. The remote server calls WeChat APIs from its whitelisted IP and cleans up by default. Use SSH key login; do not store SSH passwords in config.
 
 **Browser Method** (no API setup needed): Requires Google Chrome. First run opens browser for QR code login (session preserved).
 
@@ -657,10 +671,11 @@ accounts:
     app_secret: your_wechat_app_secret
   - name: AI Newsletter
     alias: ai-news
-    default_publish_method: browser
+    default_publish_method: remote-api
     default_author: AI Newsletter
     need_open_comment: 1
     only_fans_can_comment: 0
+    remote_publish_host: your.server.ip
 ```
 
 | Accounts configured | Behavior |

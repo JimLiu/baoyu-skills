@@ -84,6 +84,8 @@ question: "Default publishing method?"
 options:
   - label: "api (Recommended)"
     description: "Fast, requires API credentials (AppID + AppSecret)"
+  - label: "remote-api"
+    description: "Fast, uses a remote server IP over SSH for WeChat API whitelist"
   - label: "browser"
     description: "Slow, requires Chrome and login session"
 ```
@@ -157,11 +159,17 @@ options:
 ```md
 default_theme: [default/grace/simple/modern]
 default_color: [preset name, hex, or empty for theme default]
-default_publish_method: [api/browser]
+default_publish_method: [api/remote-api/browser]
 default_author: [author name or empty]
 need_open_comment: [1/0]
 only_fans_can_comment: [1/0]
 chrome_profile_path:
+remote_publish_host: [remote server host or empty]
+remote_publish_user: root
+remote_publish_port: 22
+remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+remote_publish_cleanup: 1
+remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
 ```
 
 ### Multi-Account
@@ -174,15 +182,21 @@ accounts:
   - name: [display name]
     alias: [short key, e.g. "baoyu"]
     default: true
-    default_publish_method: [api/browser]
+    default_publish_method: [api/remote-api/browser]
     default_author: [author name]
     need_open_comment: [1/0]
     only_fans_can_comment: [1/0]
     app_id: [WeChat App ID, optional]
     app_secret: [WeChat App Secret, optional]
+    remote_publish_host: [remote server host, optional]
+    remote_publish_user: root
+    remote_publish_port: 22
+    remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+    remote_publish_cleanup: 1
+    remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
   - name: [second account name]
     alias: [short key, e.g. "ai-tools"]
-    default_publish_method: [api/browser]
+    default_publish_method: [api/remote-api/browser]
     default_author: [author name]
     need_open_comment: [1/0]
     only_fans_can_comment: [1/0]

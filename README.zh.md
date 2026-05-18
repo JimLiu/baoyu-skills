@@ -613,6 +613,7 @@ clawhub install baoyu-markdown-to-html
 | 方式 | 速度 | 要求 |
 |------|------|------|
 | API（推荐） | 快 | API 凭证 |
+| 远程 API | 快 | API 凭证 + 已加入微信白名单的远程服务器 IP |
 | 浏览器 | 慢 | Chrome，登录会话 |
 
 **API 配置**（更快的发布方式）：
@@ -628,6 +629,19 @@ WECHAT_APP_SECRET=你的AppSecret
 2. 进入：我的业务 → 公众号 → 开发密钥
 3. 添加开发密钥，复制 AppID 和 AppSecret
 4. 将你操作的机器 IP 加入白名单
+
+**远程 API 发布**：如果公众号 API 白名单只配置了云服务器 IP，可以设置 `default_publish_method: remote-api` 并配置 SSH：
+
+```yaml
+remote_publish_host: your.server.ip
+remote_publish_user: root
+remote_publish_port: 22
+remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+remote_publish_cleanup: 1
+remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+```
+
+本地仍负责 Markdown/HTML 转换，然后把临时 HTML、图片和发布脚本上传到远程服务器，由远程服务器调用微信 API，默认发布后清理临时目录。需要 SSH key 登录，不要在配置里保存服务器密码。
 
 **浏览器方式**（无需 API 配置）：需已安装 Google Chrome，首次运行需扫码登录（登录状态会保存）
 
@@ -657,10 +671,11 @@ accounts:
     app_secret: 你的微信AppSecret
   - name: AI 工具集
     alias: ai-tools
-    default_publish_method: browser
+    default_publish_method: remote-api
     default_author: AI 工具集
     need_open_comment: 1
     only_fans_can_comment: 0
+    remote_publish_host: your.server.ip
 ```
 
 | 账号配置情况 | 行为 |

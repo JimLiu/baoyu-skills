@@ -13,6 +13,12 @@ export interface WechatAccount {
   app_id?: string;
   app_secret?: string;
   chrome_profile_path?: string;
+  remote_publish_host?: string;
+  remote_publish_user?: string;
+  remote_publish_port?: number;
+  remote_publish_workdir?: string;
+  remote_publish_cleanup?: boolean;
+  remote_publish_ssh_options?: string[];
 }
 
 export interface WechatExtendConfig {
@@ -23,6 +29,12 @@ export interface WechatExtendConfig {
   need_open_comment?: number;
   only_fans_can_comment?: number;
   chrome_profile_path?: string;
+  remote_publish_host?: string;
+  remote_publish_user?: string;
+  remote_publish_port?: number;
+  remote_publish_workdir?: string;
+  remote_publish_cleanup?: boolean;
+  remote_publish_ssh_options?: string[];
   accounts?: WechatAccount[];
 }
 
@@ -36,6 +48,12 @@ export interface ResolvedAccount {
   app_id?: string;
   app_secret?: string;
   chrome_profile_path?: string;
+  remote_publish_host?: string;
+  remote_publish_user?: string;
+  remote_publish_port?: number;
+  remote_publish_workdir?: string;
+  remote_publish_cleanup?: boolean;
+  remote_publish_ssh_options?: string[];
 }
 
 function stripQuotes(s: string): string {
@@ -44,6 +62,35 @@ function stripQuotes(s: string): string {
 
 function toBool01(v: string): number {
   return v === "1" || v === "true" ? 1 : 0;
+}
+
+function toOptionalBool(v?: string): boolean | undefined {
+  if (v === undefined) return undefined;
+  const normalized = v.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  return undefined;
+}
+
+function toOptionalPort(v?: string): number | undefined {
+  if (v === undefined) return undefined;
+  const port = Number.parseInt(v, 10);
+  return Number.isInteger(port) && port > 0 ? port : undefined;
+}
+
+function parseListValue(v?: string): string[] | undefined {
+  if (!v) return undefined;
+  const trimmed = v.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    try {
+      const parsed = JSON.parse(trimmed.replace(/'/g, '"'));
+      if (Array.isArray(parsed) && parsed.every(item => typeof item === "string")) {
+        return parsed;
+      }
+    } catch {}
+  }
+  return trimmed.split(/\s+/).filter(Boolean);
 }
 
 function parseWechatExtend(content: string): WechatExtendConfig {
@@ -106,6 +153,12 @@ function parseWechatExtend(content: string): WechatExtendConfig {
       case "need_open_comment": config.need_open_comment = toBool01(val); break;
       case "only_fans_can_comment": config.only_fans_can_comment = toBool01(val); break;
       case "chrome_profile_path": config.chrome_profile_path = val; break;
+      case "remote_publish_host": config.remote_publish_host = val; break;
+      case "remote_publish_user": config.remote_publish_user = val; break;
+      case "remote_publish_port": config.remote_publish_port = toOptionalPort(val); break;
+      case "remote_publish_workdir": config.remote_publish_workdir = val; break;
+      case "remote_publish_cleanup": config.remote_publish_cleanup = toOptionalBool(val); break;
+      case "remote_publish_ssh_options": config.remote_publish_ssh_options = parseListValue(val); break;
     }
   }
 
@@ -123,6 +176,12 @@ function parseWechatExtend(content: string): WechatExtendConfig {
       app_id: a.app_id || undefined,
       app_secret: a.app_secret || undefined,
       chrome_profile_path: a.chrome_profile_path || undefined,
+      remote_publish_host: a.remote_publish_host || undefined,
+      remote_publish_user: a.remote_publish_user || undefined,
+      remote_publish_port: toOptionalPort(a.remote_publish_port),
+      remote_publish_workdir: a.remote_publish_workdir || undefined,
+      remote_publish_cleanup: toOptionalBool(a.remote_publish_cleanup),
+      remote_publish_ssh_options: parseListValue(a.remote_publish_ssh_options),
     }));
   }
 
@@ -168,6 +227,12 @@ export function resolveAccount(config: WechatExtendConfig, alias?: string): Reso
     app_id: acct?.app_id,
     app_secret: acct?.app_secret,
     chrome_profile_path: acct?.chrome_profile_path ?? config.chrome_profile_path,
+    remote_publish_host: acct?.remote_publish_host ?? config.remote_publish_host,
+    remote_publish_user: acct?.remote_publish_user ?? config.remote_publish_user,
+    remote_publish_port: acct?.remote_publish_port ?? config.remote_publish_port,
+    remote_publish_workdir: acct?.remote_publish_workdir ?? config.remote_publish_workdir,
+    remote_publish_cleanup: acct?.remote_publish_cleanup ?? config.remote_publish_cleanup,
+    remote_publish_ssh_options: acct?.remote_publish_ssh_options ?? config.remote_publish_ssh_options,
   };
 }
 

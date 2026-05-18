@@ -37,7 +37,7 @@ accounts:
 
 ## Per-Account vs Global Keys
 
-**Per-account** (also accepted globally as fallback): `default_publish_method`, `default_author`, `need_open_comment`, `only_fans_can_comment`, `app_id`, `app_secret`, `chrome_profile_path`.
+**Per-account** (also accepted globally as fallback): `default_publish_method`, `default_author`, `need_open_comment`, `only_fans_can_comment`, `app_id`, `app_secret`, `chrome_profile_path`, `remote_publish_host`, `remote_publish_user`, `remote_publish_port`, `remote_publish_workdir`, `remote_publish_cleanup`, `remote_publish_ssh_options`.
 
 **Global-only** (always shared): `default_theme`, `default_color`.
 
@@ -96,6 +96,28 @@ All publishing scripts accept `--account <alias>`:
 
 ```bash
 ${BUN_X} {baseDir}/scripts/wechat-api.ts <file> --theme default --account ai-tools
+${BUN_X} {baseDir}/scripts/wechat-api.ts <file> --theme default --account ai-tools --remote
 ${BUN_X} {baseDir}/scripts/wechat-article.ts --markdown <file> --theme default --account baoyu
 ${BUN_X} {baseDir}/scripts/wechat-browser.ts --markdown <file> --images ./photos/ --account baoyu
 ```
+
+## Remote API Publishing
+
+Use `default_publish_method: remote-api` or pass `--remote` when the WeChat API whitelist points at a cloud server rather than the local machine.
+
+```md
+accounts:
+  - name: AI工具集
+    alias: ai-tools
+    default_publish_method: remote-api
+    app_id: your_ai_tools_wechat_app_id
+    app_secret: your_ai_tools_wechat_app_secret
+    remote_publish_host: your.server.ip
+    remote_publish_user: root
+    remote_publish_port: 22
+    remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
+    remote_publish_cleanup: 1
+    remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+```
+
+Remote publishing copies only temporary HTML/image payloads, credentials, and a small Python publisher over SSH/SCP. The remote host calls WeChat APIs from its own IP and deletes the temporary directory by default. Configure SSH key login; do not store SSH passwords in EXTEND.md.
