@@ -638,10 +638,16 @@ remote_publish_user: root
 remote_publish_port: 22
 remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
 remote_publish_cleanup: 1
-remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+remote_publish_identity_file: /path/to/id_ed25519
+remote_publish_known_hosts_file: /path/to/known_hosts
+remote_publish_strict_host_key_checking: accept-new
+remote_publish_connect_timeout: 10
+remote_publish_proxy_jump:
 ```
 
-本地仍负责 Markdown/HTML 转换，然后把临时 HTML、图片和发布脚本上传到远程服务器，由远程服务器调用微信 API，默认发布后清理临时目录。需要 SSH key 登录，不要在配置里保存服务器密码。
+原始 `ssh`/`scp` 选项已故意禁用，只能使用上面白名单内的远程 SSH 配置，避免通过 `ProxyCommand`、`-F` 等注入本地命令执行面。
+
+本地仍负责 Markdown/HTML 转换，并在本地下载、校验远程图片，只把已暂存的本地 payload 文件上传到远程服务器。远程服务器只调用微信 API，默认发布后清理临时目录。AppSecret 通过 SSH stdin 传给远端发布进程，不写入远端 payload 目录。需要 SSH key 登录，不要在配置里保存服务器密码。
 
 **浏览器方式**（无需 API 配置）：需已安装 Google Chrome，首次运行需扫码登录（登录状态会保存）
 

@@ -37,7 +37,7 @@ accounts:
 
 ## Per-Account vs Global Keys
 
-**Per-account** (also accepted globally as fallback): `default_publish_method`, `default_author`, `need_open_comment`, `only_fans_can_comment`, `app_id`, `app_secret`, `chrome_profile_path`, `remote_publish_host`, `remote_publish_user`, `remote_publish_port`, `remote_publish_workdir`, `remote_publish_cleanup`, `remote_publish_ssh_options`.
+**Per-account** (also accepted globally as fallback): `default_publish_method`, `default_author`, `need_open_comment`, `only_fans_can_comment`, `app_id`, `app_secret`, `chrome_profile_path`, `remote_publish_host`, `remote_publish_user`, `remote_publish_port`, `remote_publish_workdir`, `remote_publish_cleanup`, `remote_publish_identity_file` / `remote_publish_known_hosts_file` / `remote_publish_strict_host_key_checking` / `remote_publish_connect_timeout` / `remote_publish_proxy_jump`.
 
 **Global-only** (always shared): `default_theme`, `default_color`.
 
@@ -117,7 +117,13 @@ accounts:
     remote_publish_port: 22
     remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
     remote_publish_cleanup: 1
-    remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+    remote_publish_identity_file: /path/to/id_ed25519
+    remote_publish_known_hosts_file: /path/to/known_hosts
+    remote_publish_strict_host_key_checking: accept-new
+    remote_publish_connect_timeout: 10
+    remote_publish_proxy_jump:
 ```
 
-Remote publishing copies only temporary HTML/image payloads, credentials, and a small Python publisher over SSH/SCP. The remote host calls WeChat APIs from its own IP and deletes the temporary directory by default. Configure SSH key login; do not store SSH passwords in EXTEND.md.
+Raw `ssh`/`scp` options are intentionally unsupported. Use only the whitelisted remote SSH keys above so config cannot inject `ProxyCommand`, `-F`, or other local command execution surfaces.
+
+Remote publishing copies only temporary HTML/image payloads and a small Python publisher over SSH/SCP. Remote image URLs are downloaded and validated locally before staging; the remote host never fetches arbitrary article image URLs. AppSecret is passed over SSH stdin instead of being written to the remote directory. The remote host calls WeChat APIs from its own IP and deletes the temporary directory by default. Configure SSH key login; do not store SSH passwords in EXTEND.md.

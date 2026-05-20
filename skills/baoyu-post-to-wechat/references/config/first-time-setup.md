@@ -169,8 +169,14 @@ remote_publish_user: root
 remote_publish_port: 22
 remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
 remote_publish_cleanup: 1
-remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+remote_publish_identity_file: /path/to/id_ed25519
+remote_publish_known_hosts_file: /path/to/known_hosts
+remote_publish_strict_host_key_checking: accept-new
+remote_publish_connect_timeout: 10
+remote_publish_proxy_jump:
 ```
+
+Raw `ssh`/`scp` options are intentionally unsupported. Use only the whitelisted remote SSH keys above so config cannot inject `ProxyCommand`, `-F`, or other local command execution surfaces.
 
 ### Multi-Account
 
@@ -193,7 +199,11 @@ accounts:
     remote_publish_port: 22
     remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
     remote_publish_cleanup: 1
-    remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+    remote_publish_identity_file: /path/to/id_ed25519
+    remote_publish_known_hosts_file: /path/to/known_hosts
+    remote_publish_strict_host_key_checking: accept-new
+    remote_publish_connect_timeout: 10
+    remote_publish_proxy_jump:
   - name: [second account name]
     alias: [short key, e.g. "ai-tools"]
     default_publish_method: [api/remote-api/browser]

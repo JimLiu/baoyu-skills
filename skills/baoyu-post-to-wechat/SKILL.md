@@ -74,8 +74,14 @@ remote_publish_user: root
 remote_publish_port: 22
 remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
 remote_publish_cleanup: 1
-remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+remote_publish_identity_file: /path/to/id_ed25519
+remote_publish_known_hosts_file: /path/to/known_hosts
+remote_publish_strict_host_key_checking: accept-new
+remote_publish_connect_timeout: 10
+remote_publish_proxy_jump:
 ```
+
+Raw `ssh`/`scp` options are intentionally unsupported. Use only the whitelisted remote SSH keys above so config cannot inject `ProxyCommand`, `-F`, or other local command execution surfaces.
 
 **Theme options**: default, grace, simple, modern. **Color presets**: blue, green, vermilion, yellow, purple, sky, rose, olive, black, gray, pink, red, orange (or hex).
 
@@ -199,10 +205,10 @@ Always pass `--theme` even if it's `default`. Only pass `--color` when explicitl
 **Remote API method** (accepts `.md` or `.html`):
 
 ```bash
-${BUN_X} {baseDir}/scripts/wechat-api.ts <file> --theme <theme> --remote [--remote-host <host>] [--remote-user <user>] [--remote-port <port>] [--remote-workdir <path>] [--remote-ssh-option <arg>]
+${BUN_X} {baseDir}/scripts/wechat-api.ts <file> --theme <theme> --remote [--remote-host <host>] [--remote-user <user>] [--remote-port <port>] [--remote-workdir <path>] [--remote-identity-file <path>] [--remote-strict-host-key-checking <yes|no|accept-new>]
 ```
 
-Use this when WeChat API IP whitelist allows only a cloud server: conversion still happens locally, then temporary HTML/image payloads plus a small Python publisher are copied to the remote server with `ssh`/`scp`; the remote server calls WeChat APIs and then deletes the temporary directory by default. Requires SSH key login. Never store SSH passwords in EXTEND.md.
+Use this when WeChat API IP whitelist allows only a cloud server: conversion and remote-image download/validation happen locally, then temporary HTML/image payloads plus a small Python publisher are copied to the remote server with `ssh`/`scp`; the remote server calls WeChat APIs and then deletes the temporary directory by default. AppSecret is passed over SSH stdin instead of being copied into the remote directory. Requires SSH key login. Never store SSH passwords in EXTEND.md.
 
 **Browser method** (accepts `--markdown` or `--html`):
 
@@ -262,7 +268,7 @@ Files created:
 | Missing API credentials | Follow guided setup in Step 2 |
 | Access token error | Verify credentials valid and not expired |
 | Remote publish host missing | Set `remote_publish_host` in EXTEND.md or pass `--remote-host` |
-| Remote publish SSH fails | Verify SSH key login, `remote_publish_user`, `remote_publish_port`, and `remote_publish_ssh_options` |
+| Remote publish SSH fails | Verify SSH key login, `remote_publish_user`, `remote_publish_port`, and `remote_publish_identity_file` / `remote_publish_known_hosts_file` / `remote_publish_strict_host_key_checking` / `remote_publish_connect_timeout` / `remote_publish_proxy_jump` |
 | Not logged in (browser) | First run opens browser — scan QR to log in. Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` to receive the QR image via Telegram |
 | Chrome not found | Set `WECHAT_BROWSER_CHROME_PATH` |
 | Title/summary missing | Use auto-generation or provide manually |

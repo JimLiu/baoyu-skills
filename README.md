@@ -638,10 +638,16 @@ remote_publish_user: root
 remote_publish_port: 22
 remote_publish_workdir: /tmp/baoyu-wechat-remote-publish
 remote_publish_cleanup: 1
-remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+remote_publish_identity_file: /path/to/id_ed25519
+remote_publish_known_hosts_file: /path/to/known_hosts
+remote_publish_strict_host_key_checking: accept-new
+remote_publish_connect_timeout: 10
+remote_publish_proxy_jump:
 ```
 
-The local machine still converts Markdown/HTML, then uploads temporary payloads to the remote server. The remote server calls WeChat APIs from its whitelisted IP and cleans up by default. Use SSH key login; do not store SSH passwords in config.
+Raw `ssh`/`scp` options are intentionally unsupported. Use only the whitelisted remote SSH keys above so config cannot inject `ProxyCommand`, `-F`, or other local command execution surfaces.
+
+The local machine still converts Markdown/HTML, downloads and validates remote images, then uploads only staged local payload files to the remote server. The remote server calls WeChat APIs from its whitelisted IP and cleans up by default. WeChat AppSecret is passed to the remote publisher over SSH stdin and is not written into the remote payload directory. Use SSH key login; do not store SSH passwords in config.
 
 **Browser Method** (no API setup needed): Requires Google Chrome. First run opens browser for QR code login (session preserved).
 

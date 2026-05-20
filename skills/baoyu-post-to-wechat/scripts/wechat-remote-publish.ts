@@ -1,7 +1,10 @@
+import dns from "node:dns/promises";
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
 import {
@@ -17,7 +20,11 @@ export interface RemotePublishConfig {
   port?: number;
   workdir?: string;
   cleanup?: boolean;
-  sshOptions?: string[];
+  identityFile?: string;
+  knownHostsFile?: string;
+  strictHostKeyChecking?: "yes" | "no" | "accept-new";
+  connectTimeout?: number;
+  proxyJump?: string;
 }
 
 interface RemoteImageInfo {
@@ -50,9 +57,8 @@ export interface RemotePublishResult {
 }
 
 interface StagedAssetRef {
-  filename?: string;
-  content_type?: string;
-  remote_url?: string;
+  filename: string;
+  content_type: string;
 }
 
 interface StagedHtmlImage {
@@ -67,199 +73,19 @@ interface StagedPlaceholderImage {
   material?: StagedAssetRef;
 }
 
-const REMOTE_PUBLISHER = String.raw`#!/usr/bin/env python3
-import json
-import mimetypes
-import urllib.parse
-import urllib.request
-from pathlib import Path
-from uuid import uuid4
-
-API = "https://api.weixin.qq.com"
-ROOT = Path(__file__).resolve().parent
-
-
-def request_json(url, data=None, headers=None):
-    body = None
-    if data is not None:
-        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        headers = {"Content-Type": "application/json; charset=utf-8", **(headers or {})}
-    req = urllib.request.Request(url, data=body, headers=headers or {})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        raw = resp.read().decode("utf-8")
-    obj = json.loads(raw)
-    if obj.get("errcode") not in (None, 0):
-        raise RuntimeError(f"WeChat API error {obj.get('errcode')}: {obj.get('errmsg')}")
-    return obj
-
-
-def load_asset(asset):
-    if asset.get("remote_url"):
-        req = urllib.request.Request(asset["remote_url"], headers={"User-Agent": "baoyu-post-to-wechat/remote"})
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            data = resp.read()
-            content_type = resp.headers.get("content-type") or asset.get("content_type") or "image/jpeg"
-        filename = Path(urllib.parse.urlparse(asset["remote_url"]).path).name or f"remote-{uuid4().hex}.jpg"
-        return data, filename, content_type
-
-    file_path = ROOT / "images" / asset["filename"]
-    return (
-        file_path.read_bytes(),
-        asset["filename"],
-        asset.get("content_type") or mimetypes.guess_type(file_path.name)[0] or "application/octet-stream",
-    )
-
-
-def multipart_upload(url, asset):
-    data, filename, content_type = load_asset(asset)
-    boundary = f"----baoyu-wechat-{uuid4().hex}"
-    body = b"".join([
-        f"--{boundary}\r\n".encode(),
-        f'Content-Disposition: form-data; name="media"; filename="{filename}"\r\n'.encode(),
-        f"Content-Type: {content_type}\r\n\r\n".encode(),
-        data,
-        b"\r\n",
-        f"--{boundary}--\r\n".encode(),
-    ])
-    req = urllib.request.Request(
-        url,
-        data=body,
-        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
-    )
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        raw = resp.read().decode("utf-8")
-    obj = json.loads(raw)
-    if obj.get("errcode") not in (None, 0):
-        raise RuntimeError(f"WeChat upload error {obj.get('errcode')}: {obj.get('errmsg')}")
-    return obj
-
-
-def get_token(appid, secret):
-    query = urllib.parse.urlencode({
-        "grant_type": "client_credential",
-        "appid": appid,
-        "secret": secret,
-    })
-    return request_json(f"{API}/cgi-bin/token?{query}")["access_token"]
-
-
-def upload_body_image(token, asset):
-    obj = multipart_upload(
-        f"{API}/cgi-bin/media/uploadimg?access_token={urllib.parse.quote(token)}",
-        asset,
-    )
-    url = obj["url"]
-    return "https://" + url[len("http://"):] if url.startswith("http://") else url
-
-
-def upload_material(token, asset):
-    obj = multipart_upload(
-        f"{API}/cgi-bin/material/add_material?access_token={urllib.parse.quote(token)}&type=image",
-        asset,
-    )
-    return obj["media_id"]
-
-
-def replace_all_placeholders(html, placeholder, replacement):
-    return html.replace(placeholder, replacement)
-
-
-def publish_to_draft(token, payload, content, thumb_media_id, image_media_ids):
-    article_type = payload["article_type"]
-    article = {
-        "article_type": article_type,
-        "title": payload["title"],
-        "content": content,
-        "need_open_comment": payload.get("need_open_comment", 1),
-        "only_fans_can_comment": payload.get("only_fans_can_comment", 0),
-    }
-    if payload.get("author"):
-        article["author"] = payload["author"]
-
-    if article_type == "newspic":
-        article["image_info"] = {
-            "image_list": [{"image_media_id": item} for item in image_media_ids],
-        }
-    else:
-        article["thumb_media_id"] = thumb_media_id
-        if payload.get("digest"):
-            article["digest"] = payload["digest"]
-
-    return request_json(
-        f"{API}/cgi-bin/draft/add?access_token={urllib.parse.quote(token)}",
-        {"articles": [article]},
-    )
-
-
-def main():
-    payload = json.loads((ROOT / "payload.json").read_text(encoding="utf-8"))
-    secrets = json.loads((ROOT / "wechat.json").read_text(encoding="utf-8"))
-    token = get_token(secrets["app_id"], secrets["app_secret"])
-
-    html = payload["html"]
-    image_media_ids = []
-    thumb_media_id = None
-    body_uploads = 0
-
-    for item in payload.get("html_images", []):
-        src = item["src"]
-        if src.startswith("https://mmbiz.qpic.cn"):
-            if payload.get("collect_news_cover_fallback") and not thumb_media_id:
-                thumb_media_id = upload_material(token, {"remote_url": src, "content_type": "image/jpeg"})
-            continue
-
-        body_asset = item.get("body")
-        if body_asset:
-            image_url = upload_body_image(token, body_asset)
-            html = html.replace(src, image_url)
-            body_uploads += 1
-
-        if item.get("material"):
-            media_id = upload_material(token, item["material"])
-            if payload["article_type"] == "newspic":
-                image_media_ids.append(media_id)
-            if payload.get("collect_news_cover_fallback") and not thumb_media_id:
-                thumb_media_id = media_id
-
-    for item in payload.get("placeholder_images", []):
-        image_url = upload_body_image(token, item["body"])
-        replacement = f'<img src="{image_url}" style="display: block; width: 100%; margin: 1.5em auto;">'
-        html = replace_all_placeholders(html, item["placeholder"], replacement)
-        body_uploads += 1
-
-        if item.get("material"):
-            media_id = upload_material(token, item["material"])
-            if payload["article_type"] == "newspic":
-                image_media_ids.append(media_id)
-            if payload.get("collect_news_cover_fallback") and not thumb_media_id:
-                thumb_media_id = media_id
-
-    if payload.get("cover"):
-        thumb_media_id = upload_material(token, payload["cover"])
-
-    if payload["article_type"] == "news" and not thumb_media_id:
-        raise RuntimeError("news article requires thumb_media_id")
-    if payload["article_type"] == "newspic" and not image_media_ids:
-        raise RuntimeError("newspic requires at least one image_media_id")
-
-    result = publish_to_draft(token, payload, html, thumb_media_id, image_media_ids)
-    print(json.dumps({
-        "media_id": result.get("media_id"),
-        "title": payload["title"],
-        "body_images": body_uploads,
-        "image_media_ids": len(image_media_ids),
-    }, ensure_ascii=False))
-
-
-if __name__ == "__main__":
-    main()
-`;
+interface NormalizedRemoteConfig extends Required<Pick<RemotePublishConfig, "host" | "user" | "port" | "workdir" | "cleanup">> {
+  identityFile?: string;
+  knownHostsFile?: string;
+  strictHostKeyChecking?: "yes" | "no" | "accept-new";
+  connectTimeout?: number;
+  proxyJump?: string;
+}
 
 function shQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
-function normalizeRemoteConfig(remote: RemotePublishConfig): Required<RemotePublishConfig> {
+function normalizeRemoteConfig(remote: RemotePublishConfig): NormalizedRemoteConfig {
   const host = remote.host?.trim();
   if (!host) throw new Error("Remote publish requires remote_publish_host.");
 
@@ -269,8 +95,22 @@ function normalizeRemoteConfig(remote: RemotePublishConfig): Required<RemotePubl
     port: remote.port || 22,
     workdir: remote.workdir?.trim() || "/tmp/baoyu-wechat-remote-publish",
     cleanup: remote.cleanup ?? true,
-    sshOptions: remote.sshOptions || [],
+    identityFile: remote.identityFile?.trim() || undefined,
+    knownHostsFile: remote.knownHostsFile?.trim() || undefined,
+    strictHostKeyChecking: remote.strictHostKeyChecking,
+    connectTimeout: remote.connectTimeout,
+    proxyJump: remote.proxyJump?.trim() || undefined,
   };
+}
+
+function buildSshOptions(remote: NormalizedRemoteConfig): string[] {
+  const options: string[] = [];
+  if (remote.identityFile) options.push("-i", remote.identityFile);
+  if (remote.knownHostsFile) options.push("-o", `UserKnownHostsFile=${remote.knownHostsFile}`);
+  if (remote.strictHostKeyChecking) options.push("-o", `StrictHostKeyChecking=${remote.strictHostKeyChecking}`);
+  if (remote.connectTimeout) options.push("-o", `ConnectTimeout=${remote.connectTimeout}`);
+  if (remote.proxyJump) options.push("-J", remote.proxyJump);
+  return options;
 }
 
 function uniqueName(name: string, used: Set<string>): string {
@@ -295,36 +135,139 @@ function resolveLocalPath(imagePath: string, baseDir: string): string {
   return path.isAbsolute(imagePath) ? imagePath : path.resolve(baseDir, imagePath);
 }
 
-async function loadUploadAsset(imagePath: string, baseDir: string): Promise<WechatUploadAsset | { remoteUrl: string }> {
+function isPrivateIpv4(ip: string): boolean {
+  const parts = ip.split(".").map(part => Number.parseInt(part, 10));
+  if (parts.length !== 4 || parts.some(part => !Number.isInteger(part) || part < 0 || part > 255)) return true;
+  const [a, b, c] = parts;
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 0) ||
+    (a === 192 && b === 168) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
+    a >= 224
+  );
+}
+
+function isPrivateIpv6(ip: string): boolean {
+  const normalized = ip.toLowerCase();
+  if (normalized.includes(".")) {
+    const mapped = normalized.match(/(?:::ffff:)?(\d+\.\d+\.\d+\.\d+)$/);
+    if (mapped) return isPrivateIpv4(mapped[1]!);
+  }
+  return (
+    normalized === "::1" ||
+    normalized === "::" ||
+    normalized.startsWith("fe80:") ||
+    normalized.startsWith("fc") ||
+    normalized.startsWith("fd")
+  );
+}
+
+function isPrivateAddress(address: string): boolean {
+  const family = net.isIP(address);
+  if (family === 4) return isPrivateIpv4(address);
+  if (family === 6) return isPrivateIpv6(address);
+  return true;
+}
+
+async function assertPublicHttpsUrl(rawUrl: string): Promise<URL> {
+  const parsed = new URL(rawUrl);
+  if (parsed.protocol !== "https:") {
+    throw new Error(`Remote images must use https URLs: ${rawUrl}`);
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
+    throw new Error(`Remote image host is not allowed: ${hostname}`);
+  }
+
+  if (isPrivateAddress(hostname)) {
+    throw new Error(`Remote image host resolves to a private address: ${hostname}`);
+  }
+
+  const addresses = await dns.lookup(hostname, { all: true });
+  if (addresses.length === 0 || addresses.some(address => isPrivateAddress(address.address))) {
+    throw new Error(`Remote image host resolves to a private address: ${hostname}`);
+  }
+
+  return parsed;
+}
+
+async function fetchRemoteImage(url: string, redirects = 0): Promise<{ buffer: Buffer; filename: string; contentType: string }> {
+  if (redirects > 5) throw new Error(`Too many redirects while downloading image: ${url}`);
+  const parsed = await assertPublicHttpsUrl(url);
+  const response = await fetch(parsed, {
+    redirect: "manual",
+    headers: { "User-Agent": "baoyu-post-to-wechat/remote-stager" },
+    signal: AbortSignal.timeout(60_000),
+  });
+
+  if ([301, 302, 303, 307, 308].includes(response.status)) {
+    const location = response.headers.get("location");
+    if (!location) throw new Error(`Image redirect without Location: ${url}`);
+    return await fetchRemoteImage(new URL(location, parsed).toString(), redirects + 1);
+  }
+
+  if (!response.ok) throw new Error(`Failed to download image: ${url} (${response.status})`);
+
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+  if (!contentType.toLowerCase().startsWith("image/")) {
+    throw new Error(`Remote URL did not return an image content type: ${url} (${contentType})`);
+  }
+
+  const finalUrl = await assertPublicHttpsUrl(response.url || parsed.toString());
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length === 0) throw new Error(`Remote image is empty: ${url}`);
+  const filename = path.basename(finalUrl.pathname) || `remote-${randomUUID()}.jpg`;
+  return { buffer, filename, contentType };
+}
+
+async function loadUploadAsset(imagePath: string, baseDir: string): Promise<WechatUploadAsset> {
+  let fileBuffer: Buffer;
+  let filename: string;
+  let fileExt = "";
+  let contentType = "image/jpeg";
+
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return { remoteUrl: imagePath };
-  }
+    const downloaded = await fetchRemoteImage(imagePath);
+    fileBuffer = downloaded.buffer;
+    filename = downloaded.filename;
+    fileExt = path.extname(filename).toLowerCase();
+    contentType = downloaded.contentType;
+  } else {
+    const resolvedPath = resolveLocalPath(imagePath, baseDir);
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`Image not found: ${resolvedPath}`);
+    }
 
-  const resolvedPath = resolveLocalPath(imagePath, baseDir);
-  if (!fs.existsSync(resolvedPath)) {
-    throw new Error(`Image not found: ${resolvedPath}`);
-  }
+    fileBuffer = fs.readFileSync(resolvedPath);
+    if (fileBuffer.length === 0) {
+      throw new Error(`Local image is empty: ${resolvedPath}`);
+    }
 
-  const fileBuffer = fs.readFileSync(resolvedPath);
-  if (fileBuffer.length === 0) {
-    throw new Error(`Local image is empty: ${resolvedPath}`);
+    filename = path.basename(resolvedPath);
+    fileExt = path.extname(filename).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".gif": "image/gif",
+      ".webp": "image/webp",
+      ".bmp": "image/bmp",
+      ".tiff": "image/tiff",
+      ".tif": "image/tiff",
+      ".svg": "image/svg+xml",
+      ".ico": "image/x-icon",
+    };
+    contentType = mimeTypes[fileExt] || "image/jpeg";
   }
-
-  let filename = path.basename(resolvedPath);
-  let fileExt = path.extname(filename).toLowerCase();
-  const mimeTypes: Record<string, string> = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-    ".bmp": "image/bmp",
-    ".tiff": "image/tiff",
-    ".tif": "image/tiff",
-    ".svg": "image/svg+xml",
-    ".ico": "image/x-icon",
-  };
-  let contentType = mimeTypes[fileExt] || "image/jpeg";
 
   const detected = detectImageFormatFromBuffer(fileBuffer);
   if (detected && detected.contentType !== contentType) {
@@ -350,9 +293,6 @@ async function stageAsset(
   uploadType: "body" | "material",
 ): Promise<StagedAssetRef> {
   const asset = await loadUploadAsset(imagePath, baseDir);
-  if ("remoteUrl" in asset) {
-    return { remote_url: asset.remoteUrl };
-  }
 
   let staged = asset;
   if (uploadType === "body" && needsWechatBodyImageProcessing(asset)) {
@@ -382,10 +322,11 @@ function collectHtmlImageSources(html: string): string[] {
   return sources;
 }
 
-function runChecked(command: string, args: string[], options?: { capture?: boolean }): string {
+function runChecked(command: string, args: string[], options?: { capture?: boolean; input?: string }): string {
   const result = spawnSync(command, args, {
     encoding: "utf-8",
-    stdio: options?.capture ? ["ignore", "pipe", "pipe"] : "inherit",
+    input: options?.input,
+    stdio: options?.capture ? ["pipe", "pipe", "pipe"] : options?.input ? ["pipe", "inherit", "inherit"] : "inherit",
   });
 
   if (result.error) {
@@ -410,7 +351,7 @@ export async function publishRemoteDraft(options: RemotePublishOptions): Promise
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "baoyu-wechat-remote-"));
   const imagesDir = path.join(tmpDir, "images");
-  fs.mkdirSync(imagesDir, { recursive: true });
+  fs.mkdirSync(imagesDir, { recursive: true, mode: 0o700 });
 
   const usedNames = new Set<string>();
   const collectNewsCoverFallback = options.articleType === "news" && !options.coverPath;
@@ -418,15 +359,13 @@ export async function publishRemoteDraft(options: RemotePublishOptions): Promise
   try {
     const htmlImages: StagedHtmlImage[] = [];
     for (const src of collectHtmlImageSources(options.html)) {
-      if (src.startsWith("https://mmbiz.qpic.cn")) {
-        htmlImages.push({ src });
-        continue;
-      }
-
       const shouldUploadMaterial = options.articleType === "newspic" || collectNewsCoverFallback;
+      const shouldUploadBody = !src.startsWith("https://mmbiz.qpic.cn");
       htmlImages.push({
         src,
-        body: await stageAsset(src, options.baseDir, imagesDir, usedNames, "body"),
+        body: shouldUploadBody
+          ? await stageAsset(src, options.baseDir, imagesDir, usedNames, "body")
+          : undefined,
         material: shouldUploadMaterial
           ? await stageAsset(src, options.baseDir, imagesDir, usedNames, "material")
           : undefined,
@@ -466,30 +405,31 @@ export async function publishRemoteDraft(options: RemotePublishOptions): Promise
       collect_news_cover_fallback: collectNewsCoverFallback,
     }, null, 2));
 
-    const wechatPath = path.join(tmpDir, "wechat.json");
-    fs.writeFileSync(wechatPath, JSON.stringify({
-      app_id: options.appId,
-      app_secret: options.appSecret,
-    }, null, 2));
-    fs.chmodSync(wechatPath, 0o600);
-
+    const __filename = fileURLToPath(import.meta.url);
+    const publisherSource = path.join(path.dirname(__filename), "remote_publisher.py");
     const publisherPath = path.join(tmpDir, "remote_publisher.py");
-    fs.writeFileSync(publisherPath, REMOTE_PUBLISHER);
+    fs.copyFileSync(publisherSource, publisherPath);
     fs.chmodSync(publisherPath, 0o700);
 
     const remoteTarget = `${remote.user}@${remote.host}`;
     const remoteRunDir = `${remote.workdir.replace(/\/+$/, "")}/${randomUUID()}`;
-    const sshBase = ["-p", String(remote.port), ...remote.sshOptions, remoteTarget];
-    const scpBase = ["-P", String(remote.port), ...remote.sshOptions];
-
-    runChecked("ssh", [...sshBase, `rm -rf ${shQuote(remoteRunDir)} && mkdir -p ${shQuote(remoteRunDir)}`]);
-    runChecked("scp", [...scpBase, "-r", `${tmpDir}/.`, `${remoteTarget}:${remoteRunDir}/`]);
+    const sshOptions = buildSshOptions(remote);
+    const sshBase = ["-p", String(remote.port), ...sshOptions, remoteTarget];
+    const scpBase = ["-P", String(remote.port), ...sshOptions];
+    let remoteCreated = false;
 
     try {
+      runChecked("ssh", [...sshBase, `umask 077 && rm -rf ${shQuote(remoteRunDir)} && mkdir -p ${shQuote(remoteRunDir)} && chmod 700 ${shQuote(remoteRunDir)}`]);
+      remoteCreated = true;
+      runChecked("scp", [...scpBase, "-r", `${tmpDir}/.`, `${remoteTarget}:${remoteRunDir}/`]);
+
       const stdout = runChecked(
         "ssh",
         [...sshBase, `cd ${shQuote(remoteRunDir)} && python3 remote_publisher.py`],
-        { capture: true },
+        {
+          capture: true,
+          input: JSON.stringify({ app_id: options.appId, app_secret: options.appSecret }),
+        },
       );
       const lastLine = stdout.trim().split(/\r?\n/).filter(Boolean).at(-1);
       if (!lastLine) throw new Error("Remote publisher returned no output.");
@@ -506,7 +446,7 @@ export async function publishRemoteDraft(options: RemotePublishOptions): Promise
         imageMediaIds: result.image_media_ids,
       };
     } finally {
-      if (remote.cleanup) {
+      if (remote.cleanup && remoteCreated) {
         runBestEffort("ssh", [...sshBase, `rm -rf ${shQuote(remoteRunDir)}`]);
       }
     }

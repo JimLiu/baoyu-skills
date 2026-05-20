@@ -502,7 +502,11 @@ Options:
   --remote-user <user>       SSH user (default: root)
   --remote-port <port>       SSH port (default: 22)
   --remote-workdir <path>    Remote work directory (default: /tmp/baoyu-wechat-remote-publish)
-  --remote-ssh-option <arg>  Extra SSH/SCP option, can repeat
+  --remote-identity-file <path>       SSH identity file
+  --remote-known-hosts-file <path>    SSH known_hosts file
+  --remote-strict-host-key-checking <yes|no|accept-new>
+  --remote-connect-timeout <seconds>
+  --remote-proxy-jump <host>          SSH ProxyJump value
   --no-remote-cleanup        Keep remote temp directory after publish
   --no-cite           Disable bottom citations for ordinary external links in markdown mode
   --dry-run           Parse and render only, don't publish
@@ -555,7 +559,11 @@ interface CliArgs {
   remotePort?: number;
   remoteWorkdir?: string;
   remoteCleanup?: boolean;
-  remoteSshOptions: string[];
+  remoteIdentityFile?: string;
+  remoteKnownHostsFile?: string;
+  remoteStrictHostKeyChecking?: "yes" | "no" | "accept-new";
+  remoteConnectTimeout?: number;
+  remoteProxyJump?: string;
   citeStatus: boolean;
   dryRun: boolean;
 }
@@ -571,7 +579,6 @@ function parseArgs(argv: string[]): CliArgs {
     articleType: "news",
     theme: "default",
     remote: false,
-    remoteSshOptions: [],
     citeStatus: true,
     dryRun: false,
   };
@@ -612,9 +619,25 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--remote-workdir" && argv[i + 1]) {
       args.remote = true;
       args.remoteWorkdir = argv[++i];
-    } else if (arg === "--remote-ssh-option" && argv[i + 1]) {
+    } else if (arg === "--remote-identity-file" && argv[i + 1]) {
       args.remote = true;
-      args.remoteSshOptions.push(argv[++i]!);
+      args.remoteIdentityFile = argv[++i];
+    } else if (arg === "--remote-known-hosts-file" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteKnownHostsFile = argv[++i];
+    } else if (arg === "--remote-strict-host-key-checking" && argv[i + 1]) {
+      args.remote = true;
+      const value = argv[++i]!.toLowerCase();
+      if (value === "yes" || value === "no" || value === "accept-new") {
+        args.remoteStrictHostKeyChecking = value;
+      }
+    } else if (arg === "--remote-connect-timeout" && argv[i + 1]) {
+      args.remote = true;
+      const timeout = Number.parseInt(argv[++i]!, 10);
+      if (Number.isInteger(timeout) && timeout > 0) args.remoteConnectTimeout = timeout;
+    } else if (arg === "--remote-proxy-jump" && argv[i + 1]) {
+      args.remote = true;
+      args.remoteProxyJump = argv[++i];
     } else if (arg === "--no-remote-cleanup") {
       args.remote = true;
       args.remoteCleanup = false;
@@ -654,9 +677,10 @@ function parseEnvBool(value?: string): boolean | undefined {
   return undefined;
 }
 
-function parseEnvList(value?: string): string[] | undefined {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed.split(/\s+/).filter(Boolean) : undefined;
+function parseStrictHostKeyChecking(value?: string): "yes" | "no" | "accept-new" | undefined {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "yes" || normalized === "no" || normalized === "accept-new") return normalized;
+  return undefined;
 }
 
 function buildRemoteConfig(args: CliArgs, resolved: ReturnType<typeof resolveAccount>): RemotePublishConfig {
@@ -666,9 +690,15 @@ function buildRemoteConfig(args: CliArgs, resolved: ReturnType<typeof resolveAcc
     port: args.remotePort || resolved.remote_publish_port || parseEnvPort(process.env.WECHAT_REMOTE_PORT),
     workdir: args.remoteWorkdir || resolved.remote_publish_workdir || process.env.WECHAT_REMOTE_WORKDIR,
     cleanup: args.remoteCleanup ?? resolved.remote_publish_cleanup ?? parseEnvBool(process.env.WECHAT_REMOTE_CLEANUP),
-    sshOptions: args.remoteSshOptions.length > 0
-      ? args.remoteSshOptions
-      : resolved.remote_publish_ssh_options || parseEnvList(process.env.WECHAT_REMOTE_SSH_OPTIONS),
+    identityFile: args.remoteIdentityFile || resolved.remote_publish_identity_file || process.env.WECHAT_REMOTE_IDENTITY_FILE,
+    knownHostsFile: args.remoteKnownHostsFile || resolved.remote_publish_known_hosts_file || process.env.WECHAT_REMOTE_KNOWN_HOSTS_FILE,
+    strictHostKeyChecking: args.remoteStrictHostKeyChecking
+      || resolved.remote_publish_strict_host_key_checking
+      || parseStrictHostKeyChecking(process.env.WECHAT_REMOTE_STRICT_HOST_KEY_CHECKING),
+    connectTimeout: args.remoteConnectTimeout
+      || resolved.remote_publish_connect_timeout
+      || parseEnvPort(process.env.WECHAT_REMOTE_CONNECT_TIMEOUT),
+    proxyJump: args.remoteProxyJump || resolved.remote_publish_proxy_jump || process.env.WECHAT_REMOTE_PROXY_JUMP,
   };
 }
 

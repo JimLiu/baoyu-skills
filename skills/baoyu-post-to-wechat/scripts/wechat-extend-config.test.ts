@@ -158,7 +158,11 @@ remote_publish_user: deploy
 remote_publish_port: 2222
 remote_publish_workdir: /tmp/global-wechat
 remote_publish_cleanup: 0
-remote_publish_ssh_options: -o BatchMode=yes -o StrictHostKeyChecking=accept-new
+remote_publish_identity_file: /keys/global_ed25519
+remote_publish_known_hosts_file: /keys/known_hosts
+remote_publish_strict_host_key_checking: accept-new
+remote_publish_connect_timeout: 10
+remote_publish_proxy_jump: jump.example.com
 
 accounts:
   - name: Tech
@@ -167,6 +171,7 @@ accounts:
     remote_publish_host: account.example.com
     remote_publish_user: root
     remote_publish_port: 2200
+    remote_publish_strict_host_key_checking: yes
 `);
 
   const config = loadWechatExtendConfig();
@@ -178,10 +183,9 @@ accounts:
   assert.equal(resolved.remote_publish_port, 2200);
   assert.equal(resolved.remote_publish_workdir, "/tmp/global-wechat");
   assert.equal(resolved.remote_publish_cleanup, false);
-  assert.deepEqual(resolved.remote_publish_ssh_options, [
-    "-o",
-    "BatchMode=yes",
-    "-o",
-    "StrictHostKeyChecking=accept-new",
-  ]);
+  assert.equal(resolved.remote_publish_identity_file, "/keys/global_ed25519");
+  assert.equal(resolved.remote_publish_known_hosts_file, "/keys/known_hosts");
+  assert.equal(resolved.remote_publish_strict_host_key_checking, "yes");
+  assert.equal(resolved.remote_publish_connect_timeout, 10);
+  assert.equal(resolved.remote_publish_proxy_jump, "jump.example.com");
 });

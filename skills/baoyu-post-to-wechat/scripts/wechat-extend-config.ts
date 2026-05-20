@@ -18,7 +18,11 @@ export interface WechatAccount {
   remote_publish_port?: number;
   remote_publish_workdir?: string;
   remote_publish_cleanup?: boolean;
-  remote_publish_ssh_options?: string[];
+  remote_publish_identity_file?: string;
+  remote_publish_known_hosts_file?: string;
+  remote_publish_strict_host_key_checking?: "yes" | "no" | "accept-new";
+  remote_publish_connect_timeout?: number;
+  remote_publish_proxy_jump?: string;
 }
 
 export interface WechatExtendConfig {
@@ -34,7 +38,11 @@ export interface WechatExtendConfig {
   remote_publish_port?: number;
   remote_publish_workdir?: string;
   remote_publish_cleanup?: boolean;
-  remote_publish_ssh_options?: string[];
+  remote_publish_identity_file?: string;
+  remote_publish_known_hosts_file?: string;
+  remote_publish_strict_host_key_checking?: "yes" | "no" | "accept-new";
+  remote_publish_connect_timeout?: number;
+  remote_publish_proxy_jump?: string;
   accounts?: WechatAccount[];
 }
 
@@ -53,7 +61,11 @@ export interface ResolvedAccount {
   remote_publish_port?: number;
   remote_publish_workdir?: string;
   remote_publish_cleanup?: boolean;
-  remote_publish_ssh_options?: string[];
+  remote_publish_identity_file?: string;
+  remote_publish_known_hosts_file?: string;
+  remote_publish_strict_host_key_checking?: "yes" | "no" | "accept-new";
+  remote_publish_connect_timeout?: number;
+  remote_publish_proxy_jump?: string;
 }
 
 function stripQuotes(s: string): string {
@@ -78,20 +90,12 @@ function toOptionalPort(v?: string): number | undefined {
   return Number.isInteger(port) && port > 0 ? port : undefined;
 }
 
-function parseListValue(v?: string): string[] | undefined {
-  if (!v) return undefined;
-  const trimmed = v.trim();
-  if (!trimmed) return undefined;
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-    try {
-      const parsed = JSON.parse(trimmed.replace(/'/g, '"'));
-      if (Array.isArray(parsed) && parsed.every(item => typeof item === "string")) {
-        return parsed;
-      }
-    } catch {}
-  }
-  return trimmed.split(/\s+/).filter(Boolean);
+function toStrictHostKeyChecking(v?: string): "yes" | "no" | "accept-new" | undefined {
+  const normalized = v?.trim().toLowerCase();
+  if (normalized === "yes" || normalized === "no" || normalized === "accept-new") return normalized;
+  return undefined;
 }
+
 
 function parseWechatExtend(content: string): WechatExtendConfig {
   const config: WechatExtendConfig = {};
@@ -158,7 +162,11 @@ function parseWechatExtend(content: string): WechatExtendConfig {
       case "remote_publish_port": config.remote_publish_port = toOptionalPort(val); break;
       case "remote_publish_workdir": config.remote_publish_workdir = val; break;
       case "remote_publish_cleanup": config.remote_publish_cleanup = toOptionalBool(val); break;
-      case "remote_publish_ssh_options": config.remote_publish_ssh_options = parseListValue(val); break;
+      case "remote_publish_identity_file": config.remote_publish_identity_file = val; break;
+      case "remote_publish_known_hosts_file": config.remote_publish_known_hosts_file = val; break;
+      case "remote_publish_strict_host_key_checking": config.remote_publish_strict_host_key_checking = toStrictHostKeyChecking(val); break;
+      case "remote_publish_connect_timeout": config.remote_publish_connect_timeout = toOptionalPort(val); break;
+      case "remote_publish_proxy_jump": config.remote_publish_proxy_jump = val; break;
     }
   }
 
@@ -181,7 +189,11 @@ function parseWechatExtend(content: string): WechatExtendConfig {
       remote_publish_port: toOptionalPort(a.remote_publish_port),
       remote_publish_workdir: a.remote_publish_workdir || undefined,
       remote_publish_cleanup: toOptionalBool(a.remote_publish_cleanup),
-      remote_publish_ssh_options: parseListValue(a.remote_publish_ssh_options),
+      remote_publish_identity_file: a.remote_publish_identity_file || undefined,
+      remote_publish_known_hosts_file: a.remote_publish_known_hosts_file || undefined,
+      remote_publish_strict_host_key_checking: toStrictHostKeyChecking(a.remote_publish_strict_host_key_checking),
+      remote_publish_connect_timeout: toOptionalPort(a.remote_publish_connect_timeout),
+      remote_publish_proxy_jump: a.remote_publish_proxy_jump || undefined,
     }));
   }
 
@@ -232,7 +244,11 @@ export function resolveAccount(config: WechatExtendConfig, alias?: string): Reso
     remote_publish_port: acct?.remote_publish_port ?? config.remote_publish_port,
     remote_publish_workdir: acct?.remote_publish_workdir ?? config.remote_publish_workdir,
     remote_publish_cleanup: acct?.remote_publish_cleanup ?? config.remote_publish_cleanup,
-    remote_publish_ssh_options: acct?.remote_publish_ssh_options ?? config.remote_publish_ssh_options,
+    remote_publish_identity_file: acct?.remote_publish_identity_file ?? config.remote_publish_identity_file,
+    remote_publish_known_hosts_file: acct?.remote_publish_known_hosts_file ?? config.remote_publish_known_hosts_file,
+    remote_publish_strict_host_key_checking: acct?.remote_publish_strict_host_key_checking ?? config.remote_publish_strict_host_key_checking,
+    remote_publish_connect_timeout: acct?.remote_publish_connect_timeout ?? config.remote_publish_connect_timeout,
+    remote_publish_proxy_jump: acct?.remote_publish_proxy_jump ?? config.remote_publish_proxy_jump,
   };
 }
 
