@@ -1,5 +1,8 @@
+import type { LookupAddress } from "node:dns";
 import dns from "node:dns/promises";
 import fs from "node:fs";
+import type { IncomingHttpHeaders } from "node:http";
+import * as https from "node:https";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -80,6 +83,14 @@ interface NormalizedRemoteConfig extends Required<Pick<RemotePublishConfig, "hos
   connectTimeout?: number;
   proxyJump?: string;
 }
+
+type LookupAll = (hostname: string) => Promise<LookupAddress[]>;
+
+interface ResolvedHttpsUrl {
+  url: URL;
+  address: LookupAddress;
+}
+
 
 function shQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
@@ -170,14 +181,28 @@ function isPrivateIpv6(ip: string): boolean {
   );
 }
 
-function isPrivateAddress(address: string): boolean {
-  const family = net.isIP(address);
-  if (family === 4) return isPrivateIpv4(address);
-  if (family === 6) return isPrivateIpv6(address);
-  return true;
+function normalizeIpLiteral(hostname: string): string {
+  return hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
 }
 
-async function assertPublicHttpsUrl(rawUrl: string): Promise<URL> {
+export function isPrivateAddress(address: string): boolean {
+  const normalized = normalizeIpLiteral(address);
+  const family = net.isIP(normalized);
+  if (family === 4) return isPrivateIpv4(normalized);
+  if (family === 6) return isPrivateIpv6(normalized);
+  return false;
+}
+
+async function defaultLookupAll(hostname: string): Promise<LookupAddress[]> {
+  return await dns.lookup(hostname, { all: true });
+}
+
+export async function resolvePublicHttpsUrl(
+  rawUrl: string,
+  lookupAll: LookupAll = defaultLookupAll,
+): Promise<ResolvedHttpsUrl> {
   const parsed = new URL(rawUrl);
   if (parsed.protocol !== "https:") {
     throw new Error(`Remote images must use https URLs: ${rawUrl}`);
@@ -188,45 +213,74 @@ async function assertPublicHttpsUrl(rawUrl: string): Promise<URL> {
     throw new Error(`Remote image host is not allowed: ${hostname}`);
   }
 
-  if (isPrivateAddress(hostname)) {
-    throw new Error(`Remote image host resolves to a private address: ${hostname}`);
+  const literalAddress = normalizeIpLiteral(hostname);
+  const literalFamily = net.isIP(literalAddress);
+  if (literalFamily !== 0) {
+    if (isPrivateAddress(literalAddress)) {
+      throw new Error(`Remote image host resolves to a private address: ${hostname}`);
+    }
+    return { url: parsed, address: { address: literalAddress, family: literalFamily } };
   }
 
-  const addresses = await dns.lookup(hostname, { all: true });
+  const addresses = await lookupAll(hostname);
   if (addresses.length === 0 || addresses.some(address => isPrivateAddress(address.address))) {
     throw new Error(`Remote image host resolves to a private address: ${hostname}`);
   }
 
-  return parsed;
+  return { url: parsed, address: addresses[0]! };
+}
+
+function readHttpsImage(resolved: ResolvedHttpsUrl): Promise<{ statusCode: number; headers: IncomingHttpHeaders; buffer: Buffer }> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(resolved.url, {
+      method: "GET",
+      headers: { "User-Agent": "baoyu-post-to-wechat/remote-stager" },
+      timeout: 60_000,
+      lookup: (_hostname, _options, callback) => {
+        callback(null, resolved.address.address, resolved.address.family);
+      },
+    }, (res) => {
+      const statusCode = res.statusCode || 0;
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => {
+        chunks.push(chunk);
+      });
+      res.on("end", () => {
+        resolve({ statusCode, headers: res.headers, buffer: Buffer.concat(chunks) });
+      });
+    });
+
+    req.on("timeout", () => {
+      req.destroy(new Error(`Timed out while downloading image: ${resolved.url.toString()}`));
+    });
+    req.on("error", reject);
+    req.end();
+  });
 }
 
 async function fetchRemoteImage(url: string, redirects = 0): Promise<{ buffer: Buffer; filename: string; contentType: string }> {
   if (redirects > 5) throw new Error(`Too many redirects while downloading image: ${url}`);
-  const parsed = await assertPublicHttpsUrl(url);
-  const response = await fetch(parsed, {
-    redirect: "manual",
-    headers: { "User-Agent": "baoyu-post-to-wechat/remote-stager" },
-    signal: AbortSignal.timeout(60_000),
-  });
+  const resolved = await resolvePublicHttpsUrl(url);
+  const response = await readHttpsImage(resolved);
 
-  if ([301, 302, 303, 307, 308].includes(response.status)) {
-    const location = response.headers.get("location");
+  if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
+    const location = response.headers.location;
     if (!location) throw new Error(`Image redirect without Location: ${url}`);
-    return await fetchRemoteImage(new URL(location, parsed).toString(), redirects + 1);
+    return await fetchRemoteImage(new URL(String(location), resolved.url).toString(), redirects + 1);
   }
 
-  if (!response.ok) throw new Error(`Failed to download image: ${url} (${response.status})`);
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw new Error(`Failed to download image: ${url} (${response.statusCode})`);
+  }
 
-  const contentType = response.headers.get("content-type") || "image/jpeg";
+  const contentType = String(response.headers["content-type"] || "image/jpeg");
   if (!contentType.toLowerCase().startsWith("image/")) {
     throw new Error(`Remote URL did not return an image content type: ${url} (${contentType})`);
   }
 
-  const finalUrl = await assertPublicHttpsUrl(response.url || parsed.toString());
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.length === 0) throw new Error(`Remote image is empty: ${url}`);
-  const filename = path.basename(finalUrl.pathname) || `remote-${randomUUID()}.jpg`;
-  return { buffer, filename, contentType };
+  if (response.buffer.length === 0) throw new Error(`Remote image is empty: ${url}`);
+  const filename = path.basename(resolved.url.pathname) || `remote-${randomUUID()}.jpg`;
+  return { buffer: response.buffer, filename, contentType };
 }
 
 async function loadUploadAsset(imagePath: string, baseDir: string): Promise<WechatUploadAsset> {

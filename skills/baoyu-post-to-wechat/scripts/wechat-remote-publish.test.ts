@@ -5,6 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { isPrivateAddress, resolvePublicHttpsUrl } from "./wechat-remote-publish.ts";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publisherPath = path.join(__dirname, "remote_publisher.py");
@@ -49,9 +51,52 @@ except RuntimeError as exc:
 });
 
 
+test("remote URL validation allows normal public HTTPS hostnames", async () => {
+  const resolved = await resolvePublicHttpsUrl("https://cdn.example.com/path/a.png", async (hostname) => {
+    assert.equal(hostname, "cdn.example.com");
+    return [{ address: "93.184.216.34", family: 4 }];
+  });
+
+  assert.equal(resolved.url.hostname, "cdn.example.com");
+  assert.equal(resolved.address.address, "93.184.216.34");
+});
+
+test("remote URL validation rejects localhost and private or link-local addresses", async () => {
+  await assert.rejects(
+    () => resolvePublicHttpsUrl("https://localhost/a.png"),
+    /host is not allowed/,
+  );
+  await assert.rejects(
+    () => resolvePublicHttpsUrl("https://127.0.0.1/a.png"),
+    /private address/,
+  );
+  await assert.rejects(
+    () => resolvePublicHttpsUrl("https://169.254.169.254/latest/meta-data"),
+    /private address/,
+  );
+  await assert.rejects(
+    () => resolvePublicHttpsUrl("https://[fe80::1]/a.png"),
+    /private address/,
+  );
+  await assert.rejects(
+    () => resolvePublicHttpsUrl("https://cdn.example.com/a.png", async () => [{ address: "10.0.0.5", family: 4 }]),
+    /private address/,
+  );
+});
+
+test("remote URL validation treats non-IP hostnames as DNS names, not private addresses", () => {
+  assert.equal(isPrivateAddress("cdn.example.com"), false);
+  assert.equal(isPrivateAddress("192.168.1.10"), true);
+  assert.equal(isPrivateAddress("93.184.216.34"), false);
+});
+
+
 test("remote TypeScript publisher does not emit remote URL payloads or remote credential files", () => {
   const source = fs.readFileSync(path.join(__dirname, "wechat-remote-publish.ts"), "utf8");
   assert.doesNotMatch(source, /remote_url\s*:/);
   assert.doesNotMatch(source, /wechat\.json/);
   assert.doesNotMatch(source, /sshOptions\s*\?:\s*string\[\]/);
+  assert.doesNotMatch(source, /fetch\s*\(/);
+  assert.match(source, /https\.request/);
+  assert.match(source, /lookup:/);
 });

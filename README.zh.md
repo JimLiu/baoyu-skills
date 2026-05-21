@@ -677,7 +677,7 @@ accounts:
     app_secret: 你的微信AppSecret
   - name: AI 工具集
     alias: ai-tools
-    default_publish_method: remote-api
+    default_publish_method: browser
     default_author: AI 工具集
     need_open_comment: 1
     only_fans_can_comment: 0
