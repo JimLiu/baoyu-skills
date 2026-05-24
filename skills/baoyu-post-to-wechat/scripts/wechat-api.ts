@@ -364,10 +364,12 @@ async function publishToDraft(
     if (!options.imageMediaIds || options.imageMediaIds.length === 0) {
       throw new Error("newspic requires at least one image");
     }
+    // newspic 的 content 应该是纯文本，去掉 HTML 标签
+    const plainContent = options.content.replace(/<[^>]+>/g, "").trim();
     article = {
       article_type: "newspic",
       title: options.title,
-      content: options.content,
+      content: plainContent,
       need_open_comment: noc,
       only_fans_can_comment: ofcc,
       image_info: {
