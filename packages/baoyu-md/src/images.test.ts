@@ -45,6 +45,60 @@ test("image extension and local fallback resolution handle common path variants"
   assert.equal(resolved, path.join(baseDir, "figure.webp"));
 });
 
+test("replaceMarkdownImagesWithPlaceholders handles Obsidian wikilink syntax", () => {
+  const result = replaceMarkdownImagesWithPlaceholders(
+    `![[image.png]]\n\nText\n\n![[diagram.webp|my diagram]]`,
+    "IMG_",
+  );
+
+  assert.equal(result.markdown, `IMG_1\n\nText\n\nIMG_2`);
+  assert.deepEqual(result.images, [
+    { alt: "", originalPath: "image.png", placeholder: "IMG_1" },
+    { alt: "my diagram", originalPath: "diagram.webp", placeholder: "IMG_2" },
+  ]);
+});
+
+test("replaceMarkdownImagesWithPlaceholders handles wikilink with path", () => {
+  const result = replaceMarkdownImagesWithPlaceholders(
+    `![[Attachments/screenshot.png]]`,
+    "IMG_",
+  );
+
+  assert.equal(result.markdown, `IMG_1`);
+  assert.deepEqual(result.images, [
+    { alt: "", originalPath: "Attachments/screenshot.png", placeholder: "IMG_1" },
+  ]);
+});
+
+test("replaceMarkdownImagesWithPlaceholders handles mixed standard and wikilink images", () => {
+  const result = replaceMarkdownImagesWithPlaceholders(
+    `![[first.png]]\n\n![second](imgs/second.jpg)\n\n![[third.png|caption]]`,
+    "IMG_",
+  );
+
+  assert.equal(result.markdown, `IMG_1\n\nIMG_2\n\nIMG_3`);
+  assert.deepEqual(result.images, [
+    { alt: "", originalPath: "first.png", placeholder: "IMG_1" },
+    { alt: "second", originalPath: "imgs/second.jpg", placeholder: "IMG_2" },
+    { alt: "caption", originalPath: "third.png", placeholder: "IMG_3" },
+  ]);
+});
+
+test("resolveImagePath falls back to Attachments subdirectory", async (t) => {
+  const root = await makeTempDir("baoyu-md-attachments-");
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const baseDir = path.join(root, "article");
+  const tempDir = path.join(root, "tmp");
+  const attachDir = path.join(baseDir, "Attachments");
+  await fs.mkdir(attachDir, { recursive: true });
+  await fs.mkdir(tempDir, { recursive: true });
+  await fs.writeFile(path.join(attachDir, "photo.png"), "png");
+
+  const resolved = await resolveImagePath("photo.png", baseDir, tempDir, "test");
+  assert.equal(resolved, path.join(attachDir, "photo.png"));
+});
+
 test("resolveContentImages resolves image placeholders against the content directory", async (t) => {
   const root = await makeTempDir("baoyu-md-content-images-");
   t.after(() => fs.rm(root, { recursive: true, force: true }));

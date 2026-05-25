@@ -24,13 +24,15 @@ export function replaceMarkdownImagesWithPlaceholders(
   const images: ImagePlaceholder[] = [];
   let imageCounter = 0;
 
-  const rewritten = markdown.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, src) => {
+  // Combined pattern: Obsidian wikilink ![[path]] or ![[path|alt]], and standard ![alt](path)
+  const combined = /!\[\[([^\]|]+?)(?:\|([^\]]*))?\]\]|!\[([^\]]*)\]\(([^)]+)\)/g;
+  const rewritten = markdown.replace(combined, (_match, wikiSrc, wikiAlt, mdAlt, mdSrc) => {
     const placeholder = `${placeholderPrefix}${++imageCounter}`;
-    images.push({
-      alt,
-      originalPath: src,
-      placeholder,
-    });
+    if (wikiSrc != null) {
+      images.push({ alt: wikiAlt ?? "", originalPath: wikiSrc, placeholder });
+    } else {
+      images.push({ alt: mdAlt, originalPath: mdSrc, placeholder });
+    }
     return placeholder;
   });
 
@@ -150,6 +152,17 @@ function resolveLocalWithFallback(resolved: string, logLabel: string): string {
       `[${logLabel}] Image fallback: ${path.basename(resolved)} -> ${path.basename(alternative)}`,
     );
     return alternative;
+  }
+
+  // Obsidian attachment folder fallback: check Attachments/ subdirectory
+  const dir = path.dirname(resolved);
+  const filename = path.basename(resolved);
+  const attachmentsPath = path.join(dir, "Attachments", filename);
+  if (fs.existsSync(attachmentsPath)) {
+    console.error(
+      `[${logLabel}] Image fallback: ${filename} -> Attachments/${filename}`,
+    );
+    return attachmentsPath;
   }
 
   return resolved;
