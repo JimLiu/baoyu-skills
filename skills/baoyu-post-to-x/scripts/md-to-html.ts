@@ -182,7 +182,19 @@ async function resolveImagePath(imagePath: string, baseDir: string, tempDir: str
     return imagePath;
   }
 
-  return path.resolve(baseDir, imagePath);
+  const resolved = path.resolve(baseDir, imagePath);
+  if (fs.existsSync(resolved)) {
+    return resolved;
+  }
+
+  // Obsidian attachment folder fallback
+  const attachmentsPath = path.resolve(baseDir, 'Attachments', imagePath);
+  if (fs.existsSync(attachmentsPath)) {
+    console.error(`[md-to-html] Image fallback: ${imagePath} -> Attachments/${imagePath}`);
+    return attachmentsPath;
+  }
+
+  return resolved;
 }
 
 function escapeHtml(text: string): string {
@@ -318,10 +330,15 @@ export async function parseMarkdown(
     coverImagePath = findCoverImageNearMarkdown(baseDir);
   }
 
+  // Normalize Obsidian wikilink images to standard markdown before parsing
+  const normalizedBody = body.replace(/!\[\[([^\]|]+?)(?:\|([^\]]*))?\]\]/g, (_m, src, alt) => {
+    return `![${alt ?? ""}](${src})`;
+  });
+
   const images: Array<{ src: string; alt: string; blockIndex: number }> = [];
   let imageCounter = 0;
 
-  const { html, totalBlocks } = convertMarkdownToHtml(body, (src, alt) => {
+  const { html, totalBlocks } = convertMarkdownToHtml(normalizedBody, (src, alt) => {
     const placeholder = `XIMGPH_${++imageCounter}`;
     images.push({ src, alt, blockIndex: -1 });
     return placeholder;
