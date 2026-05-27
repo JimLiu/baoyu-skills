@@ -178,11 +178,12 @@ async function resolveImagePath(imagePath: string, baseDir: string, tempDir: str
     return localPath;
   }
 
-  if (path.isAbsolute(imagePath)) {
-    return imagePath;
+  const decoded = decodeURIComponent(imagePath);
+  if (path.isAbsolute(decoded)) {
+    return decoded;
   }
 
-  return path.resolve(baseDir, imagePath);
+  return path.resolve(baseDir, decoded);
 }
 
 function escapeHtml(text: string): string {

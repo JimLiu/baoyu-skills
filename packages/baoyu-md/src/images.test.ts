@@ -45,6 +45,20 @@ test("image extension and local fallback resolution handle common path variants"
   assert.equal(resolved, path.join(baseDir, "figure.webp"));
 });
 
+test("resolveImagePath decodes URL-encoded filenames with spaces", async (t) => {
+  const root = await makeTempDir("baoyu-md-urlencoded-");
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const baseDir = path.join(root, "article");
+  const tempDir = path.join(root, "tmp");
+  await fs.mkdir(baseDir, { recursive: true });
+  await fs.mkdir(tempDir, { recursive: true });
+  await fs.writeFile(path.join(baseDir, "Pasted image 20260524.png"), "png");
+
+  const resolved = await resolveImagePath("Pasted%20image%2020260524.png", baseDir, tempDir, "test");
+  assert.equal(resolved, path.join(baseDir, "Pasted image 20260524.png"));
+});
+
 test("resolveContentImages resolves image placeholders against the content directory", async (t) => {
   const root = await makeTempDir("baoyu-md-content-images-");
   t.after(() => fs.rm(root, { recursive: true, force: true }));

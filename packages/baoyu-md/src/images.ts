@@ -103,9 +103,10 @@ export async function resolveImagePath(
     return localPath;
   }
 
-  const resolved = path.isAbsolute(imagePath)
-    ? imagePath
-    : path.resolve(baseDir, imagePath);
+  const decoded = decodeURIComponent(imagePath);
+  const resolved = path.isAbsolute(decoded)
+    ? decoded
+    : path.resolve(baseDir, decoded);
   return resolveLocalWithFallback(resolved, logLabel);
 }
 
