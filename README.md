@@ -752,6 +752,9 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Ag
 # Agnes with reference image edit
 /baoyu-image-gen --prompt "Make it blue while preserving the composition" --image out.png --provider agnes --ref source.png
 
+# Agnes URL output (writes the returned image URL into a .txt file)
+/baoyu-image-gen --prompt "A cat" --image cat-url.txt --provider agnes --response-format url
+
 # OpenRouter
 /baoyu-image-gen --prompt "A cat" --image cat.png --provider openrouter
 
@@ -810,6 +813,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Ag
 | `--quality` | `normal` or `2k` (default: `2k`) |
 | `--imageSize` | `1K`, `2K`, or `4K` for Google/OpenRouter |
 | `--imageApiDialect` | `openai-native` or `ratio-metadata` for OpenAI-compatible gateways |
+| `--response-format` | Agnes only: `file` (default) or `url` |
 | `--ref` | Reference images (Google, OpenAI, Agnes, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 5.0/4.5/4.0) |
 | `--n` | Number of images per request (`replicate` currently requires `--n 1`) |
 | `--json` | JSON output |
@@ -868,7 +872,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Ag
 
 **Provider Notes**:
 - Azure OpenAI: `--model` means Azure deployment name, not the underlying model family.
-- Agnes: `agnes-image-2.1-flash` supports both text-to-image and image-to-image. baoyu-image-gen requests Base64 output and sends reference images as Data URLs (or public HTTPS URLs when you pass them directly).
+- Agnes: `agnes-image-2.1-flash` supports both text-to-image and image-to-image. baoyu-image-gen uses top-level `return_base64: true` for default text-to-image output, sends image-to-image refs via `extra_body.image[]`, accepts local refs or public HTTPS refs, and supports `--response-format url` to write the returned URL into a `.txt` file.
 - DashScope: `qwen-image-2.0-pro` is the recommended default for custom `--size`, `21:9`, and strong Chinese/English text rendering.
 - Z.AI: `glm-image` is recommended for posters, diagrams, and text-heavy Chinese/English images. Reference images are not supported.
 - MiniMax: `image-01` supports documented custom `width` / `height`; `image-01-live` is lower latency and works best with `--ar`.

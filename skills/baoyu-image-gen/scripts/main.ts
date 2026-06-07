@@ -87,6 +87,8 @@ Options:
   --quality normal|2k       Quality preset (default: 2k)
   --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
   --imageApiDialect <id>    OpenAI-compatible image dialect: openai-native|ratio-metadata
+  --response-format <file|url>
+                           Agnes output mode (default: file)
   --ref <files...>          Reference images (Google, OpenAI, Agnes, Azure, OpenRouter, Replicate supported families, MiniMax, Seedream 4.0/4.5/5.0, or DashScope wan2.7-image*)
   --n <count>               Number of images for the current task (default: 1; Replicate currently requires 1)
   --json                    JSON output
@@ -184,6 +186,7 @@ export function parseArgs(argv: string[]): CliArgs {
     imageSize: null,
     imageSizeSource: null,
     imageApiDialect: null,
+    responseFormat: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -321,6 +324,15 @@ export function parseArgs(argv: string[]): CliArgs {
         throw new Error(`Invalid imageApiDialect: ${v}`);
       }
       out.imageApiDialect = v;
+      continue;
+    }
+
+    if (a === "--response-format") {
+      const v = argv[++i];
+      if (v !== "file" && v !== "url") {
+        throw new Error(`Invalid responseFormat: ${v}`);
+      }
+      out.responseFormat = v;
       continue;
     }
 
@@ -911,19 +923,19 @@ function getModelForProvider(
   return providerModule.getDefaultModel();
 }
 
-async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<PreparedTask> {
+export async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<PreparedTask> {
   if (!args.quality) args.quality = "2k";
 
   const prompt = (await loadPromptForArgs(args)) ?? (await readPromptFromStdin());
   if (!prompt) throw new Error("Prompt is required");
   if (!args.imagePath) throw new Error("--image is required");
+  const provider = detectProvider(args);
   if (args.referenceImages.length > 0) {
     await validateReferenceImages(args.referenceImages, {
-      allowRemoteUrls: shouldAllowRemoteReferenceImages(args.provider),
+      allowRemoteUrls: shouldAllowRemoteReferenceImages(provider),
     });
   }
 
-  const provider = detectProvider(args);
   const providerModule = await loadProviderModule(provider);
   const model = getModelForProvider(provider, args.model, extendConfig, providerModule);
   providerModule.validateArgs?.(model, args);
@@ -989,6 +1001,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
     imageSize: task.imageSize ?? baseArgs.imageSize ?? null,
     imageSizeSource: task.imageSize != null ? "task" : (baseArgs.imageSizeSource ?? null),
     imageApiDialect: task.imageApiDialect ?? baseArgs.imageApiDialect ?? null,
+    responseFormat: task.responseFormat ?? baseArgs.responseFormat ?? null,
     referenceImages: task.ref ? task.ref.map((filePath) => resolveBatchReferencePath(batchDir, filePath)) : [],
     n: task.n ?? baseArgs.n,
     batchFile: null,
@@ -998,7 +1011,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
   };
 }
 
-async function prepareBatchTasks(
+export async function prepareBatchTasks(
   args: CliArgs,
   extendConfig: Partial<ExtendConfig>
 ): Promise<{ tasks: PreparedTask[]; jobs: number | null }> {
@@ -1013,13 +1026,13 @@ async function prepareBatchTasks(
     const prompt = await loadPromptForArgs(taskArgs);
     if (!prompt) throw new Error(`Task ${i + 1} is missing prompt or promptFiles.`);
     if (!taskArgs.imagePath) throw new Error(`Task ${i + 1} is missing image output path.`);
+    const provider = detectProvider(taskArgs);
     if (taskArgs.referenceImages.length > 0) {
       await validateReferenceImages(taskArgs.referenceImages, {
-        allowRemoteUrls: shouldAllowRemoteReferenceImages(taskArgs.provider),
+        allowRemoteUrls: shouldAllowRemoteReferenceImages(provider),
       });
     }
 
-    const provider = detectProvider(taskArgs);
     const providerModule = await loadProviderModule(provider);
     const model = getModelForProvider(provider, taskArgs.model, extendConfig, providerModule);
     providerModule.validateArgs?.(model, taskArgs);

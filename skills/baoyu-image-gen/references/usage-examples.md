@@ -33,6 +33,9 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider a
 # Agnes image-to-image with composition preservation
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make it blue while preserving the composition" --image out.png --provider agnes --ref source.png
 
+# Agnes URL output
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.txt --provider agnes --response-format url
+
 # Azure OpenAI (model = deployment name)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider azure --model gpt-image-2
 

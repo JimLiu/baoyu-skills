@@ -36,6 +36,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     imageSize: null,
     imageSizeSource: null,
     imageApiDialect: null,
+    responseFormat: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -90,6 +91,8 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
     "4k",
     "--imageApiDialect",
     "ratio-metadata",
+    "--response-format",
+    "url",
     "--ref",
     "ref/one.png",
     "ref/two.jpg",
@@ -108,6 +111,7 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
   assert.equal(args.imageSize, "4K");
   assert.equal(args.imageSizeSource, "cli");
   assert.equal(args.imageApiDialect, "ratio-metadata");
+  assert.equal(args.responseFormat, "url");
   assert.deepEqual(args.referenceImages, ["ref/one.png", "ref/two.jpg"]);
   assert.equal(args.n, 3);
   assert.equal(args.jobs, 5);
@@ -602,6 +606,7 @@ test("loadBatchTasks and createTaskArgs resolve batch-relative paths", async (t)
       provider: "replicate",
       quality: "2k",
       imageApiDialect: "ratio-metadata",
+      responseFormat: "url",
       json: true,
     }),
     loaded.tasks[0]!,
@@ -620,7 +625,102 @@ test("loadBatchTasks and createTaskArgs resolve batch-relative paths", async (t)
   assert.equal(taskArgs.aspectRatio, "16:9");
   assert.equal(taskArgs.quality, "2k");
   assert.equal(taskArgs.imageApiDialect, "ratio-metadata");
+  assert.equal(taskArgs.responseFormat, "url");
   assert.equal(taskArgs.json, true);
+});
+
+test("prepareSingleTask accepts remote Agnes refs during auto-detection", async (t) => {
+  useEnv(t, {
+    AGNES_API_KEY: "agnes-key",
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+  });
+
+  const mod = await import("./main.ts");
+  assert.equal(typeof (mod as Record<string, unknown>).prepareSingleTask, "function");
+
+  const prepareSingleTask = (mod as { prepareSingleTask: (args: CliArgs, extend: Partial<ExtendConfig>) => Promise<unknown> }).prepareSingleTask;
+  const prepared = await prepareSingleTask(
+    makeArgs({
+      prompt: "draw a cat",
+      imagePath: "out/agnes-auto-ref",
+      model: "agnes-image-2.1-flash",
+      referenceImages: ["https://example.com/ref.png"],
+    }),
+    {},
+  );
+
+  assert.equal((prepared as { provider: string }).provider, "agnes");
+});
+
+test("prepareBatchTasks accepts remote Agnes refs during auto-detection", async (t) => {
+  useEnv(t, {
+    AGNES_API_KEY: "agnes-key",
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+  });
+
+  const root = await makeTempDir("baoyu-image-gen-agnes-batch-");
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const batchFile = path.join(root, "jobs", "batch.json");
+  await fs.mkdir(path.dirname(batchFile), { recursive: true });
+  await fs.writeFile(
+    batchFile,
+    JSON.stringify({
+      tasks: [
+        {
+          id: "agnes-remote-ref",
+          prompt: "make it blue",
+          image: "out/agnes-remote-ref",
+          model: "agnes-image-2.1-flash",
+          ref: ["https://example.com/ref.png"],
+        },
+      ],
+    }),
+  );
+
+  const mod = await import("./main.ts");
+  assert.equal(typeof (mod as Record<string, unknown>).prepareBatchTasks, "function");
+
+  const prepareBatchTasks = (mod as {
+    prepareBatchTasks: (
+      args: CliArgs,
+      extend: Partial<ExtendConfig>,
+    ) => Promise<{ tasks: Array<{ provider: string }>; jobs: number | null }>;
+  }).prepareBatchTasks;
+
+  const prepared = await prepareBatchTasks(
+    makeArgs({
+      batchFile,
+    }),
+    {},
+  );
+
+  assert.equal(prepared.tasks.length, 1);
+  assert.equal(prepared.tasks[0]?.provider, "agnes");
 });
 
 test("path normalization, worker count, and retry classification follow expected rules", () => {

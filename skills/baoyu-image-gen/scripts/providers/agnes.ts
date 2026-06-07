@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import type { CliArgs, Quality } from "../types";
+import type { CliArgs, Quality, ResponseFormat } from "../types";
 
 type AgnesResponse = {
   data?: Array<{ url?: string | null; b64_json?: string | null }>;
@@ -10,7 +10,10 @@ type AgnesTextToImageBody = {
   model: string;
   prompt: string;
   size: string;
-  return_base64: true;
+  return_base64?: true;
+  extra_body?: {
+    response_format: "url";
+  };
 };
 
 type AgnesImageToImageBody = {
@@ -19,7 +22,7 @@ type AgnesImageToImageBody = {
   size: string;
   extra_body: {
     image: string[];
-    response_format: "b64_json";
+    response_format: "b64_json" | "url";
   };
 };
 
@@ -89,6 +92,10 @@ function normalizeQuality(quality: CliArgs["quality"]): Quality {
   return quality === "normal" ? "normal" : "2k";
 }
 
+function resolveResponseFormat(responseFormat: ResponseFormat | null): "b64_json" | "url" {
+  return responseFormat === "url" ? "url" : "b64_json";
+}
+
 export function resolveSize(args: Pick<CliArgs, "size" | "aspectRatio" | "quality">): string {
   if (args.size) {
     const parsed = parseSize(args.size);
@@ -144,11 +151,26 @@ export function validateArgs(_model: string, args: CliArgs): void {
   }
 }
 
+export function getDefaultOutputExtension(_model: string, args: CliArgs): ".png" | ".txt" {
+  return args.responseFormat === "url" ? ".txt" : ".png";
+}
+
 export function buildTextToImageBody(
   prompt: string,
   model: string,
-  args: Pick<CliArgs, "size" | "aspectRatio" | "quality">,
+  args: Pick<CliArgs, "size" | "aspectRatio" | "quality" | "responseFormat">,
 ): AgnesTextToImageBody {
+  if (args.responseFormat === "url") {
+    return {
+      model,
+      prompt,
+      size: resolveSize(args),
+      extra_body: {
+        response_format: "url",
+      },
+    };
+  }
+
   return {
     model,
     prompt,
@@ -160,7 +182,7 @@ export function buildTextToImageBody(
 export async function buildImageToImageBody(
   prompt: string,
   model: string,
-  args: Pick<CliArgs, "size" | "aspectRatio" | "quality" | "referenceImages">,
+  args: Pick<CliArgs, "size" | "aspectRatio" | "quality" | "referenceImages" | "responseFormat">,
 ): Promise<AgnesImageToImageBody> {
   const images = await Promise.all(args.referenceImages.map((refPath) => loadReferenceImage(refPath)));
   return {
@@ -169,7 +191,7 @@ export async function buildImageToImageBody(
     size: resolveSize(args),
     extra_body: {
       image: images,
-      response_format: "b64_json",
+      response_format: resolveResponseFormat(args.responseFormat),
     },
   };
 }
@@ -183,7 +205,7 @@ export async function extractImageFromResponse(result: AgnesResponse): Promise<U
   if (image?.url) {
     const response = await fetch(image.url);
     if (!response.ok) {
-      throw new Error("Failed to download Agnes image");
+      throw new Error(`Failed to download Agnes image: ${response.status}`);
     }
     return new Uint8Array(await response.arrayBuffer());
   }
@@ -213,8 +235,17 @@ export async function generateImage(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Agnes API error: ${errorText}`);
+    throw new Error(`Agnes API error (${response.status}): ${errorText}`);
   }
 
-  return extractImageFromResponse((await response.json()) as AgnesResponse);
+  const result = (await response.json()) as AgnesResponse;
+  if (args.responseFormat === "url") {
+    const url = result.data?.[0]?.url;
+    if (!url) {
+      throw new Error("No URL in response");
+    }
+    return new Uint8Array(Buffer.from(url, "utf8"));
+  }
+
+  return extractImageFromResponse(result);
 }

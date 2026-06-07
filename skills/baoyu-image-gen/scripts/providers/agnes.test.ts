@@ -7,7 +7,9 @@ import test, { type TestContext } from "node:test";
 import type { CliArgs } from "../types.ts";
 import {
   buildAgnesUrl,
+  generateImage,
   extractImageFromResponse,
+  getDefaultOutputExtension,
   getDefaultModel,
   parseAspectRatio,
   parseSize,
@@ -29,6 +31,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     quality: "2k",
     imageSize: null,
     imageApiDialect: null,
+    responseFormat: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -148,6 +151,53 @@ test("Agnes request bodies use return_base64 for text-to-image and extra_body im
   assert.match(editBody.extra_body?.image?.[0] ?? "", /^data:image\/png;base64,/);
 });
 
+test("Agnes URL output switches extension and request format", async (t) => {
+  const root = await makeTempDir("agnes-provider-url-");
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const refPath = path.join(root, "ref.png");
+  await fs.writeFile(
+    refPath,
+    Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX8kAAAAASUVORK5CYII=", "base64"),
+  );
+
+  assert.equal(
+    getDefaultOutputExtension("agnes-image-2.1-flash", makeArgs({ responseFormat: "url" })),
+    ".txt",
+  );
+  assert.equal(
+    getDefaultOutputExtension("agnes-image-2.1-flash", makeArgs()),
+    ".png",
+  );
+
+  assert.deepEqual(
+    buildTextToImageBody("Draw a skyline", "agnes-image-2.1-flash", makeArgs({
+      aspectRatio: "16:9",
+      quality: "normal",
+      responseFormat: "url",
+    })),
+    {
+      model: "agnes-image-2.1-flash",
+      prompt: "Draw a skyline",
+      size: "1360x768",
+      extra_body: {
+        response_format: "url",
+      },
+    },
+  );
+
+  const editBody = await buildImageToImageBody(
+    "Make the square red",
+    "agnes-image-2.1-flash",
+    makeArgs({
+      referenceImages: [refPath],
+      size: "1024x1024",
+      responseFormat: "url",
+    }),
+  );
+  assert.deepEqual(editBody.extra_body?.response_format, "url");
+});
+
 test("Agnes response extraction supports base64 and URL download flows", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
@@ -173,5 +223,45 @@ test("Agnes response extraction supports base64 and URL download flows", async (
   await assert.rejects(
     () => extractImageFromResponse({ data: [{}] }),
     /No image in response/,
+  );
+});
+
+test("Agnes URL output returns URL text and API errors include HTTP status", async (t) => {
+  useEnv(t, {
+    AGNES_API_KEY: "agnes-key",
+  });
+
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    new Response(
+      JSON.stringify({
+        data: [{ url: "https://cdn.example.com/agnes.png" }],
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+
+  const urlBytes = await generateImage(
+    "Draw a skyline",
+    "agnes-image-2.1-flash",
+    makeArgs({ responseFormat: "url" }),
+  );
+  assert.equal(Buffer.from(urlBytes).toString("utf8"), "https://cdn.example.com/agnes.png");
+
+  globalThis.fetch = async () =>
+    new Response("denied", {
+      status: 401,
+      headers: { "Content-Type": "text/plain" },
+    });
+
+  await assert.rejects(
+    () => generateImage("Draw a skyline", "agnes-image-2.1-flash", makeArgs()),
+    /Agnes API error \(401\): denied/,
   );
 });

@@ -747,6 +747,15 @@ AI 驱动的生成后端。
 # Azure OpenAI（model 为部署名称）
 /baoyu-image-gen --prompt "一只猫" --image cat.png --provider azure --model gpt-image-2
 
+# Agnes Image 2.1 Flash
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider agnes
+
+# Agnes + 参考图编辑
+/baoyu-image-gen --prompt "把它变成蓝色，同时保留原始构图" --image out.png --provider agnes --ref source.png
+
+# Agnes URL 输出（把返回的图片 URL 写入 .txt 文件）
+/baoyu-image-gen --prompt "一只猫" --image cat-url.txt --provider agnes --response-format url
+
 # OpenRouter
 /baoyu-image-gen --prompt "一只猫" --image cat.png --provider openrouter
 
@@ -783,7 +792,7 @@ AI 驱动的生成后端。
 # 豆包（Seedream）
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
-# 带参考图（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate、MiniMax 或 Seedream 5.0/4.5/4.0）
+# 带参考图（Google、OpenAI、Agnes、Azure OpenAI、OpenRouter、Replicate、MiniMax 或 Seedream 5.0/4.5/4.0）
 /baoyu-image-gen --prompt "把它变成蓝色" --image out.png --ref source.png
 
 # 批量模式
@@ -798,14 +807,15 @@ AI 驱动的生成后端。
 | `--image` | 输出图片路径（必需） |
 | `--batchfile` | 多图批量生成的 JSON 文件 |
 | `--jobs` | 批量模式的并发 worker 数 |
-| `--provider` | `google`、`openai`、`azure`、`openrouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream` 或 `replicate` |
+| `--provider` | `google`、`openai`、`agnes`、`azure`、`openrouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream` 或 `replicate` |
 | `--model`, `-m` | 模型 ID 或部署名。Azure 使用部署名；OpenRouter 使用完整模型 ID；Z.AI 使用 `glm-image`；MiniMax 使用 `image-01` / `image-01-live` |
 | `--ar` | 宽高比（如 `16:9`、`1:1`、`4:3`） |
 | `--size` | 尺寸（如 `1024x1024`；`gpt-image-2` 支持最长边不超过 3840px 的有效自定义尺寸） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
 | `--imageSize` | Google/OpenRouter 使用的 `1K`、`2K`、`4K` |
 | `--imageApiDialect` | OpenAI 兼容网关的图像 API 方言（`openai-native` 或 `ratio-metadata`） |
-| `--ref` | 参考图片（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate 支持的模型家族、MiniMax 或 Seedream 5.0/4.5/4.0） |
+| `--response-format` | 仅 Agnes：`file`（默认）或 `url` |
+| `--ref` | 参考图片（Google、OpenAI、Agnes、Azure OpenAI、OpenRouter、Replicate 支持的模型家族、MiniMax 或 Seedream 5.0/4.5/4.0） |
 | `--n` | 单次请求生成图片数量（`replicate` 当前只支持 `--n 1`） |
 | `--json` | 输出 JSON 结果 |
 
@@ -813,6 +823,7 @@ AI 驱动的生成后端。
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `OPENAI_API_KEY` | OpenAI API 密钥 | - |
+| `AGNES_API_KEY` | Agnes API 密钥 | - |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API 密钥 | - |
 | `OPENROUTER_API_KEY` | OpenRouter API 密钥 | - |
 | `GOOGLE_API_KEY` | Google API 密钥 | - |
@@ -826,6 +837,7 @@ AI 驱动的生成后端。
 | `JIMENG_SECRET_ACCESS_KEY` | 即梦火山引擎 Secret Key | - |
 | `ARK_API_KEY` | 豆包火山引擎 ARK API 密钥 | - |
 | `OPENAI_IMAGE_MODEL` | OpenAI 模型 | `gpt-image-2` |
+| `AGNES_IMAGE_MODEL` | Agnes 模型 | `agnes-image-2.1-flash` |
 | `AZURE_OPENAI_DEPLOYMENT` | Azure 默认部署名 | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | 兼容旧配置的 Azure 部署/模型别名 | `gpt-image-2` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image` |
@@ -838,6 +850,7 @@ AI 驱动的生成后端。
 | `JIMENG_IMAGE_MODEL` | 即梦模型 | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | 豆包模型 | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | 自定义 OpenAI 端点 | - |
+| `AGNES_BASE_URL` | 自定义 Agnes 端点 | `https://apihub.agnes-ai.com/v1` |
 | `OPENAI_IMAGE_API_DIALECT` | OpenAI 兼容图像 API 方言（`openai-native` 或 `ratio-metadata`） | `openai-native` |
 | `OPENAI_IMAGE_USE_CHAT` | OpenAI 改走 `/chat/completions` | `false` |
 | `AZURE_OPENAI_BASE_URL` | Azure 资源或部署端点 | - |
@@ -860,6 +873,7 @@ AI 驱动的生成后端。
 
 **Provider 说明**：
 - Azure OpenAI：`--model` 表示 Azure deployment name，不是底层模型家族名。
+- Agnes：`agnes-image-2.1-flash` 同时支持文生图和图生图。默认文生图走顶层 `return_base64: true`；图生图参考图走 `extra_body.image[]`；本地文件和公开 HTTPS 参考图都支持；传 `--response-format url` 时会把返回 URL 写入 `.txt` 文件。
 - DashScope：`qwen-image-2.0-pro` 是自定义 `--size`、`21:9` 和中英文排版的推荐默认模型。
 - Z.AI：`glm-image` 适合海报、图表和中英文排版密集的图片生成，暂不支持参考图。
 - MiniMax：`image-01` 支持官方文档里的自定义 `width` / `height`；`image-01-live` 更偏低延迟，适合配合 `--ar` 使用。
@@ -872,9 +886,9 @@ AI 驱动的生成后端。
 
 **服务商自动选择**：
 1. 如果指定了 `--provider` → 使用指定的
-2. 如果传了 `--ref` 且未指定 provider → 依次尝试 Google、OpenAI、Azure、OpenRouter、Replicate、Seedream，最后是 MiniMax
+2. 如果传了 `--ref` 且未指定 provider → 依次尝试 Google、OpenAI、Agnes、Azure、OpenRouter、Replicate、Seedream，最后是 MiniMax
 3. 如果只有一个 API 密钥 → 使用对应服务商
-4. 如果多个可用 → 默认使用 Google，然后依次为 OpenAI、Azure、OpenRouter、DashScope、Z.AI、MiniMax、Replicate、即梦、豆包
+4. 如果多个可用 → 默认使用 Google，然后依次为 OpenAI、Agnes、Azure、OpenRouter、DashScope、Z.AI、MiniMax、Replicate、即梦、豆包
 
 #### baoyu-danger-gemini-web
 

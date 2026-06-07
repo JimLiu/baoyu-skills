@@ -13,6 +13,7 @@ export type Provider =
   | "codex-cli";
 export type Quality = "normal" | "2k";
 export type OpenAIImageApiDialect = "openai-native" | "ratio-metadata";
+export type ResponseFormat = "file" | "url";
 
 export type CliArgs = {
   prompt: string | null;
@@ -27,6 +28,7 @@ export type CliArgs = {
   imageSize: string | null;
   imageSizeSource?: "cli" | "task" | "config" | null;
   imageApiDialect: OpenAIImageApiDialect | null;
+  responseFormat: ResponseFormat | null;
   referenceImages: string[];
   n: number;
   batchFile: string | null;
@@ -47,6 +49,7 @@ export type BatchTaskInput = {
   quality?: Quality | null;
   imageSize?: "1K" | "2K" | "4K" | null;
   imageApiDialect?: OpenAIImageApiDialect | null;
+  responseFormat?: ResponseFormat | null;
   ref?: string[];
   n?: number;
 };

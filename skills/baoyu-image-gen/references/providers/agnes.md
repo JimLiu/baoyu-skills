@@ -10,12 +10,13 @@ Read when the user picks `--provider agnes` or sets `default_model.agnes`. Defau
 - baoyu-image-gen requests Base64 output for text-to-image via top-level `return_base64: true`
 - baoyu-image-gen sends image-to-image refs under `extra_body.image[]` with `extra_body.response_format: "b64_json"` because that path was verified against the live API
 - Local refs are converted to Data URLs; public `https://...` refs are passed through as-is
+- Pass `--response-format url` to request URL output and write the returned URL into a `.txt` file instead of saving image bytes
 
 ## Behavior Notes
 
 - Agnes requires an explicit `size` for every request; baoyu-image-gen derives one from `--size`, `--ar`, and `--quality` when you do not pass `--size`
 - `--n > 1` is rejected locally because the current provider flow saves exactly one image per request
-- The API also supports URL output, but baoyu-image-gen prefers Base64 for stability and to avoid an extra download hop where possible
+- Default behavior prefers Base64 for stability and to avoid an extra download hop where possible
 
 ## Environment Variables
 

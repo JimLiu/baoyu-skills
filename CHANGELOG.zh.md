@@ -2,6 +2,11 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## Unreleased
+
+### 新功能
+- `baoyu-image-gen`：新增一等 Agnes provider（`--provider agnes`），适配 `agnes-image-2.1-flash`。支持文生图、通过 `--ref` 的图生图、通过 `--response-format url` 输出 URL、`AGNES_API_KEY` / `AGNES_IMAGE_MODEL` / `AGNES_BASE_URL` 配置、provider 自动识别、batch 限流覆盖，以及配套测试与文档
+
 ## 2.4.1 - 2026-06-01
 
 ### 修复

@@ -84,6 +84,9 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider o
 # Agnes Image 2.1 Flash
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider agnes
 
+# Agnes URL output (writes the returned image URL into a .txt file)
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.txt --provider agnes --response-format url
+
 # Codex CLI (uses logged-in Codex subscription — no OPENAI_API_KEY required; requires `codex` on PATH)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider codex-cli --ar 16:9
 
@@ -121,6 +124,7 @@ When the user wants a person/object preserved from reference images:
 | `--quality normal\|2k` | Quality preset (default: `2k`) |
 | `--imageSize 1K\|2K\|4K` | Image size for Google/OpenRouter (default: from quality) |
 | `--imageApiDialect openai-native\|ratio-metadata` | OpenAI-compatible endpoint dialect — use `ratio-metadata` for gateways that expect aspect-ratio `size` plus `metadata.resolution` |
+| `--response-format file\|url` | Agnes only. `file` (default) saves the image bytes; `url` writes the returned image URL into a `.txt` file |
 | `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Agnes image-to-image, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, Seedream 5.0/4.5/4.0, DashScope `wan2.7-image-pro`/`wan2.7-image`. Not supported by Jimeng, Seedream 3.0, SeedEdit 3.0, or any DashScope model outside the `wan2.7-image*` family |
 | `--n <count>` | Number of images. Replicate requires `--n 1` (single-output save semantics) |
 | `--json` | JSON output |
