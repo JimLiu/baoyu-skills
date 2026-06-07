@@ -1,6 +1,7 @@
 export type Provider =
   | "google"
   | "openai"
+  | "agnes"
   | "openrouter"
   | "dashscope"
   | "zai"
@@ -67,6 +68,7 @@ export type ExtendConfig = {
   default_model: {
     google: string | null;
     openai: string | null;
+    agnes: string | null;
     openrouter: string | null;
     dashscope: string | null;
     zai: string | null;

@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## Unreleased
+
+### Features
+- `baoyu-image-gen`: add a first-class Agnes provider (`--provider agnes`) for `agnes-image-2.1-flash`, including text-to-image, image-to-image via `--ref`, model/env/config wiring (`AGNES_API_KEY`, `AGNES_IMAGE_MODEL`, `AGNES_BASE_URL`), provider auto-detection, batch rate-limit overrides, tests, and docs
+
 ## 2.4.1 - 2026-06-01
 
 ### Fixes

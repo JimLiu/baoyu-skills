@@ -11,7 +11,7 @@ description: EXTEND.md YAML schema for baoyu-image-gen user preferences
 ---
 version: 1
 
-default_provider: null      # google|openai|azure|openrouter|dashscope|zai|minimax|replicate|jimeng|seedream|codex-cli|null (null = auto-detect; codex-cli is never auto-detected — pin it here or via --provider)
+default_provider: null      # google|openai|agnes|azure|openrouter|dashscope|zai|minimax|replicate|jimeng|seedream|codex-cli|null (null = auto-detect; codex-cli is never auto-detected — pin it here or via --provider)
 
 default_quality: null       # normal|2k|null (null = use default: 2k)
 
@@ -24,6 +24,7 @@ default_image_api_dialect: null  # openai-native|ratio-metadata|null (OpenAI-com
 default_model:
   google: null              # e.g., "gemini-3-pro-image", "gemini-3.1-flash-image"
   openai: null              # e.g., "gpt-image-2", "gpt-image-1.5", "gpt-image-1"
+  agnes: null               # e.g., "agnes-image-2.1-flash"
   azure: null               # Azure deployment name, e.g., "gpt-image-2" or "image-prod"
   openrouter: null          # e.g., "google/gemini-3.1-flash-image"
   dashscope: null           # e.g., "qwen-image-2.0-pro"
@@ -42,6 +43,9 @@ batch:
       concurrency: 3
       start_interval_ms: 1100
     openai:
+      concurrency: 3
+      start_interval_ms: 1100
+    agnes:
       concurrency: 3
       start_interval_ms: 1100
     azure:
@@ -77,6 +81,7 @@ batch:
 | `default_image_api_dialect` | string\|null | null | OpenAI-compatible image dialect (`openai-native` or `ratio-metadata`) |
 | `default_model.google` | string\|null | null | Google default model |
 | `default_model.openai` | string\|null | null | OpenAI default model |
+| `default_model.agnes` | string\|null | null | Agnes default model |
 | `default_model.azure` | string\|null | null | Azure default deployment name |
 | `default_model.openrouter` | string\|null | null | OpenRouter default model |
 | `default_model.dashscope` | string\|null | null | DashScope default model |
@@ -112,6 +117,7 @@ default_image_api_dialect: null
 default_model:
   google: "gemini-3-pro-image"
   openai: "gpt-image-2"
+  agnes: "agnes-image-2.1-flash"
   azure: "gpt-image-2"
   openrouter: "google/gemini-3.1-flash-image"
   dashscope: "qwen-image-2.0-pro"
@@ -125,6 +131,9 @@ batch:
       concurrency: 5
       start_interval_ms: 700
     azure:
+      concurrency: 3
+      start_interval_ms: 1100
+    agnes:
       concurrency: 3
       start_interval_ms: 1100
     zai:

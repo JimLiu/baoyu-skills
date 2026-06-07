@@ -83,7 +83,7 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
     "--image",
     "out/hero",
     "--provider",
-    "zai",
+    "agnes",
     "--quality",
     "2k",
     "--imageSize",
@@ -102,7 +102,7 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
 
   assert.deepEqual(args.promptFiles, ["prompts/system.md", "prompts/content.md"]);
   assert.equal(args.imagePath, "out/hero");
-  assert.equal(args.provider, "zai");
+  assert.equal(args.provider, "agnes");
   assert.equal(args.quality, "2k");
   assert.equal(args.aspectRatioSource, null);
   assert.equal(args.imageSize, "4K");
@@ -144,6 +144,7 @@ default_image_api_dialect: ratio-metadata
 default_model:
   google: gemini-3-pro-image
   openai: gpt-image-2
+  agnes: agnes-image-2.1-flash
   zai: glm-image
   azure: image-prod
   minimax: image-01
@@ -158,6 +159,9 @@ batch:
     zai:
       concurrency: 2
       start_interval_ms: 1000
+    agnes:
+      concurrency: 2
+      start_interval_ms: 1050
     minimax:
       concurrency: 2
       start_interval_ms: 1400
@@ -176,6 +180,7 @@ batch:
   assert.equal(config.default_image_api_dialect, "ratio-metadata");
   assert.equal(config.default_model?.google, "gemini-3-pro-image");
   assert.equal(config.default_model?.openai, "gpt-image-2");
+  assert.equal(config.default_model?.agnes, "agnes-image-2.1-flash");
   assert.equal(config.default_model?.zai, "glm-image");
   assert.equal(config.default_model?.azure, "image-prod");
   assert.equal(config.default_model?.minimax, "image-01");
@@ -190,6 +195,10 @@ batch:
   assert.deepEqual(config.batch?.provider_limits?.zai, {
     concurrency: 2,
     start_interval_ms: 1000,
+  });
+  assert.deepEqual(config.batch?.provider_limits?.agnes, {
+    concurrency: 2,
+    start_interval_ms: 1050,
   });
   assert.deepEqual(config.batch?.provider_limits?.minimax, {
     concurrency: 2,
@@ -402,6 +411,32 @@ test("detectProvider selects Z.AI when credentials are present or the model id m
   assert.equal(detectProvider(makeArgs({ model: "glm-image" })), "zai");
 });
 
+test("detectProvider selects Agnes when credentials are present or the model id matches", (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    AGNES_API_KEY: "agnes-key",
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+  });
+
+  assert.equal(detectProvider(makeArgs()), "agnes");
+  assert.equal(detectProvider(makeArgs({ model: "agnes-image-2.1-flash" })), "agnes");
+  assert.equal(
+    detectProvider(makeArgs({ referenceImages: ["ref.png"] })),
+    "agnes",
+  );
+});
+
 test("detectProvider infers Seedream from model id and allows Seedream reference-image workflows", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
@@ -488,6 +523,7 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
     BAOYU_IMAGE_GEN_MAX_WORKERS: "12",
     BAOYU_IMAGE_GEN_GOOGLE_CONCURRENCY: "5",
     BAOYU_IMAGE_GEN_GOOGLE_START_INTERVAL_MS: "450",
+    BAOYU_IMAGE_GEN_AGNES_CONCURRENCY: "6",
     BAOYU_IMAGE_GEN_ZAI_CONCURRENCY: "4",
   });
 
@@ -498,6 +534,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
         google: {
           concurrency: 2,
           start_interval_ms: 900,
+        },
+        agnes: {
+          concurrency: 2,
+          start_interval_ms: 1300,
         },
         zai: {
           concurrency: 1,
@@ -515,6 +555,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
   assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).google, {
     concurrency: 5,
     startIntervalMs: 450,
+  });
+  assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).agnes, {
+    concurrency: 6,
+    startIntervalMs: 1300,
   });
   assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).zai, {
     concurrency: 4,

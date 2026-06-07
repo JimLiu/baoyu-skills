@@ -27,6 +27,12 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref so
 # OpenAI
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai --model gpt-image-2
 
+# Agnes Image 2.1 Flash
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider agnes
+
+# Agnes image-to-image with composition preservation
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Make it blue while preserving the composition" --image out.png --provider agnes --ref source.png
+
 # Azure OpenAI (model = deployment name)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider azure --model gpt-image-2
 

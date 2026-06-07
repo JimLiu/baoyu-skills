@@ -728,7 +728,7 @@ AI-powered generation backends.
 
 #### baoyu-image-gen
 
-AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
+AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Agnes, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
 
 ```bash
 # Basic generation (auto-detect provider)
@@ -745,6 +745,12 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 
 # Azure OpenAI (model = deployment name)
 /baoyu-image-gen --prompt "A cat" --image cat.png --provider azure --model gpt-image-2
+
+# Agnes Image 2.1 Flash
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider agnes
+
+# Agnes with reference image edit
+/baoyu-image-gen --prompt "Make it blue while preserving the composition" --image out.png --provider agnes --ref source.png
 
 # OpenRouter
 /baoyu-image-gen --prompt "A cat" --image cat.png --provider openrouter
@@ -782,7 +788,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 # Seedream (豆包)
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
-# With reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0)
+# With reference images (Google, OpenAI, Agnes, Azure OpenAI, OpenRouter, Replicate, MiniMax, or Seedream 5.0/4.5/4.0)
 /baoyu-image-gen --prompt "Make it blue" --image out.png --ref source.png
 
 # Batch mode
@@ -797,14 +803,14 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `--image` | Output image path (required) |
 | `--batchfile` | JSON batch file for multi-image generation |
 | `--jobs` | Worker count for batch mode |
-| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, or `replicate` |
+| `--provider` | `google`, `openai`, `agnes`, `azure`, `openrouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, or `replicate` |
 | `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; Z.AI uses `glm-image`; MiniMax uses `image-01` / `image-01-live` |
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`; `gpt-image-2` accepts valid custom sizes up to 3840px max edge) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
 | `--imageSize` | `1K`, `2K`, or `4K` for Google/OpenRouter |
 | `--imageApiDialect` | `openai-native` or `ratio-metadata` for OpenAI-compatible gateways |
-| `--ref` | Reference images (Google, OpenAI, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 5.0/4.5/4.0) |
+| `--ref` | Reference images (Google, OpenAI, Agnes, Azure OpenAI, OpenRouter, Replicate supported families, MiniMax, or Seedream 5.0/4.5/4.0) |
 | `--n` | Number of images per request (`replicate` currently requires `--n 1`) |
 | `--json` | JSON output |
 
@@ -812,6 +818,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | OpenAI API key | - |
+| `AGNES_API_KEY` | Agnes API key | - |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API key | - |
 | `OPENROUTER_API_KEY` | OpenRouter API key | - |
 | `GOOGLE_API_KEY` | Google API key | - |
@@ -825,6 +832,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `JIMENG_SECRET_ACCESS_KEY` | Jimeng Volcengine secret key | - |
 | `ARK_API_KEY` | Seedream Volcengine ARK API key | - |
 | `OPENAI_IMAGE_MODEL` | OpenAI model | `gpt-image-2` |
+| `AGNES_IMAGE_MODEL` | Agnes model | `agnes-image-2.1-flash` |
 | `AZURE_OPENAI_DEPLOYMENT` | Azure default deployment name | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | Backward-compatible Azure deployment/model alias | `gpt-image-2` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image` |
@@ -837,6 +845,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `JIMENG_IMAGE_MODEL` | Jimeng model | `jimeng_t2i_v40` |
 | `SEEDREAM_IMAGE_MODEL` | Seedream model | `doubao-seedream-5-0-260128` |
 | `OPENAI_BASE_URL` | Custom OpenAI endpoint | - |
+| `AGNES_BASE_URL` | Custom Agnes endpoint | `https://apihub.agnes-ai.com/v1` |
 | `OPENAI_IMAGE_API_DIALECT` | OpenAI-compatible image API dialect (`openai-native` or `ratio-metadata`) | `openai-native` |
 | `OPENAI_IMAGE_USE_CHAT` | Use `/chat/completions` for OpenAI image generation | `false` |
 | `AZURE_OPENAI_BASE_URL` | Azure resource or deployment endpoint | - |
@@ -859,6 +868,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 
 **Provider Notes**:
 - Azure OpenAI: `--model` means Azure deployment name, not the underlying model family.
+- Agnes: `agnes-image-2.1-flash` supports both text-to-image and image-to-image. baoyu-image-gen requests Base64 output and sends reference images as Data URLs (or public HTTPS URLs when you pass them directly).
 - DashScope: `qwen-image-2.0-pro` is the recommended default for custom `--size`, `21:9`, and strong Chinese/English text rendering.
 - Z.AI: `glm-image` is recommended for posters, diagrams, and text-heavy Chinese/English images. Reference images are not supported.
 - MiniMax: `image-01` supports documented custom `width` / `height`; `image-01-live` is lower latency and works best with `--ar`.
@@ -871,9 +881,9 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 
 **Provider Auto-Selection**:
 1. If `--provider` is specified → use it
-2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, Replicate, Seedream, and finally MiniMax
+2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Agnes, Azure, OpenRouter, Replicate, Seedream, and finally MiniMax
 3. If only one API key is available → use that provider
-4. If multiple providers are available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
+4. If multiple providers are available → default to Google, then OpenAI, Agnes, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream
 
 #### baoyu-danger-gemini-web
 
