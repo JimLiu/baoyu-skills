@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## Unreleased
+
+### Features
+- `baoyu-youtube-transcript`: support Netscape-format cookies files during yt-dlp fallback via `YOUTUBE_TRANSCRIPT_COOKIES_FILE`
+
 ## 2.5.1 - 2026-06-13
 
 ### Documentation

@@ -2,6 +2,11 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## Unreleased
+
+### 新功能
+- `baoyu-youtube-transcript`：支持通过 `YOUTUBE_TRANSCRIPT_COOKIES_FILE` 在 yt-dlp 回退时传入 Netscape 格式 cookies 文件
+
 ## 2.5.1 - 2026-06-13
 
 ### 文档

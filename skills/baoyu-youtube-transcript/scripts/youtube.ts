@@ -374,8 +374,10 @@ function fetchYtDlpInfo(videoId: string): YtDlpInfo {
     "--remote-components",
     "ejs:github",
   ];
+  const cookiesFile = process.env.YOUTUBE_TRANSCRIPT_COOKIES_FILE?.trim();
   const cookiesFromBrowser = process.env.YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER?.trim();
-  if (cookiesFromBrowser) args.push("--cookies-from-browser", cookiesFromBrowser);
+  if (cookiesFile) args.push("--cookies", cookiesFile);
+  else if (cookiesFromBrowser) args.push("--cookies-from-browser", cookiesFromBrowser);
   args.push(`${WATCH_URL}${videoId}`);
 
   const result = spawnSync(command.command, args, {

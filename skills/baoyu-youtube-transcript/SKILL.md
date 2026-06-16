@@ -79,6 +79,7 @@ ${BUN_X} {baseDir}/scripts/main.ts <url> --refresh
 
 | Variable | Description |
 |----------|-------------|
+| `YOUTUBE_TRANSCRIPT_COOKIES_FILE` | Passed to `yt-dlp --cookies` during fallback. Use a Netscape-format cookies file exported from a browser or another trusted source. Takes precedence over `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER` |
 | `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER` | Passed to `yt-dlp --cookies-from-browser` during fallback, e.g. `chrome`, `safari`, `firefox`, or `chrome:Profile 1` |
 
 ## Input Formats
@@ -183,4 +184,4 @@ When `--speakers` is used, `--chapters` is implied — the processed output alwa
 | Video unavailable | Video deleted, private, or region-locked |
 | IP blocked | Too many requests, try again later |
 | Age restricted | Video requires login for age verification |
-| bot detected | The script retries alternate clients and then `yt-dlp`; if fallback tooling is missing, the agent should resolve that itself, otherwise if it still fails try `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER=safari` (or your browser) |
+| bot detected | The script retries alternate clients and then `yt-dlp`; if fallback tooling is missing, the agent should resolve that itself, otherwise if it still fails try `YOUTUBE_TRANSCRIPT_COOKIES_FILE=/path/to/cookies.txt` or `YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER=safari` (or your browser) |
