@@ -7,7 +7,7 @@ metadata:
     homepage: https://github.com/JimLiu/baoyu-skills#baoyu-xhs-images
 ---
 
-# Image Card Series Generator
+# baoyu-xhs-images: Image Card Series Generator
 
 Break down complex content into eye-catching image card series with multiple style options.
 
