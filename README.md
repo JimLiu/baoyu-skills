@@ -1,5 +1,14 @@
 # baoyu-skills
 
+<p align="center">
+  <a href="https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=baoyu-skills">
+    <img src="assets/atlas-cloud-logo.png" alt="Atlas Cloud" width="140" />
+  </a>
+  <br />
+  <sub><strong>Atlas Cloud</strong> Atlas Cloud provides OpenAI-compatible LLM APIs and async image/video generation APIs for practical skills, image generation, and multimodal workflows.</sub>
+</p>
+
+
 English | [中文](./README.zh.md)
 
 Skills shared by Baoyu for improving daily work efficiency with AI Agents (Claude Code, Codex, etc.).
