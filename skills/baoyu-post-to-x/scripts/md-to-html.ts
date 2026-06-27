@@ -12,6 +12,7 @@ import { unified } from 'unified';
 import remarkCjkFriendly from 'remark-cjk-friendly';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
+import { visit, SKIP } from 'unist-util-visit';
 
 import {
   preprocessMermaidInMarkdown,
@@ -136,11 +137,67 @@ function highlightCode(code: string, lang: string): string {
   }
 }
 
+// Serialize an inline mdast subtree to HTML. Used to convert `strong`/`emphasis`
+// nodes (which remark-cjk-friendly already parses correctly, even when the
+// delimiters are adjacent to CJK characters) into raw inline HTML that marked
+// passes through. marked's own emphasis tokenizer fails on closing `**`/`*`
+// directly followed by a CJK character, so we bypass it for emphasis entirely.
+function serializeMdastInline(nodes: Array<Record<string, unknown>>): string {
+  return nodes.map(serializeMdastNode).join('');
+}
+
+function serializeMdastNode(node: Record<string, unknown>): string {
+  switch (node.type) {
+    case 'text':
+      return escapeHtml(String(node.value ?? ''));
+    case 'strong':
+      return `<strong>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</strong>`;
+    case 'emphasis':
+      return `<em>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</em>`;
+    case 'delete':
+      return `<del>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</del>`;
+    case 'inlineCode':
+      return `<code>${escapeHtml(String(node.value ?? ''))}</code>`;
+    case 'break':
+      return '<br>';
+    case 'image':
+      return escapeHtml(String(node.alt ?? ''));
+    case 'link': {
+      const href = escapeHtml(String(node.url ?? ''));
+      const title = node.title ? ` title="${escapeHtml(String(node.title))}"` : '';
+      return `<a href="${href}"${title} rel="noopener noreferrer nofollow">${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</a>`;
+    }
+    case 'html':
+      return String(node.value ?? '');
+    default:
+      return Array.isArray(node.children) ? serializeMdastInline(node.children as Array<Record<string, unknown>>) : '';
+  }
+}
+
+function remarkStrongEmToHtml(): (tree: Record<string, unknown>) => void {
+  return (tree) => {
+    visit(tree, (node, index, parent) => {
+      if (
+        (node.type === 'strong' || node.type === 'emphasis') &&
+        parent &&
+        Array.isArray(parent.children) &&
+        typeof index === 'number'
+      ) {
+        const tag = node.type === 'strong' ? 'strong' : 'em';
+        const value = `<${tag}>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</${tag}>`;
+        parent.children[index] = { type: 'html', value };
+        return SKIP;
+      }
+    });
+  };
+}
+
 function preprocessCjkMarkdown(markdown: string): string {
   try {
     const processor = unified()
       .use(remarkParse)
       .use(remarkCjkFriendly)
+      .use(remarkStrongEmToHtml)
       .use(remarkStringify);
 
     const result = String(processor.processSync(markdown));

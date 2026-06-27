@@ -98,3 +98,35 @@ test('parseMarkdown resolves encoded spaces and literal percent image paths', as
   assert.equal(result.contentImages[0]?.localPath, path.join(root, 'Pasted image.png'));
   assert.equal(result.contentImages[1]?.localPath, path.join(root, '100%.png'));
 });
+
+test('parseMarkdown renders CJK-adjacent bold and italics (no literal asterisks)', async (t) => {
+  const root = await makeTempDir('x-md-to-html-cjk-bold-');
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const markdownPath = path.join(root, 'post.md');
+  const tempDir = path.join(root, 'tmp');
+  await fs.mkdir(tempDir, { recursive: true });
+  await fs.writeFile(
+    markdownPath,
+    [
+      '# 标题',
+      '',
+      '分工在变细。**国际大厂卷基础设施，中文项目卷场景落地。**这其实是生态成熟的表现。',
+      '',
+      '半角场景 **Top 10 里平均有 8 个** 项目。',
+      '',
+      '斜体 *数据来源 GitHub* 收尾。',
+    ].join('\n'),
+  );
+
+  const result = await parseMarkdown(markdownPath, { tempDir });
+
+  // Bold directly adjacent to CJK (closing ** followed by CJK) must render.
+  assert.match(result.html, /<strong>国际大厂卷基础设施，中文项目卷场景落地。<\/strong>/);
+  assert.match(result.html, /<strong>Top 10 里平均有 8 个<\/strong>/);
+  // Italics.
+  assert.match(result.html, /<em>数据来源 GitHub<\/em>/);
+  // No literal emphasis delimiters should leak into the output.
+  assert.doesNotMatch(result.html, /\*\*/);
+  assert.doesNotMatch(result.html, /(?<!\*)\*(?!\*)[^*\n]+\*(?!\*)/);
+});
