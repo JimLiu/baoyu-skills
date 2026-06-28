@@ -116,6 +116,10 @@ test('parseMarkdown renders CJK-adjacent bold and italics (no literal asterisks)
       '半角场景 **Top 10 里平均有 8 个** 项目。',
       '',
       '斜体 *数据来源 GitHub* 收尾。',
+      '',
+      '参考 **[docs][d]** 了解更多。',
+      '',
+      '[d]: https://example.com',
     ].join('\n'),
   );
 
@@ -126,6 +130,8 @@ test('parseMarkdown renders CJK-adjacent bold and italics (no literal asterisks)
   assert.match(result.html, /<strong>Top 10 里平均有 8 个<\/strong>/);
   // Italics.
   assert.match(result.html, /<em>数据来源 GitHub<\/em>/);
+  // Reference-style links inside emphasis must render as links, not plain text.
+  assert.match(result.html, /<strong><a href="https:\/\/example\.com" rel="noopener noreferrer nofollow">docs<\/a><\/strong>/);
   // No literal emphasis delimiters should leak into the output.
   assert.doesNotMatch(result.html, /\*\*/);
   assert.doesNotMatch(result.html, /(?<!\*)\*(?!\*)[^*\n]+\*(?!\*)/);

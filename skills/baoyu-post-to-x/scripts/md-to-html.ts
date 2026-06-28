@@ -12,7 +12,6 @@ import { unified } from 'unified';
 import remarkCjkFriendly from 'remark-cjk-friendly';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
-import { visit, SKIP } from 'unist-util-visit';
 
 import {
   preprocessMermaidInMarkdown,
@@ -137,74 +136,36 @@ function highlightCode(code: string, lang: string): string {
   }
 }
 
-// Serialize an inline mdast subtree to HTML. Used to convert `strong`/`emphasis`
-// nodes (which remark-cjk-friendly already parses correctly, even when the
-// delimiters are adjacent to CJK characters) into raw inline HTML that marked
-// passes through. marked's own emphasis tokenizer fails on closing `**`/`*`
-// directly followed by a CJK character, so we bypass it for emphasis entirely.
-function serializeMdastInline(nodes: Array<Record<string, unknown>>): string {
-  return nodes.map(serializeMdastNode).join('');
-}
-
-function serializeMdastNode(node: Record<string, unknown>): string {
-  switch (node.type) {
-    case 'text':
-      return escapeHtml(String(node.value ?? ''));
-    case 'strong':
-      return `<strong>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</strong>`;
-    case 'emphasis':
-      return `<em>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</em>`;
-    case 'delete':
-      return `<del>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</del>`;
-    case 'inlineCode':
-      return `<code>${escapeHtml(String(node.value ?? ''))}</code>`;
-    case 'break':
-      return '<br>';
-    case 'image':
-      return escapeHtml(String(node.alt ?? ''));
-    case 'link': {
-      const href = escapeHtml(String(node.url ?? ''));
-      const title = node.title ? ` title="${escapeHtml(String(node.title))}"` : '';
-      return `<a href="${href}"${title} rel="noopener noreferrer nofollow">${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</a>`;
-    }
-    case 'html':
-      return String(node.value ?? '');
-    default:
-      return Array.isArray(node.children) ? serializeMdastInline(node.children as Array<Record<string, unknown>>) : '';
-  }
-}
-
-function remarkStrongEmToHtml(): (tree: Record<string, unknown>) => void {
-  return (tree) => {
-    visit(tree, (node, index, parent) => {
-      if (
-        (node.type === 'strong' || node.type === 'emphasis') &&
-        parent &&
-        Array.isArray(parent.children) &&
-        typeof index === 'number'
-      ) {
-        const tag = node.type === 'strong' ? 'strong' : 'em';
-        const value = `<${tag}>${serializeMdastInline((node.children as Array<Record<string, unknown>>) ?? [])}</${tag}>`;
-        parent.children[index] = { type: 'html', value };
-        return SKIP;
-      }
-    });
-  };
-}
-
+// Normalize CJK-adjacent emphasis so `marked` renders it correctly.
+//
+// `marked`'s emphasis tokenizer treats a closing `**`/`*` directly followed by a
+// CJK character as not right-flanking, so it leaves the delimiters literal
+// (e.g. `**加粗**这` renders as plain text with the asterisks intact). We round-trip
+// the markdown through `remark-cjk-friendly`, whose stringify serializes those
+// CJK characters as HTML entities (`&#x8FD9;`); the entity is treated as
+// punctuation by `marked`'s flanking rules, so emphasis parses as expected.
+//
+// We deliberately do NOT decode the entities here — that would re-expose the raw
+// CJK character to `marked` and reintroduce the bug. Decoding happens later, after
+// `marked` has rendered the HTML (see `decodeHtmlEntities`).
 function preprocessCjkMarkdown(markdown: string): string {
   try {
     const processor = unified()
       .use(remarkParse)
       .use(remarkCjkFriendly)
-      .use(remarkStrongEmToHtml)
       .use(remarkStringify);
 
-    const result = String(processor.processSync(markdown));
-    return result.replace(/&#x([0-9A-Fa-f]+);/g, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)));
+    return String(processor.processSync(markdown));
   } catch {
     return markdown;
   }
+}
+
+// Decode the numeric HTML entities that `remark-cjk-friendly` introduced back into
+// real characters, now that `marked` has finished parsing (the markdown syntax
+// is gone, so decoding is safe). Keeps the final HTML clean and human-readable.
+function decodeHtmlEntities(html: string): string {
+  return html.replace(/&#x([0-9A-Fa-f]+);/g, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)));
 }
 
 function convertMarkdownToHtml(markdown: string): { html: string; totalBlocks: number } {
@@ -269,7 +230,7 @@ function convertMarkdownToHtml(markdown: string): { html: string; totalBlocks: n
   }).length;
 
   return {
-    html: rendered,
+    html: decodeHtmlEntities(rendered),
     totalBlocks,
   };
 }
