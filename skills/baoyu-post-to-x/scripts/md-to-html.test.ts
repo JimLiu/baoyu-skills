@@ -136,3 +136,30 @@ test('parseMarkdown renders CJK-adjacent bold and italics (no literal asterisks)
   assert.doesNotMatch(result.html, /\*\*/);
   assert.doesNotMatch(result.html, /(?<!\*)\*(?!\*)[^*\n]+\*(?!\*)/);
 });
+
+test('parseMarkdown does not decode author-written literal HTML entities into tags', async (t) => {
+  const root = await makeTempDir('x-md-to-html-entities-');
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+
+  const markdownPath = path.join(root, 'post.md');
+  const tempDir = path.join(root, 'tmp');
+  await fs.mkdir(tempDir, { recursive: true });
+  await fs.writeFile(
+    markdownPath,
+    [
+      '# 标题',
+      '',
+      '正文中写 &#x3C;b&#x3E;literal&#x3C;/b&#x3E; 想显示字面标签。**加粗**收尾。',
+      '',
+      '代码里写 `&#x3C;b&#x3E;` 同样保留。',
+    ].join('\n'),
+  );
+
+  const result = await parseMarkdown(markdownPath, { tempDir });
+
+  // CJK-adjacent bold still renders.
+  assert.match(result.html, /<strong>加粗<\/strong>/);
+  // Author-written literal entities must NOT be decoded into real tags.
+  assert.doesNotMatch(result.html, /<b>literal<\/b>/);
+  assert.match(result.html, /&lt;b&gt;literal&lt;\/b&gt;/);
+});

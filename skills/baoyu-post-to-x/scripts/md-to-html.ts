@@ -141,13 +141,16 @@ function highlightCode(code: string, lang: string): string {
 // `marked`'s emphasis tokenizer treats a closing `**`/`*` directly followed by a
 // CJK character as not right-flanking, so it leaves the delimiters literal
 // (e.g. `**加粗**这` renders as plain text with the asterisks intact). We round-trip
-// the markdown through `remark-cjk-friendly`, whose stringify serializes those
-// CJK characters as HTML entities (`&#x8FD9;`); the entity is treated as
+// the markdown through `remark-cjk-friendly`, whose stringify serializes the
+// boundary character as an HTML entity (`&#x8FD9;`); the entity is treated as
 // punctuation by `marked`'s flanking rules, so emphasis parses as expected.
 //
-// We deliberately do NOT decode the entities here — that would re-expose the raw
-// CJK character to `marked` and reintroduce the bug. Decoding happens later, after
-// `marked` has rendered the HTML (see `decodeHtmlEntities`).
+// We deliberately do NOT decode the entities afterward. They are valid HTML
+// character references that render correctly when the article HTML is pasted into
+// the X editor, and `marked` only emits them for characters outside the emphasis
+// span (the boundary char), never inside it. A blanket decode of the rendered
+// HTML would risk turning author-written literal entities (e.g. `&#x3C;b&#x3E;`
+// meant to display `<b>` as text) into real tags, so we leave them intact.
 function preprocessCjkMarkdown(markdown: string): string {
   try {
     const processor = unified()
@@ -159,13 +162,6 @@ function preprocessCjkMarkdown(markdown: string): string {
   } catch {
     return markdown;
   }
-}
-
-// Decode the numeric HTML entities that `remark-cjk-friendly` introduced back into
-// real characters, now that `marked` has finished parsing (the markdown syntax
-// is gone, so decoding is safe). Keeps the final HTML clean and human-readable.
-function decodeHtmlEntities(html: string): string {
-  return html.replace(/&#x([0-9A-Fa-f]+);/g, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)));
 }
 
 function convertMarkdownToHtml(markdown: string): { html: string; totalBlocks: number } {
@@ -230,7 +226,7 @@ function convertMarkdownToHtml(markdown: string): { html: string; totalBlocks: n
   }).length;
 
   return {
-    html: decodeHtmlEntities(rendered),
+    html: rendered,
     totalBlocks,
   };
 }
