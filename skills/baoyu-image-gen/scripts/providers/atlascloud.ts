@@ -52,6 +52,10 @@ export function getDefaultModel(): string {
   return process.env.ATLASCLOUD_IMAGE_MODEL || process.env.ATLAS_CLOUD_IMAGE_MODEL || DEFAULT_GENERATION_MODEL;
 }
 
+export function getDefaultOutputExtension(_model: string, args: CliArgs): string {
+  return args.responseFormat === "url" ? ".txt" : ".png";
+}
+
 function getApiKey(): string | null {
   return process.env.ATLASCLOUD_API_KEY || process.env.ATLAS_CLOUD_API_KEY || null;
 }

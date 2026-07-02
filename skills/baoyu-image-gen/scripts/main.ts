@@ -956,19 +956,20 @@ function getModelForProvider(
   return providerModule.getDefaultModel();
 }
 
-async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<PreparedTask> {
+export async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConfig>): Promise<PreparedTask> {
   if (!args.quality) args.quality = "2k";
 
   const prompt = (await loadPromptForArgs(args)) ?? (await readPromptFromStdin());
   if (!prompt) throw new Error("Prompt is required");
   if (!args.imagePath) throw new Error("--image is required");
+
+  const provider = detectProvider(args);
   if (args.referenceImages.length > 0) {
     await validateReferenceImages(args.referenceImages, {
-      allowRemoteUrls: shouldAllowRemoteReferenceImages(args.provider),
+      allowRemoteUrls: shouldAllowRemoteReferenceImages(provider),
     });
   }
 
-  const provider = detectProvider(args);
   const providerModule = await loadProviderModule(provider);
   const model = getModelForProvider(provider, args.model, extendConfig, providerModule);
   providerModule.validateArgs?.(model, args);
@@ -1044,7 +1045,7 @@ export function createTaskArgs(baseArgs: CliArgs, task: BatchTaskInput, batchDir
   };
 }
 
-async function prepareBatchTasks(
+export async function prepareBatchTasks(
   args: CliArgs,
   extendConfig: Partial<ExtendConfig>
 ): Promise<{ tasks: PreparedTask[]; jobs: number | null }> {
@@ -1059,13 +1060,14 @@ async function prepareBatchTasks(
     const prompt = await loadPromptForArgs(taskArgs);
     if (!prompt) throw new Error(`Task ${i + 1} is missing prompt or promptFiles.`);
     if (!taskArgs.imagePath) throw new Error(`Task ${i + 1} is missing image output path.`);
+
+    const provider = detectProvider(taskArgs);
     if (taskArgs.referenceImages.length > 0) {
       await validateReferenceImages(taskArgs.referenceImages, {
-        allowRemoteUrls: shouldAllowRemoteReferenceImages(taskArgs.provider),
+        allowRemoteUrls: shouldAllowRemoteReferenceImages(provider),
       });
     }
 
-    const provider = detectProvider(taskArgs);
     const providerModule = await loadProviderModule(provider);
     const model = getModelForProvider(provider, taskArgs.model, extendConfig, providerModule);
     providerModule.validateArgs?.(model, taskArgs);

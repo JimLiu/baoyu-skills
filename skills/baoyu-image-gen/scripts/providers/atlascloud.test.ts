@@ -4,6 +4,7 @@ import test from "node:test";
 import type { CliArgs } from "../types.ts";
 import {
   buildRequestBody,
+  getDefaultOutputExtension,
   inferAspectRatioFromSize,
   resolveRequestModel,
   resolveResolution,
@@ -42,6 +43,17 @@ test("Atlas Cloud maps quality, imageSize, and explicit size to schema resolutio
   assert.equal(resolveResolution(makeArgs({ size: "1024x1024" })), "1k");
   assert.equal(resolveResolution(makeArgs({ size: "2048x1152" })), "2k");
   assert.equal(resolveResolution(makeArgs({ size: "3840x2160" })), "4k");
+});
+
+test("Atlas Cloud uses text files for URL-only output mode", () => {
+  assert.equal(getDefaultOutputExtension("google/nano-banana-2/text-to-image", makeArgs()), ".png");
+  assert.equal(
+    getDefaultOutputExtension(
+      "google/nano-banana-2/text-to-image",
+      makeArgs({ responseFormat: "url" }),
+    ),
+    ".txt",
+  );
 });
 
 test("Atlas Cloud infers supported aspect ratios from explicit sizes", () => {

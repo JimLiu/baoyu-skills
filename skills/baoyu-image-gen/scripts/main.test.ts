@@ -19,6 +19,8 @@ import {
   normalizeOutputImagePath,
   parseArgs,
   parseOpenAIImageApiDialect,
+  prepareBatchTasks,
+  prepareSingleTask,
   parseSimpleYaml,
   validateReferenceImages,
 } from "./main.ts";
@@ -561,6 +563,60 @@ test("detectProvider selects Atlas Cloud when credentials are present or model i
     detectProvider(makeArgs({ model: "google/nano-banana-2/edit", referenceImages: ["ref.png"] })),
     "atlascloud",
   );
+});
+
+test("prepare tasks allow remote references after Atlas Cloud auto-detection", async (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: "atlas-key",
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
+  });
+
+  const single = await prepareSingleTask(
+    makeArgs({
+      prompt: "Make it blue",
+      imagePath: "out",
+      referenceImages: ["https://example.com/ref.png"],
+      responseFormat: "url",
+    }),
+    {},
+  );
+  assert.equal(single.provider, "atlascloud");
+  assert.match(single.outputPath, /out\.txt$/);
+
+  const root = await makeTempDir("baoyu-image-gen-atlas-remote-ref-");
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const batchFile = path.join(root, "batch.json");
+  await fs.writeFile(
+    batchFile,
+    JSON.stringify({
+      tasks: [
+        {
+          prompt: "Make it green",
+          image: "batch-out",
+          ref: ["https://example.com/ref.png"],
+          responseFormat: "url",
+        },
+      ],
+    }),
+  );
+
+  const batch = await prepareBatchTasks(makeArgs({ batchFile }), {});
+  assert.equal(batch.tasks[0]?.provider, "atlascloud");
+  assert.match(batch.tasks[0]?.outputPath ?? "", /batch-out\.txt$/);
 });
 
 test("batch worker and provider-rate-limit configuration prefer env over EXTEND config", (t) => {
