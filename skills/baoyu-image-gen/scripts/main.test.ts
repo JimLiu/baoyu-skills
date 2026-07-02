@@ -37,6 +37,7 @@ function makeArgs(overrides: Partial<CliArgs> = {}): CliArgs {
     imageSize: null,
     imageSizeSource: null,
     imageApiDialect: null,
+    responseFormat: null,
     referenceImages: [],
     n: 1,
     batchFile: null,
@@ -84,7 +85,7 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
     "--image",
     "out/hero",
     "--provider",
-    "zai",
+    "atlascloud",
     "--quality",
     "2k",
     "--imageSize",
@@ -103,7 +104,7 @@ test("parseArgs parses the main baoyu-image-gen CLI flags", () => {
 
   assert.deepEqual(args.promptFiles, ["prompts/system.md", "prompts/content.md"]);
   assert.equal(args.imagePath, "out/hero");
-  assert.equal(args.provider, "zai");
+  assert.equal(args.provider, "atlascloud");
   assert.equal(args.quality, "2k");
   assert.equal(args.aspectRatioSource, null);
   assert.equal(args.imageSize, "4K");
@@ -148,6 +149,7 @@ default_model:
   zai: glm-image
   azure: image-prod
   minimax: image-01
+  atlascloud: google/nano-banana-2/text-to-image
 batch:
   max_workers: 8
   provider_limits:
@@ -165,6 +167,9 @@ batch:
     azure:
       concurrency: 1
       start_interval_ms: 1500
+    atlascloud:
+      concurrency: 2
+      start_interval_ms: 1300
 `;
 
   const config = parseSimpleYaml(yaml);
@@ -180,6 +185,7 @@ batch:
   assert.equal(config.default_model?.zai, "glm-image");
   assert.equal(config.default_model?.azure, "image-prod");
   assert.equal(config.default_model?.minimax, "image-01");
+  assert.equal(config.default_model?.atlascloud, "google/nano-banana-2/text-to-image");
   assert.equal(config.batch?.max_workers, 8);
   assert.deepEqual(config.batch?.provider_limits?.google, {
     concurrency: 2,
@@ -199,6 +205,10 @@ batch:
   assert.deepEqual(config.batch?.provider_limits?.azure, {
     concurrency: 1,
     start_interval_ms: 1500,
+  });
+  assert.deepEqual(config.batch?.provider_limits?.atlascloud, {
+    concurrency: 2,
+    start_interval_ms: 1300,
   });
 });
 
@@ -356,6 +366,9 @@ test("detectProvider rejects non-ref-capable providers and prefers Google first 
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
   assert.equal(detectProvider(makeArgs()), "google");
 });
@@ -373,6 +386,9 @@ test("detectProvider selects an available ref-capable provider for reference-ima
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
   assert.equal(
     detectProvider(makeArgs({ referenceImages: ["ref.png"] })),
@@ -393,6 +409,9 @@ test("detectProvider selects Azure when only Azure credentials are configured", 
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
 
   assert.equal(detectProvider(makeArgs()), "azure");
@@ -417,6 +436,9 @@ test("detectProvider selects Z.AI when credentials are present or the model id m
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
 
   assert.equal(detectProvider(makeArgs()), "zai");
@@ -434,6 +456,9 @@ test("detectProvider infers Seedream from model id and allows Seedream reference
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: "ark-key",
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
 
   assert.equal(
@@ -470,6 +495,9 @@ test("detectProvider allows DashScope reference-image workflows when explicitly 
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
 
   assert.equal(
@@ -497,11 +525,42 @@ test("detectProvider selects MiniMax when only MiniMax credentials are configure
     JIMENG_ACCESS_KEY_ID: null,
     JIMENG_SECRET_ACCESS_KEY: null,
     ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: null,
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
   });
 
   assert.equal(detectProvider(makeArgs()), "minimax");
   assert.equal(detectProvider(makeArgs({ referenceImages: ["ref.png"] })), "minimax");
   assert.equal(detectProvider(makeArgs({ model: "image-01-live" })), "minimax");
+});
+
+test("detectProvider selects Atlas Cloud when credentials are present or model id matches", (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+    ATLASCLOUD_API_KEY: "atlas-key",
+    ATLAS_CLOUD_API_KEY: null,
+    AGNES_API_KEY: null,
+  });
+
+  assert.equal(detectProvider(makeArgs()), "atlascloud");
+  assert.equal(detectProvider(makeArgs({ referenceImages: ["ref.png"] })), "atlascloud");
+  assert.equal(
+    detectProvider(makeArgs({ model: "google/nano-banana-2/edit", referenceImages: ["ref.png"] })),
+    "atlascloud",
+  );
 });
 
 test("batch worker and provider-rate-limit configuration prefer env over EXTEND config", (t) => {
@@ -510,6 +569,7 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
     BAOYU_IMAGE_GEN_GOOGLE_CONCURRENCY: "5",
     BAOYU_IMAGE_GEN_GOOGLE_START_INTERVAL_MS: "450",
     BAOYU_IMAGE_GEN_ZAI_CONCURRENCY: "4",
+    BAOYU_IMAGE_GEN_ATLASCLOUD_CONCURRENCY: "3",
   });
 
   const extendConfig: Partial<ExtendConfig> = {
@@ -528,6 +588,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
           concurrency: 1,
           start_interval_ms: 1500,
         },
+        atlascloud: {
+          concurrency: 2,
+          start_interval_ms: 1300,
+        },
       },
     },
   };
@@ -544,6 +608,10 @@ test("batch worker and provider-rate-limit configuration prefer env over EXTEND 
   assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).minimax, {
     concurrency: 1,
     startIntervalMs: 1500,
+  });
+  assert.deepEqual(getConfiguredProviderRateLimits(extendConfig).atlascloud, {
+    concurrency: 3,
+    startIntervalMs: 1300,
   });
 });
 
