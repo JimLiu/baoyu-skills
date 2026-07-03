@@ -29,6 +29,22 @@ If you only need a subset of skills in one project, you do not need to install t
 <project>/.agents/skills/baoyu-post-to-wechat/SKILL.md
 ```
 
+### Autohand Code Install
+
+Autohand Code reads skills from `~/.autohand/skills/` for global installs and `<project>/.autohand/skills/` for project-level installs. Copy or symlink each skill directory you want to expose:
+
+```bash
+# Global install
+mkdir -p ~/.autohand/skills/
+cp -R skills/baoyu-cover-image skills/baoyu-article-illustrator ~/.autohand/skills/
+
+# Project-level install
+mkdir -p .autohand/skills/
+ln -s "$(pwd)/skills/baoyu-post-to-wechat" .autohand/skills/baoyu-post-to-wechat
+```
+
+Autohand Code also supports `autohand --skill-install` for skills listed in the Autohand catalog, with `--project` for workspace-level installs. Until these skills are cataloged there, use the direct copy or symlink paths above.
+
 For a WeChat Official Account article workflow, the usual minimal set is:
 
 - `baoyu-cover-image`

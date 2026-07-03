@@ -39,6 +39,22 @@ npx skills add jimliu/baoyu-skills
 <project>/.agents/skills/baoyu-post-to-wechat/SKILL.md
 ```
 
+### Autohand Code 安装
+
+Autohand Code 会从 `~/.autohand/skills/` 读取全局 skill，也会从 `<project>/.autohand/skills/` 读取当前项目的 skill。把需要使用的 skill 目录复制或软链接进去即可：
+
+```bash
+# 全局安装
+mkdir -p ~/.autohand/skills/
+cp -R skills/baoyu-cover-image skills/baoyu-article-illustrator ~/.autohand/skills/
+
+# 项目级安装
+mkdir -p .autohand/skills/
+ln -s "$(pwd)/skills/baoyu-post-to-wechat" .autohand/skills/baoyu-post-to-wechat
+```
+
+Autohand Code 也支持通过 `autohand --skill-install` 安装已收录在 Autohand catalog 中的 skill，并可通过 `--project` 安装到当前项目。在这些 skill 收录前，请使用上面的复制或软链接方式。
+
 公众号文章发布的最小组合通常是：
 
 - `baoyu-cover-image`
