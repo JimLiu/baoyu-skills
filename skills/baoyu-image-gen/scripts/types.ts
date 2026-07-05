@@ -10,6 +10,7 @@ export type Provider =
   | "seedream"
   | "azure"
   | "codex-cli"
+  | "atlascloud"
   | "agnes";
 export type Quality = "normal" | "2k";
 export type OpenAIImageApiDialect = "openai-native" | "ratio-metadata";
@@ -80,6 +81,7 @@ export type ExtendConfig = {
     seedream: string | null;
     azure: string | null;
     "codex-cli": string | null;
+    atlascloud: string | null;
     agnes: string | null;
   };
   batch?: {

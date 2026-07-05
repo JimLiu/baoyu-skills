@@ -1,6 +1,6 @@
 ---
 name: baoyu-image-gen
-description: AI image generation with OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope, Z.AI GLM-Image, MiniMax, Jimeng, Seedream, Replicate and Agnes APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
+description: AI image generation with OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope, Z.AI GLM-Image, MiniMax, Jimeng, Seedream, Replicate, Atlas Cloud and Agnes APIs. Supports text-to-image, reference images, aspect ratios, and batch generation from saved prompt files. Sequential by default; use batch parallel generation when the user already has multiple prompts or wants stable multi-image throughput. Use when user asks to generate, create, or draw images.
 version: 2.1.0
 metadata:
   openclaw:
@@ -13,7 +13,7 @@ metadata:
 
 # Image Generation (AI SDK)
 
-Official API-based image generation. Supports OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包), Replicate and Agnes.
+Official API-based image generation. Supports OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包), Replicate, Atlas Cloud and Agnes.
 
 ## User Input Tools
 
@@ -81,6 +81,9 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider d
 # OpenAI GPT Image 2
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai --model gpt-image-2
 
+# Atlas Cloud Nano Banana 2
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider atlascloud --model google/nano-banana-2/text-to-image
+
 # Codex CLI (uses logged-in Codex subscription — no OPENAI_API_KEY required; requires `codex` on PATH)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider codex-cli --ar 16:9
 
@@ -111,14 +114,14 @@ When the user wants a person/object preserved from reference images:
 | `--image <path>` | Output image path (required in single-image mode) |
 | `--batchfile <path>` | JSON batch file for multi-image generation |
 | `--jobs <count>` | Worker count for batch mode (default: auto, max from config, built-in default 10) |
-| `--provider google\|openai\|azure\|openrouter\|dashscope\|zai\|minimax\|jimeng\|seedream\|replicate\|codex-cli\|agnes` | Force provider (default: auto-detect; `codex-cli` is never auto-selected — must be pinned via CLI or EXTEND.md) |
+| `--provider google\|openai\|azure\|openrouter\|dashscope\|zai\|minimax\|jimeng\|seedream\|replicate\|codex-cli\|atlascloud\|agnes` | Force provider (default: auto-detect; `codex-cli` is never auto-selected — must be pinned via CLI or EXTEND.md) |
 | `--model <id>`, `-m` | Model ID — see provider references for defaults and allowed values |
 | `--ar <ratio>` | Aspect ratio (`16:9`, `1:1`, `4:3`, …) |
 | `--size <WxH>` | Explicit size (e.g., `1024x1024`; for `gpt-image-2`, width/height must be multiples of 16, max edge 3840px, ratio no wider than 3:1) |
 | `--quality normal\|2k` | Quality preset (default: `2k`) |
-| `--imageSize 1K\|2K\|4K` | Image size for Google/OpenRouter (default: from quality) |
+| `--imageSize 1K\|2K\|4K` | Image size for Google/OpenRouter/Atlas Cloud (default: from quality) |
 | `--imageApiDialect openai-native\|ratio-metadata` | OpenAI-compatible endpoint dialect — use `ratio-metadata` for gateways that expect aspect-ratio `size` plus `metadata.resolution` |
-| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, Seedream 5.0/4.5/4.0, DashScope `wan2.7-image-pro`/`wan2.7-image`. Not supported by Jimeng, Seedream 3.0, SeedEdit 3.0, or any DashScope model outside the `wan2.7-image*` family |
+| `--ref <files...>` | Reference images. Supported by Google multimodal, OpenAI GPT Image edits, Azure OpenAI edits (PNG/JPG only), OpenRouter multimodal models, Replicate supported families, MiniMax subject-reference, Atlas Cloud Nano Banana 2 edit, Seedream 5.0/4.5/4.0, DashScope `wan2.7-image-pro`/`wan2.7-image`. Not supported by Jimeng, Seedream 3.0, SeedEdit 3.0, or any DashScope model outside the `wan2.7-image*` family |
 | `--n <count>` | Number of images. Replicate requires `--n 1` (single-output save semantics) |
 | `--json` | JSON output |
 
@@ -136,11 +139,13 @@ When the user wants a person/object preserved from reference images:
 | `REPLICATE_API_TOKEN` | Replicate API token |
 | `JIMENG_ACCESS_KEY_ID`, `JIMENG_SECRET_ACCESS_KEY` | Jimeng (即梦) Volcengine credentials |
 | `ARK_API_KEY` | Seedream (豆包) Volcengine ARK API key |
-| `<PROVIDER>_IMAGE_MODEL` | Per-provider model override (`OPENAI_IMAGE_MODEL`, `GOOGLE_IMAGE_MODEL`, `DASHSCOPE_IMAGE_MODEL`, `ZAI_IMAGE_MODEL`/`BIGMODEL_IMAGE_MODEL`, `MINIMAX_IMAGE_MODEL`, `OPENROUTER_IMAGE_MODEL`, `REPLICATE_IMAGE_MODEL`, `JIMENG_IMAGE_MODEL`, `SEEDREAM_IMAGE_MODEL`, `AGNES_IMAGE_MODEL`) |
+| `ATLASCLOUD_API_KEY` (alias `ATLAS_CLOUD_API_KEY`) | Atlas Cloud API key |
+| `<PROVIDER>_IMAGE_MODEL` | Per-provider model override (`OPENAI_IMAGE_MODEL`, `GOOGLE_IMAGE_MODEL`, `DASHSCOPE_IMAGE_MODEL`, `ZAI_IMAGE_MODEL`/`BIGMODEL_IMAGE_MODEL`, `MINIMAX_IMAGE_MODEL`, `OPENROUTER_IMAGE_MODEL`, `REPLICATE_IMAGE_MODEL`, `JIMENG_IMAGE_MODEL`, `SEEDREAM_IMAGE_MODEL`, `ATLASCLOUD_IMAGE_MODEL`/`ATLAS_CLOUD_IMAGE_MODEL`, `AGNES_IMAGE_MODEL`) |
 | `AZURE_OPENAI_DEPLOYMENT` (alias `AZURE_OPENAI_IMAGE_MODEL`) | Azure default deployment |
 | `<PROVIDER>_BASE_URL` | Per-provider endpoint override |
 | `AZURE_API_VERSION` | Azure image API version (default `2025-04-01-preview`) |
 | `JIMENG_REGION` | Jimeng region (default `cn-north-1`) |
+| `ATLASCLOUD_MEDIA_BASE_URL` (alias `ATLAS_CLOUD_MEDIA_BASE_URL`) | Atlas Cloud Media API endpoint override |
 | `OPENAI_IMAGE_API_DIALECT` | `openai-native` \| `ratio-metadata` |
 | `OPENROUTER_HTTP_REFERER`, `OPENROUTER_TITLE` | Optional OpenRouter attribution |
 | `BAOYU_IMAGE_GEN_MAX_WORKERS` | Override batch worker cap |
@@ -207,14 +212,15 @@ Each provider has its own quirks (model families, size rules, ref support, limit
 | OpenRouter (multimodal models, `/chat/completions` flow) | `references/providers/openrouter.md` |
 | Replicate (nano-banana, Seedream, Wan) | `references/providers/replicate.md` |
 | Codex CLI (wraps bundled `scripts/codex-imagegen/`; Codex login, no `OPENAI_API_KEY`) | `references/providers/codex-cli.md` |
+| Atlas Cloud (Nano Banana 2 text-to-image and edit) | `references/providers/atlascloud.md` |
 | Agnes (agnes-image-2.1-flash, reference-image support) | `references/providers/agnes.md` |
 
 ## Provider Selection
 
-1. `--ref` provided + no `--provider` → auto-select Google → OpenAI → Azure → OpenRouter → Replicate → Seedream → MiniMax → Agnes (MiniMax's subject reference is more specialized toward character/portrait consistency)
-2. `--provider` specified → use it (if `--ref`, must be google/openai/azure/openrouter/replicate/seedream/minimax/codex-cli/agnes)
+1. `--ref` provided + no `--provider` → auto-select Google → OpenAI → Azure → OpenRouter → Replicate → Seedream → MiniMax → Atlas Cloud → Agnes (MiniMax's subject reference is more specialized toward character/portrait consistency)
+2. `--provider` specified → use it (if `--ref`, must be google/openai/azure/openrouter/replicate/seedream/minimax/codex-cli/atlascloud/agnes)
 3. Only one API key present → use that provider
-4. Multiple keys → default priority: Google → OpenAI → Azure → OpenRouter → DashScope → Z.AI → MiniMax → Replicate → Jimeng → Seedream → Agnes
+4. Multiple keys → default priority: Google → OpenAI → Azure → OpenRouter → DashScope → Z.AI → MiniMax → Replicate → Jimeng → Seedream → Atlas Cloud → Agnes
 5. `codex-cli` is **never auto-selected** — set `default_provider: codex-cli` in EXTEND.md or pass `--provider codex-cli`. It spawns `codex exec` via the bundled `scripts/codex-imagegen/main.ts` TS entrypoint (run with `bun`) and uses the user's Codex subscription (no `OPENAI_API_KEY`). Requires `codex` on `PATH` with an active `codex login`.
 
 ## Quality Presets
@@ -224,7 +230,7 @@ Each provider has its own quirks (model families, size rules, ref support, limit
 | `normal` | 1K | 1024px target | 1K | 1K | Quick previews |
 | `2k` (default) | 2K | 2048px target | 2K | 2K | Covers, illustrations, infographics |
 
-Google/OpenRouter `imageSize` can be overridden with `--imageSize 1K|2K|4K`.
+Google/OpenRouter/Atlas Cloud `imageSize` can be overridden with `--imageSize 1K|2K|4K`.
 
 For OpenAI native `gpt-image-2`, `normal` maps to `quality=medium` and a low-latency valid size near the requested aspect ratio; `2k` maps to `quality=high` and 2048px-class sizes such as `2048x2048`, `2048x1152`, or `1152x2048`. Use explicit `--size` for valid custom or 4K outputs, e.g. `3840x2160`.
 
@@ -237,6 +243,7 @@ Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`.
 - OpenRouter: `imageGenerationOptions.aspect_ratio`; if only `--size <WxH>` is given, the ratio is inferred
 - Replicate: behavior is model-specific — `google/nano-banana*` uses `aspect_ratio`, `bytedance/seedream-*` uses documented Replicate ratios, Wan 2.7 maps `--ar` to a concrete `size`
 - MiniMax: official `aspect_ratio` values; if `--size <WxH>` is given without `--ar`, sends `width`/`height` for `image-01`
+- Atlas Cloud: sends `aspect_ratio` for supported ratios; if only `--size <WxH>` is given, the ratio is inferred when possible
 
 ## Generation Mode
 
@@ -282,6 +289,7 @@ If `--provider openai --model gpt-image-2` fails because `OPENAI_API_KEY` is mis
 | `references/providers/minimax.md` | MiniMax image-01 + subject reference |
 | `references/providers/openrouter.md` | OpenRouter multimodal flow |
 | `references/providers/replicate.md` | Replicate supported families + guardrails |
+| `references/providers/atlascloud.md` | Atlas Cloud Nano Banana 2 model IDs, refs, and limits |
 | `references/providers/agnes.md` | Agnes (agnes-image-2.1-flash) sizing, refs, and limits |
 | `references/config/preferences-schema.md` | EXTEND.md schema |
 | `references/config/first-time-setup.md` | First-time setup flow |

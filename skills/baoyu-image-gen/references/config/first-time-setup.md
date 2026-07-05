@@ -59,6 +59,8 @@ options:
     description: "MiniMax image generation with subject-reference character workflows"
   - label: "Replicate"
     description: "Curated Replicate image families - nano-banana-2, Seedream, and Wan image models"
+  - label: "Atlas Cloud"
+    description: "Atlas Cloud Media API - Nano Banana 2 text-to-image and edit models"
   - label: "Agnes"
     description: "Sapiens AI Agnes - optimized for high information density, complex layouts, reference-image support"
 ```
@@ -139,6 +141,20 @@ options:
     description: "Legacy Z.AI image model on the same endpoint"
 ```
 
+### Question 2f: Default Atlas Cloud Model
+
+Only show if user selected Atlas Cloud.
+
+```yaml
+header: "Atlas Model"
+question: "Default Atlas Cloud image generation model?"
+options:
+  - label: "google/nano-banana-2/text-to-image (Recommended)"
+    description: "Default Atlas Cloud text-to-image model; switches to edit flow when reference images are provided"
+  - label: "google/nano-banana-2/edit"
+    description: "Reference-image editing model"
+```
+
 ### Question 3: Default Quality
 
 ```yaml
@@ -189,6 +205,7 @@ default_model:
   zai: [selected Z.AI model or null]
   minimax: [selected minimax model or null]
   replicate: null
+  atlascloud: [selected Atlas Cloud model or null]
   agnes: null
 ---
 ```
@@ -325,6 +342,25 @@ options:
     description: "Replicate Wan 2.7 Image Pro with 4K text-to-image support"
 ```
 
+### Atlas Cloud Model Selection
+
+```yaml
+header: "Atlas Model"
+question: "Choose a default Atlas Cloud image generation model?"
+options:
+  - label: "google/nano-banana-2/text-to-image (Recommended)"
+    description: "Text-to-image default; baoyu-image-gen automatically switches to the edit model when --ref is provided"
+  - label: "google/nano-banana-2/edit"
+    description: "Reference-image editing model"
+```
+
+Notes for Atlas Cloud setup:
+
+- API key env var is `ATLASCLOUD_API_KEY` or `ATLAS_CLOUD_API_KEY`.
+- The default `google/nano-banana-2/text-to-image` model is safest for normal prompts.
+- When reference images are provided with the default model, baoyu-image-gen sends the request through `google/nano-banana-2/edit`.
+- Atlas Cloud accepts `resolution` values `1k`, `2k`, and `4k`; `quality` and `imageSize` map to these values locally.
+
 ### MiniMax Model Selection
 
 ```yaml
@@ -361,6 +397,7 @@ default_model:
   zai: [value or null]
   minimax: [value or null]
   replicate: [value or null]
+  atlascloud: [value or null]
   agnes: [value or null]
 ```
 
