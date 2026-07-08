@@ -76,23 +76,24 @@ Use this mode whenever the user requests the Codex Chrome plugin, `@chrome`, or 
    ${BUN_X} {baseDir}/scripts/md-to-html.ts article.md --save-html /tmp/x-article-body.html > /tmp/x-article.json
    ```
 2. Read the JSON output for `title`, `coverImage`, and `contentImages` (`placeholder` → `localPath`).
-3. Open or create the article draft at `https://x.com/compose/articles`.
-4. Upload the cover with the Chrome plugin file chooser flow. If upload is blocked by extension permissions, stop and report the exact permission fix above.
-5. Fill the title, then copy rich HTML:
+3. If the user asks for a generated cover, or the parsed cover is missing/unsuitable, follow **Generated Article Covers** and use that file as `coverImage`.
+4. Open or create the article draft at `https://x.com/compose/articles`.
+5. Upload the cover with the Chrome plugin file chooser flow. If upload is blocked by extension permissions, stop and report the exact permission fix above.
+6. Fill the title, then copy rich HTML:
    ```bash
    ${BUN_X} {baseDir}/scripts/copy-to-clipboard.ts html --file /tmp/x-article-body.html
    ```
-6. Paste into the article body with a real paste keystroke through the Chrome plugin. On macOS use `Meta+V`.
-7. Verify the editor text contains the article body and `XIMGPH_` placeholders. Do not rely on `tab.clipboard.readText()` as proof of the system clipboard after shell clipboard writes; on macOS verify with `pbpaste` if needed.
-8. For each `contentImages` item in placeholder order:
+7. Paste into the article body with a real paste keystroke through the Chrome plugin. On macOS use `Meta+V`.
+8. Verify the editor text contains the article body and `XIMGPH_` placeholders. Do not rely on `tab.clipboard.readText()` as proof of the system clipboard after shell clipboard writes; on macOS verify with `pbpaste` if needed.
+9. For each `contentImages` item in placeholder order:
    - Locate the visible placeholder text (`XIMGPH_N`) and click it to place the caret there.
    - Open the toolbar menu `Insert` -> `Media`.
    - In the modal, click the icon button with `aria-label="Add photos or video"`; do not click the text/dropzone or hidden file input.
    - Use the file chooser to upload that image's `localPath`.
    - After the image appears, if `XIMGPH_N` remains above it, select exactly that placeholder and press `Delete` first. Use `Backspace` only if `Delete` fails and the selected text is confirmed to be exactly the placeholder.
    - Verify the placeholder count for that `XIMGPH_N` is `0`.
-9. Open Preview and verify title, cover, body, links, and images.
-10. Ask for explicit confirmation before clicking `Publish`.
+10. Open Preview and verify title, cover, body, links, and images.
+11. Ask for explicit confirmation before clicking `Publish`.
 
 ## Preferences (EXTEND.md)
 
@@ -143,6 +144,31 @@ Checks: Chrome, profile isolation, Bun, Accessibility, clipboard, paste keystrok
 
 ---
 
+## Generated Article Covers
+
+X Articles recommends a `5:2` cover image. If the article has no suitable cover, or the user asks for one, generate a simple cover before opening Preview.
+
+1. Read the Markdown title and skim the first sections to identify the core theme, audience, and visual metaphor.
+2. Generate a wide `5:2` image with the available image-generation tool. If no image-generation tool is available, ask the user to provide a cover image or continue without generating one.
+3. Use no text, letters, logos, or watermark. Prefer a clean editorial scene with generous safe margins, because X may crop the cover in cards and previews.
+4. Save the generated image beside the article or in another durable project path, then normalize it to an exact `5:2` size such as `2000x800`.
+   - macOS, for outputs already close to `5:2`: `sips -z 800 2000 input.png --out cover-5x2.png`
+   - ImageMagick, for center-cropping without distortion: `magick input.png -resize 2000x800^ -gravity center -extent 2000x800 cover-5x2.png`
+5. Verify dimensions before upload:
+   ```bash
+   sips -g pixelWidth -g pixelHeight cover-5x2.png
+   ```
+6. Inspect the result visually for clutter, text artifacts, and bad crops.
+7. Use the generated image as the article cover only; do not insert it into the body unless the user explicitly asks.
+
+Prompt pattern:
+
+```text
+Create a concise 5:2 X Article cover for: <article title/theme>.
+Visualize the article's subject with a simple editorial illustration, generous safe margins, and no text.
+No letters, logos, UI brand names, watermark, or clutter.
+```
+
 ## Chrome Computer Use Mode
 
 Use this mode when the user explicitly asks for Chrome Computer Use, or when no Chrome-plugin preference is stated and Codex can control `Google Chrome` with Computer Use. This uses the user's existing Chrome window, cookies, login, extensions, and X session.
@@ -182,21 +208,22 @@ Use this mode when the user explicitly asks for Chrome Computer Use, or when no 
    ${BUN_X} {baseDir}/scripts/md-to-html.ts article.md --save-html /tmp/x-article-body.html > /tmp/x-article.json
    ```
 2. Read the JSON output for `title`, `coverImage`, and `contentImages` (`placeholder` → `localPath`).
-3. In Chrome, open `https://x.com/compose/articles`, create or open the draft, upload the cover if present, and fill the title.
-4. Copy rich HTML to the clipboard:
+3. If the user asks for a generated cover, or the parsed cover is missing/unsuitable, follow **Generated Article Covers** and use that file as `coverImage`.
+4. In Chrome, open `https://x.com/compose/articles`, create or open the draft, upload the cover if present, and fill the title.
+5. Copy rich HTML to the clipboard:
    ```bash
    ${BUN_X} {baseDir}/scripts/copy-to-clipboard.ts html --file /tmp/x-article-body.html
    ```
-5. Paste into the article body with Computer Use.
-6. For each `contentImages` entry in placeholder order:
+6. Paste into the article body with Computer Use.
+7. For each `contentImages` entry in placeholder order:
    - Locate the exact visible placeholder text such as `XIMGPH_3` and click it to set the insertion point.
    - Open the toolbar `Insert` dropdown, choose `Media`, then click the modal's icon button labeled `Add photos or video`.
    - Use the native file picker to choose the image's `localPath`.
    - Wait until the image block appears and any upload activity is finished.
    - If the placeholder remains above the inserted image, reselect exactly that placeholder text and press `Delete` first. Use `Backspace` only if `Delete` fails and the selected text is confirmed to be exactly the placeholder.
-7. Verify no `XIMGPH_` placeholders remain and the expected images appear.
-8. Open Preview and verify title, cover, body, links, and images.
-9. Ask for explicit confirmation before clicking `Publish`.
+8. Verify no `XIMGPH_` placeholders remain and the expected images appear.
+9. Open Preview and verify title, cover, body, links, and images.
+10. Ask for explicit confirmation before clicking `Publish`.
 
 If Computer Use selection, toolbar upload, or file-picker control becomes unreliable, stop and report the blocker instead of switching to the Chrome plugin or CDP silently.
 
@@ -286,6 +313,7 @@ Long-form Markdown articles (requires X Premium).
 ```bash
 ${BUN_X} {baseDir}/scripts/x-article.ts article.md
 ${BUN_X} {baseDir}/scripts/x-article.ts article.md --cover ./cover.jpg
+${BUN_X} {baseDir}/scripts/x-article.ts article.md --cover ./cover-5x2.png
 ```
 
 **Parameters**:
@@ -296,6 +324,8 @@ ${BUN_X} {baseDir}/scripts/x-article.ts article.md --cover ./cover.jpg
 | `--title <text>` | Override title |
 
 **Frontmatter**: `title`, `cover_image` supported in YAML front matter.
+
+For generated covers, follow **Generated Article Covers** first, then pass the exact `5:2` file with `--cover` in CDP Script Mode or upload it through the visible cover slot in Chrome modes.
 
 **Codex mode note**: If the user explicitly requested the Codex Chrome plugin, follow **Codex Chrome Plugin Mode** above. If the user explicitly requested Chrome Computer Use, follow **Chrome Computer Use Mode**. Otherwise, prefer Chrome Computer Use; for Markdown articles with local content images, use the toolbar `Insert` -> `Media` image-upload workflow before falling back to `x-article.ts` in **CDP Script Mode**.
 
