@@ -21,6 +21,25 @@ When this skill prompts the user, follow this tool-selection rule (priority orde
 
 Concrete `AskUserQuestion` references below are examples. Substitute the local equivalent in other runtimes.
 
+## Preferences (EXTEND.md)
+
+Check these paths in order. The first file found wins:
+
+| Path | Scope |
+|------|-------|
+| `.baoyu-skills/baoyu-xquik-data/EXTEND.md` | Project |
+| `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-xquik-data/EXTEND.md` | XDG |
+| `$HOME/.baoyu-skills/baoyu-xquik-data/EXTEND.md` | User home |
+
+- **Found**: read it, summarize the preferences, and apply them to source
+  selection, approval gates, and output shape.
+- **Not found**: ask whether to continue without saved preferences or create one
+  at the user's chosen path.
+
+Useful preference keys include `default_surface`, `preferred_docs`,
+`approval_required_for_writes`, `minimum_result_fields`, and
+`webhook_verification_required`.
+
 ## Source Truth
 
 Before generating requests or integration code, read the current source documents:
@@ -70,3 +89,8 @@ Stop and ask the user before continuing when:
 - The requested endpoint or field is absent from source truth
 - The task asks for private, write, persistent, scheduled, or bulk behavior without approval
 - A generated request would expose an API key, session data, or unrelated user content
+
+## Extension Support
+
+Custom configurations are supported through EXTEND.md. See
+**Preferences (EXTEND.md)** for paths and supported options.
