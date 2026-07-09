@@ -2,6 +2,14 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 2.5.3 - 2026-07-09
+
+### 新功能
+- `baoyu-xquik-data`：新增用于规划有来源依据的 Xquik REST API、OpenAPI、webhook 和 MCP 工作流的 skill。
+
+### CI
+- 在根目录开发依赖中加入 `socks`，让现有微信远程 API 测试可从 workspace 安装中导入 SOCKS client。
+
 ## 2.5.2 - 2026-06-18
 
 ### 修复

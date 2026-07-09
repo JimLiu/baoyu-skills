@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Skills shared by Baoyu for improving daily work efficiency",
-    "version": "2.5.2"
+    "version": "2.5.3"
   },
   "plugins": [
     {
@@ -35,6 +35,7 @@
         "./skills/baoyu-url-to-markdown",
         "./skills/baoyu-wechat-summary",
         "./skills/baoyu-xhs-images",
+        "./skills/baoyu-xquik-data",
         "./skills/baoyu-youtube-transcript"
       ]
     }

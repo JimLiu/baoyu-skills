@@ -2,6 +2,14 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 2.5.3 - 2026-07-09
+
+### Features
+- `baoyu-xquik-data`: add a skill for planning source-backed Xquik REST API, OpenAPI, webhook, and MCP workflows.
+
+### CI
+- Add `socks` to root dev dependencies so existing WeChat remote API tests can import the SOCKS client from the workspace install.
+
 ## 2.5.2 - 2026-06-18
 
 ### Fixes

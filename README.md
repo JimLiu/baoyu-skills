@@ -997,6 +997,21 @@ Fetch any URL via Chrome CDP and convert to clean markdown. Saves rendered HTML 
 | `--wait` | Wait for user signal before capturing |
 | `--timeout <ms>` | Page load timeout (default: 30000) |
 
+#### baoyu-xquik-data
+
+Plan Xquik REST API, OpenAPI, webhook, and MCP workflows for source-backed X data automation.
+
+Use this skill when you need to:
+- Check the current Xquik docs and OpenAPI document before generating requests
+- Design X data extraction, monitoring, or agent access workflows
+- Decide when to use REST API, webhooks, or MCP for Xquik tasks
+- Keep private, write, persistent, or bulk workflows behind explicit user approval
+
+**Source links:**
+- Docs: `https://docs.xquik.com/api-reference/overview`
+- OpenAPI: `https://xquik.com/openapi.json`
+- MCP: `https://docs.xquik.com/mcp/overview`
+
 #### baoyu-danger-x-to-markdown
 
 Converts X (Twitter) content to markdown format. Supports tweet threads and X Articles.

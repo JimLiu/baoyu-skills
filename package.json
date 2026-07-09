@@ -14,6 +14,7 @@
   "devDependencies": {
     "@mozilla/readability": "^0.6.0",
     "linkedom": "^0.18.12",
+    "socks": "^2.8.9",
     "turndown": "^7.2.2",
     "turndown-plugin-gfm": "^1.0.2",
     "tsx": "^4.20.5"

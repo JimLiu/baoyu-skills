@@ -998,6 +998,21 @@ AI 驱动的生成后端。
 | `--wait` | 等待用户信号后抓取 |
 | `--timeout <ms>` | 页面加载超时（默认：30000） |
 
+#### baoyu-xquik-data
+
+规划 Xquik REST API、OpenAPI、webhook 和 MCP 工作流，用于有来源依据的 X 数据自动化。
+
+适合在这些场景使用：
+- 生成请求前先检查当前 Xquik 文档和 OpenAPI 文档
+- 设计 X 数据提取、监控或 agent 访问流程
+- 判断 Xquik 任务应该使用 REST API、webhook 还是 MCP
+- 对私有、写入、持久化或批量工作流保持明确用户授权
+
+**来源链接：**
+- 文档：`https://docs.xquik.com/api-reference/overview`
+- OpenAPI：`https://xquik.com/openapi.json`
+- MCP：`https://docs.xquik.com/mcp/overview`
+
 #### baoyu-danger-x-to-markdown
 
 将 X (Twitter) 内容转换为 markdown 格式。支持推文串和 X 文章。
