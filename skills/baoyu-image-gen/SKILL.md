@@ -152,7 +152,7 @@ When the user wants a person/object preserved from reference images:
 | `BAOYU_CODEX_IMAGEGEN_RETRIES` | Wrapper-side retry attempts on retryable errors for the `codex-cli` provider (default: 2) |
 | `BAOYU_CODEX_IMAGEGEN_LOG_FILE` | Append JSONL diagnostic log for the `codex-cli` provider |
 
-**Load priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
+**Load priority**: CLI args > EXTEND.md > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env` > env vars
 
 ### Codex/ChatGPT OAuth is not an OpenAI API key
 

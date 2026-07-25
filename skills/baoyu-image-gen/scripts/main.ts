@@ -165,7 +165,7 @@ Environment variables:
   BAOYU_CODEX_IMAGEGEN_RETRIES  Codex-side retry attempts on retryable errors (default: 2)
   BAOYU_CODEX_IMAGEGEN_LOG_FILE  Append JSONL diagnostic log for codex-cli provider
 
-Env file load order: CLI args > EXTEND.md > process.env > <cwd>/.baoyu-skills/.env > ~/.baoyu-skills/.env`);
+Env file load order: CLI args > EXTEND.md > <cwd>/.baoyu-skills/.env > ~/.baoyu-skills/.env > process.env`);
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -389,11 +389,14 @@ async function loadEnv(): Promise<void> {
   const homeEnv = await loadEnvFile(path.join(home, ".baoyu-skills", ".env"));
   const cwdEnv = await loadEnvFile(path.join(cwd, ".baoyu-skills", ".env"));
 
+  // Load priority (lowest -> highest wins):
+  //   process.env  <  ~/.baoyu-skills/.env  <  <cwd>/.baoyu-skills/.env
+  // Higher-precedence .env files OVERWRITE values already in process.env.
   for (const [k, v] of Object.entries(homeEnv)) {
-    if (!process.env[k]) process.env[k] = v;
+    process.env[k] = v;
   }
   for (const [k, v] of Object.entries(cwdEnv)) {
-    if (!process.env[k]) process.env[k] = v;
+    process.env[k] = v;
   }
 }
 
