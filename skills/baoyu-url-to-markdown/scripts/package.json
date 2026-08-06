@@ -12,7 +12,7 @@
     "@mozilla/readability": "^0.6.0",
     "chrome-launcher": "^1.2.1",
     "defuddle": "^0.17.0",
-    "jsdom": "^29.0.2",
+    "jsdom": "^30.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "turndown": "^7.2.0",

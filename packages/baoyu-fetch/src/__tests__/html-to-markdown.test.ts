@@ -35,6 +35,27 @@ Body text.
   });
 });
 
+describe("convertHtmlToMarkdown CSS robustness", () => {
+  // Browsers serialize the `background` shorthand in its full form, which carries
+  // both a background-origin and a background-clip box value. Any page captured
+  // from a live DOM (CDP, DevTools copy, WeChat article pages, ...) is full of it.
+  // jsdom <30 failed to parse that value and then crashed while rebuilding the
+  // shorthand, taking down the whole document parse.
+  test("parses browser-serialized background shorthand without crashing", async () => {
+    const html = `<!doctype html><html><head><title>Local Title</title></head><body>
+<article style="background: none left top / auto no-repeat scroll padding-box border-box rgba(0, 0, 0, 0); color: rgb(0, 0, 0);">
+<h1>Article Heading</h1>
+<p style="background: padding-box border-box; font-size: 16px;">First paragraph carrying enough prose that the extractor keeps the article body instead of discarding it as boilerplate.</p>
+<p>Second paragraph so the readability heuristics have a real block of content to score against and retain.</p>
+</article>
+</body></html>`;
+
+    const result = await convertHtmlToMarkdown(html, "https://example.com/post");
+
+    expect(result.markdown).toContain("First paragraph");
+  });
+});
+
 describe("convertHtmlToMarkdown remote fallback", () => {
   test("does not call defuddle.md when the remote fallback option is disabled", async () => {
     let fetchCalls = 0;
