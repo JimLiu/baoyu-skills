@@ -504,7 +504,7 @@ Frontmatter Fields (markdown):
   author              Author name
   digest/summary      Article summary
   sourceUrl/contentSourceUrl/content_source_url   Original article URL
-  coverImage/featureImage/cover/image   Cover image path
+  coverImage/featureImage/cover_image/cover/image   Cover image path (local path or URL)
 
 Comments:
   Comments are enabled by default, open to all users.
@@ -797,9 +797,11 @@ async function main(): Promise<void> {
   const rawCoverPath = args.cover ||
     frontmatter.coverImage ||
     frontmatter.featureImage ||
+    frontmatter.cover_image ||
     frontmatter.cover ||
     frontmatter.image;
-  const coverPath = rawCoverPath && !path.isAbsolute(rawCoverPath) && args.cover
+  const isRemoteUrl = (p: string) => /^https?:\/\//i.test(p);
+  const coverPath = rawCoverPath && !isRemoteUrl(rawCoverPath) && !path.isAbsolute(rawCoverPath) && args.cover
     ? path.resolve(process.cwd(), rawCoverPath)
     : rawCoverPath;
   const needNewsCoverFallback = args.articleType === "news" && !coverPath;
