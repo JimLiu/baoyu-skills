@@ -33,7 +33,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf dist && bun build ./src/cli.ts --target bun --outfile ./dist/cli.js && chmod +x ./dist/cli.js",
+    "build": "rm -rf dist && bun build ./src/cli.ts --target bun --external jsdom --outfile ./dist/cli.js && chmod +x ./dist/cli.js",
     "check": "tsc --noEmit",
     "dev": "bun run ./src/cli.ts",
     "release": "changeset publish",
