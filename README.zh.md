@@ -1014,6 +1014,9 @@ AI 驱动的生成后端。
 
 # 下载媒体文件（图片/视频）到本地
 /baoyu-danger-x-to-markdown https://x.com/username/status/123456 --download-media
+
+# 使用 Xquik，无需 X Cookie
+X_TWITTER_SCRAPER_API_KEY=your_api_key /baoyu-danger-x-to-markdown https://x.com/username/status/123456 --provider xquik
 ```
 
 **支持的 URL：**
@@ -1021,7 +1024,7 @@ AI 驱动的生成后端。
 - `https://twitter.com/<user>/status/<id>`
 - `https://x.com/i/article/<id>`
 
-**身份验证：** 使用环境变量（`X_AUTH_TOKEN`、`X_CT0`）或 Chrome 登录进行 cookie 认证。
+**Provider：** Xquik 通过公开的 TypeScript SDK 处理推文和线程。设置 `X_TWITTER_SCRAPER_API_KEY` 即可使用。也可传入 `--provider legacy`，通过 `X_AUTH_TOKEN`、`X_CT0` 或 Chrome 登录。X 文章仍使用 legacy provider。
 
 #### baoyu-compress-image
 

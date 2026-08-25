@@ -8,9 +8,14 @@ import { formatArticleMarkdown } from "./markdown.js";
 import { resolveReferencedTweetsFromArticle } from "./referenced-tweets.js";
 import { formatThreadTweetsMarkdown } from "./thread-markdown.js";
 import { resolveArticleEntityFromTweet } from "./tweet-article.js";
+import { fetchXquikThread, type XquikTweetsClient } from "./xquik.js";
+
+export type TweetProvider = "legacy" | "xquik";
 
 type TweetToMarkdownOptions = {
   log?: (message: string) => void;
+  provider?: TweetProvider;
+  xquikClient?: XquikTweetsClient;
 };
 
 function parseArgs(): { url?: string } {
@@ -111,14 +116,24 @@ export async function tweetToMarkdown(
   }
 
   const log = options.log ?? (() => {});
-  log("[tweet-to-markdown] Loading cookies...");
-  const cookieMap = await loadXCookies(log);
-  if (!hasRequiredXCookies(cookieMap)) {
-    throw new Error("Missing auth cookies. Provide X_AUTH_TOKEN and X_CT0 or log in via Chrome.");
+  const provider = options.provider ?? "legacy";
+  let cookieMap: Record<string, string> | null = null;
+  let thread;
+  if (provider === "xquik") {
+    log(`[tweet-to-markdown] Fetching thread ${tweetId} with Xquik...`);
+    thread = await fetchXquikThread(tweetId, {
+      apiKey: process.env.X_TWITTER_SCRAPER_API_KEY,
+      client: options.xquikClient,
+    });
+  } else {
+    log("[tweet-to-markdown] Loading cookies...");
+    cookieMap = await loadXCookies(log);
+    if (!hasRequiredXCookies(cookieMap)) {
+      throw new Error("Missing auth cookies. Provide X_AUTH_TOKEN and X_CT0 or log in via Chrome.");
+    }
+    log(`[tweet-to-markdown] Fetching thread for ${tweetId}...`);
+    thread = await fetchTweetThread(tweetId, cookieMap);
   }
-
-  log(`[tweet-to-markdown] Fetching thread for ${tweetId}...`);
-  const thread = await fetchTweetThread(tweetId, cookieMap);
   if (!thread) {
     throw new Error("Failed to fetch thread.");
   }
@@ -129,8 +144,8 @@ export async function tweetToMarkdown(
   }
 
   const firstTweet = tweets[0] as any;
-  const user = thread.user ?? firstTweet?.core?.user_results?.result?.legacy;
-  const username = user?.screen_name;
+  const user = thread.user ?? firstTweet?.author ?? firstTweet?.core?.user_results?.result?.legacy;
+  const username = user?.username ?? user?.screen_name;
   const name = user?.name;
   const author =
     username && name ? `${name} (@${username})` : username ? `@${username}` : name ?? null;
@@ -138,12 +153,20 @@ export async function tweetToMarkdown(
   const requestedUrl = normalizedUrl || buildTweetUrl(username, tweetId) || inputUrl.trim();
   const rootUrl = buildTweetUrl(username, thread.rootId ?? tweetId) ?? requestedUrl;
 
-  const articleEntity = await resolveArticleEntityFromTweet(firstTweet, cookieMap);
+  if (provider === "xquik" && tweets.some((tweet: any) => Boolean(tweet?.article))) {
+    throw new Error(
+      "Xquik exposes article metadata, not article content. Use --provider legacy for X Articles."
+    );
+  }
+
+  const articleEntity = cookieMap
+    ? await resolveArticleEntityFromTweet(firstTweet, cookieMap)
+    : null;
   let coverImage: string | null = null;
   let remainingTweets = tweets;
   const parts: string[] = [];
 
-  if (articleEntity) {
+  if (articleEntity && cookieMap) {
     const referencedTweets = await resolveReferencedTweetsFromArticle(articleEntity, cookieMap, { log });
     const articleResult = formatArticleMarkdown(articleEntity, { referencedTweets });
     coverImage = articleResult.coverUrl;

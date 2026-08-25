@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { formatArticleMarkdown } from "./markdown.js";
+import { formatThreadTweetsMarkdown } from "./thread-markdown.js";
 
 test("formatArticleMarkdown renders MARKDOWN entities from atomic blocks", () => {
   const article = {
@@ -176,4 +177,55 @@ test("formatArticleMarkdown keeps coverUrl as preview image for video cover medi
   const { coverUrl } = formatArticleMarkdown(article);
 
   assert.strictEqual(coverUrl, posterUrl);
+});
+
+test("formatThreadTweetsMarkdown renders normalized Xquik media and quoted tweets", () => {
+  const markdown = formatThreadTweetsMarkdown(
+    [
+      {
+        id: "123",
+        text: "A normalized tweet",
+        media: [
+          {
+            type: "photo",
+            mediaUrl: "https://pbs.twimg.com/media/photo.jpg",
+            altText: "Diagram [detail]",
+          },
+          {
+            type: "video",
+            mediaUrl: "https://pbs.twimg.com/media/poster.jpg",
+            videoVariants: [
+              {
+                contentType: "video/mp4",
+                bitrate: 256000,
+                url: "https://video.twimg.com/low.mp4",
+              },
+              {
+                contentType: "video/mp4",
+                bitrate: 832000,
+                url: "https://video.twimg.com/high.mp4",
+              },
+            ],
+          },
+        ],
+        quoted_tweet: {
+          id: "456",
+          text: "Quoted text",
+          author: { id: "user-2", name: "Quoted", username: "quoted" },
+        },
+      },
+    ],
+    { username: "example" }
+  );
+
+  assert.match(markdown, /https:\/\/x\.com\/example\/status\/123/);
+  assert.match(markdown, /> Author: Quoted \(@quoted\)/);
+  assert.match(markdown, /> URL: https:\/\/x\.com\/quoted\/status\/456/);
+  assert.ok(
+    markdown.includes(
+      "![Diagram \\[detail\\]](https://pbs.twimg.com/media/photo.jpg)"
+    )
+  );
+  assert.match(markdown, /\[video\]\(https:\/\/video\.twimg\.com\/high\.mp4\)/);
+  assert.doesNotMatch(markdown, /low\.mp4/);
 });

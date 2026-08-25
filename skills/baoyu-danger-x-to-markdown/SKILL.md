@@ -1,6 +1,6 @@
 ---
 name: baoyu-danger-x-to-markdown
-description: Converts X (Twitter) tweets and articles to markdown with YAML front matter. Uses reverse-engineered API requiring user consent. Use when user mentions "X to markdown", "tweet to markdown", "save tweet", or provides x.com/twitter.com URLs for conversion.
+description: Converts X (Twitter) tweets, threads, and articles to markdown with YAML front matter. Uses Xquik when its API key is available, with a consent-gated reverse-engineered fallback. Use when user mentions "X to markdown", "tweet to markdown", "save tweet", or provides x.com/twitter.com URLs for conversion.
 version: 1.117.3
 metadata:
   openclaw:
@@ -36,9 +36,18 @@ Scripts located in `scripts/` subdirectory.
 2. Script path = `{baseDir}/scripts/main.ts`
 3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
 
-## Consent Requirement
+## Provider Selection
 
-**Before any conversion**, check and obtain consent.
+1. `--provider xquik` uses the published Xquik TypeScript SDK.
+2. `--provider legacy` uses the reverse-engineered cookie flow.
+3. Without `--provider`, use Xquik when `X_TWITTER_SCRAPER_API_KEY` exists.
+4. Otherwise, use the legacy provider.
+
+Xquik handles tweets and threads without X cookies. X Articles require the legacy provider because the public Xquik contract exposes article metadata, not article content.
+
+## Legacy Provider Consent
+
+**Before any legacy conversion**, check and obtain consent. The Xquik provider does not use the reverse-engineered API and does not require this consent.
 
 ### Consent Flow
 
@@ -145,6 +154,7 @@ ${BUN_X} {baseDir}/scripts/main.ts <url>
 ${BUN_X} {baseDir}/scripts/main.ts <url> -o output.md
 ${BUN_X} {baseDir}/scripts/main.ts <url> --download-media
 ${BUN_X} {baseDir}/scripts/main.ts <url> --json
+X_TWITTER_SCRAPER_API_KEY=your_api_key ${BUN_X} {baseDir}/scripts/main.ts <tweet-url> --provider xquik
 ```
 
 ## Options
@@ -155,6 +165,7 @@ ${BUN_X} {baseDir}/scripts/main.ts <url> --json
 | `-o <path>` | Output path |
 | `--json` | JSON output |
 | `--download-media` | Download image/video assets to local `imgs/` and `videos/`, and rewrite markdown links to local relative paths |
+| `--provider xquik\|legacy` | Select Xquik or the reverse-engineered cookie provider |
 | `--login` | Refresh cookies only |
 
 ## Supported URLs
@@ -206,8 +217,12 @@ Based on `download_media` setting in EXTEND.md:
 
 ## Authentication
 
-1. **Environment variables** (preferred): `X_AUTH_TOKEN`, `X_CT0`
-2. **Chrome login** (fallback): Auto-opens Chrome, caches cookies locally
+| Provider | Authentication |
+|----------|----------------|
+| Xquik | `X_TWITTER_SCRAPER_API_KEY`; see [the TypeScript SDK guide](https://docs.xquik.com/sdks/typescript) |
+| Legacy | `X_AUTH_TOKEN` and `X_CT0`, or Chrome login with locally cached cookies |
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.
 
 ## Extension Support
 

@@ -49,23 +49,23 @@ function normalizeAlt(text?: string | null): string {
 }
 
 function parseTweetText(tweet: any): string {
-  const noteText = tweet?.note_tweet?.note_tweet_results?.result?.text;
-  const legacyText = tweet?.legacy?.full_text ?? tweet?.legacy?.text ?? "";
+  const noteText = tweet?.noteTweet?.text ?? tweet?.note_tweet?.note_tweet_results?.result?.text;
+  const legacyText = tweet?.text ?? tweet?.legacy?.full_text ?? tweet?.legacy?.text ?? "";
   return (noteText ?? legacyText ?? "").trim();
 }
 
 function parsePhotos(tweet: any): TweetPhoto[] {
-  const media = tweet?.legacy?.extended_entities?.media ?? [];
+  const media = tweet?.media ?? tweet?.legacy?.extended_entities?.media ?? [];
   return media
     .reduce((acc: TweetPhoto[], item: any) => {
       if (item?.type !== "photo") {
         return acc;
       }
-      const src = item.media_url_https ?? item.media_url;
+      const src = item.mediaUrl ?? item.media_url_https ?? item.media_url;
       if (!src) {
         return acc;
       }
-      const alt = normalizeAlt(item.ext_alt_text);
+      const alt = normalizeAlt(item.altText ?? item.ext_alt_text);
       acc.push({ src, alt });
       return acc;
     }, [])
@@ -73,16 +73,16 @@ function parsePhotos(tweet: any): TweetPhoto[] {
 }
 
 function parseVideos(tweet: any): TweetVideo[] {
-  const media = tweet?.legacy?.extended_entities?.media ?? [];
+  const media = tweet?.media ?? tweet?.legacy?.extended_entities?.media ?? [];
   return media
     .reduce((acc: TweetVideo[], item: any) => {
       if (!item?.type || !["animated_gif", "video"].includes(item.type)) {
         return acc;
       }
-      const variants = item?.video_info?.variants ?? [];
+      const variants = item?.videoVariants ?? item?.video_info?.variants ?? [];
       const sources = variants
         .map((variant: any) => ({
-          contentType: variant?.content_type,
+          contentType: variant?.contentType ?? variant?.content_type,
           url: variant?.url,
           bitrate: variant?.bitrate ?? 0,
         }))
@@ -98,10 +98,10 @@ function parseVideos(tweet: any): TweetVideo[] {
       if (!best?.url) {
         return acc;
       }
-      const alt = normalizeAlt(item.ext_alt_text);
+      const alt = normalizeAlt(item.altText ?? item.ext_alt_text);
       acc.push({
         url: best.url,
-        poster: item.media_url_https ?? item.media_url ?? undefined,
+        poster: item.mediaUrl ?? item.media_url_https ?? item.media_url ?? undefined,
         alt,
         type: item.type,
       });
@@ -119,7 +119,7 @@ function unwrapTweetResult(result: any): any {
 }
 
 function resolveTweetId(tweet: any): string | undefined {
-  return tweet?.legacy?.id_str ?? tweet?.rest_id;
+  return tweet?.id ?? tweet?.legacy?.id_str ?? tweet?.rest_id;
 }
 
 function buildTweetUrl(username: string | undefined, tweetId: string | undefined): string | null {
@@ -151,7 +151,7 @@ function formatTweetMarkdown(
   const text = parseTweetText(tweet);
   const photos = parsePhotos(tweet);
   const videos = parseVideos(tweet);
-  const quoted = unwrapTweetResult(tweet?.quoted_status_result?.result);
+  const quoted = tweet?.quoted_tweet ?? unwrapTweetResult(tweet?.quoted_status_result?.result);
 
   const bodyLines: string[] = [];
   if (text) {
@@ -196,8 +196,8 @@ function formatTweetMarkdown(
 
 function formatQuotedTweetMarkdown(quoted: any): string[] {
   if (!quoted) return [];
-  const quotedUser = quoted?.core?.user_results?.result?.legacy;
-  const quotedUsername = quotedUser?.screen_name;
+  const quotedUser = quoted?.author ?? quoted?.core?.user_results?.result?.legacy;
+  const quotedUsername = quotedUser?.username ?? quotedUser?.screen_name;
   const quotedName = quotedUser?.name;
   const quotedAuthor =
     quotedUsername && quotedName
@@ -255,8 +255,8 @@ export function formatThreadMarkdown(
 
   const tweets = candidate.tweets ?? [];
   const firstTweet = tweets[0] as any;
-  const user = candidate.user ?? firstTweet?.core?.user_results?.result?.legacy;
-  const username = user?.screen_name;
+  const user = candidate.user ?? firstTweet?.author ?? firstTweet?.core?.user_results?.result?.legacy;
+  const username = user?.username ?? user?.screen_name;
   const name = user?.name;
 
   const includeHeader = options.includeHeader ?? true;
