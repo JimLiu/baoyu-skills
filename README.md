@@ -1013,6 +1013,9 @@ Converts X (Twitter) content to markdown format. Supports tweet threads and X Ar
 
 # Download media (images/videos) to local files
 /baoyu-danger-x-to-markdown https://x.com/username/status/123456 --download-media
+
+# Use Xquik without X cookies
+X_TWITTER_SCRAPER_API_KEY=your_api_key /baoyu-danger-x-to-markdown https://x.com/username/status/123456 --provider xquik
 ```
 
 **Supported URLs:**
@@ -1020,7 +1023,7 @@ Converts X (Twitter) content to markdown format. Supports tweet threads and X Ar
 - `https://twitter.com/<user>/status/<id>`
 - `https://x.com/i/article/<id>`
 
-**Authentication:** Uses environment variables (`X_AUTH_TOKEN`, `X_CT0`) or Chrome login for cookie-based auth.
+**Providers:** Xquik handles tweets and threads through its published TypeScript SDK. Set `X_TWITTER_SCRAPER_API_KEY`, or pass `--provider legacy` to use `X_AUTH_TOKEN`, `X_CT0`, or Chrome login. X Articles use the legacy provider.
 
 #### baoyu-compress-image
 

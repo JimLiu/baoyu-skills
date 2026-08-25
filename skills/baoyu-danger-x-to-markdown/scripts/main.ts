@@ -3,6 +3,7 @@ import path from "node:path";
 import readline from "node:readline";
 import process from "node:process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 import { fetchXArticle } from "./graphql.js";
 import { formatArticleMarkdown } from "./markdown.js";
@@ -10,7 +11,7 @@ import { localizeMarkdownMedia, type LocalizeMarkdownMediaResult } from "./media
 import { resolveReferencedTweetsFromArticle } from "./referenced-tweets.js";
 import { hasRequiredXCookies, loadXCookies, refreshXCookies } from "./cookies.js";
 import { resolveXToMarkdownConsentPath } from "./paths.js";
-import { tweetToMarkdown } from "./tweet-to-markdown.js";
+import { tweetToMarkdown, type TweetProvider } from "./tweet-to-markdown.js";
 
 type CliArgs = {
   url: string | null;
@@ -19,6 +20,7 @@ type CliArgs = {
   login: boolean;
   downloadMedia: boolean;
   help: boolean;
+  provider: TweetProvider | null;
 };
 
 type ConsentRecord = {
@@ -56,6 +58,7 @@ Options:
   --output <path>, -o  Output path (file or dir). Default: ./x-to-markdown/<slug>/
   --json               Output as JSON
   --download-media     Download images/videos to local ./imgs and ./videos next to markdown
+  --provider <name>    Data provider: xquik or legacy (default: Xquik when its key is set)
   --login              Refresh cookies only, then exit
   --help, -h           Show help
 
@@ -64,13 +67,14 @@ Examples:
   ${cmd} https://x.com/i/article/1234567890 -o ./article.md
   ${cmd} https://x.com/username/status/1234567890 -o ./out/
   ${cmd} https://x.com/username/status/1234567890 --download-media
+  ${cmd} https://x.com/username/status/1234567890 --provider xquik
   ${cmd} https://x.com/username/status/1234567890 --json | jq -r '.markdownPath'
   ${cmd} --login
 `);
   process.exit(exitCode);
 }
 
-function parseArgs(argv: string[]): CliArgs {
+export function parseArgs(argv: string[]): CliArgs {
   const out: CliArgs = {
     url: null,
     output: null,
@@ -78,6 +82,7 @@ function parseArgs(argv: string[]): CliArgs {
     login: false,
     downloadMedia: false,
     help: false,
+    provider: null,
   };
 
   const positional: string[] = [];
@@ -102,6 +107,15 @@ function parseArgs(argv: string[]): CliArgs {
 
     if (a === "--download-media") {
       out.downloadMedia = true;
+      continue;
+    }
+
+    if (a === "--provider") {
+      const value = argv[++i];
+      if (value !== "xquik" && value !== "legacy") {
+        throw new Error("Invalid --provider. Use xquik or legacy.");
+      }
+      out.provider = value;
       continue;
     }
 
@@ -131,6 +145,24 @@ function parseArgs(argv: string[]): CliArgs {
   }
 
   return out;
+}
+
+export function resolveTweetProvider(
+  provider: TweetProvider | null,
+  hasXquikApiKey = Boolean(process.env.X_TWITTER_SCRAPER_API_KEY?.trim())
+): TweetProvider {
+  return provider ?? (hasXquikApiKey ? "xquik" : "legacy");
+}
+
+export function resolveContentProvider(
+  kind: "article" | "tweet",
+  provider: TweetProvider | null,
+  hasXquikApiKey = Boolean(process.env.X_TWITTER_SCRAPER_API_KEY?.trim())
+): TweetProvider {
+  if (kind === "article" && !provider) {
+    return "legacy";
+  }
+  return resolveTweetProvider(provider, hasXquikApiKey);
 }
 
 function normalizeInputUrl(input: string): string {
@@ -512,9 +544,12 @@ async function main(): Promise<void> {
   if (!args.login && !args.url) printUsage(1);
 
   const log = (message: string) => console.error(message);
-  await ensureConsent(log);
 
   if (args.login) {
+    if (args.provider === "xquik") {
+      throw new Error("--login only applies to the legacy provider.");
+    }
+    await ensureConsent(log);
     log("[x-to-markdown] Refreshing cookies via browser login...");
     const cookieMap = await refreshXCookies(log);
     if (!hasRequiredXCookies(cookieMap)) {
@@ -585,10 +620,20 @@ async function main(): Promise<void> {
     }
   }
 
+  const provider = resolveContentProvider(kind, args.provider);
+  if (kind === "article" && provider === "xquik") {
+    throw new Error(
+      "Xquik exposes article metadata, not article content. Use --provider legacy for X Articles."
+    );
+  }
+  if (provider === "legacy") {
+    await ensureConsent(log);
+  }
+
   let markdown =
     kind === "article" && articleId
       ? await convertArticleToMarkdown(normalizedUrl, articleId, log)
-      : await tweetToMarkdown(normalizedUrl, { log });
+      : await tweetToMarkdown(normalizedUrl, { log, provider });
 
   const contentSlug = extractContentSlug(markdown);
   const { outputDir, markdownPath, slug } = await resolveOutputPath(normalizedUrl, kind, args.output, contentSlug, log);
@@ -624,6 +669,7 @@ async function main(): Promise<void> {
           downloadedVideos: mediaResult?.downloadedVideos ?? 0,
           imageDir: mediaResult?.imageDir ?? null,
           videoDir: mediaResult?.videoDir ?? null,
+          provider,
         },
         null,
         2
@@ -634,7 +680,12 @@ async function main(): Promise<void> {
   }
 }
 
-await main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error ?? ""));
-  process.exit(1);
-});
+const isCliExecution =
+  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+
+if (isCliExecution) {
+  await main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error ?? ""));
+    process.exit(1);
+  });
+}
