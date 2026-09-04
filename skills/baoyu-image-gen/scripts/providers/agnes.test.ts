@@ -111,26 +111,26 @@ test("resolveSize aligns to 32 and respects max edge", () => {
 
 test("validateArgs rejects --n > 1", () => {
   assert.throws(
-    () => validateArgs("agnes-image-2.1-flash", makeArgs({ n: 2 })),
+    () => validateArgs("agnes-image-2.5-flash", makeArgs({ n: 2 })),
     /returns a single image per request/,
   );
   assert.doesNotThrow(() =>
-    validateArgs("agnes-image-2.1-flash", makeArgs({ n: 1 })),
+    validateArgs("agnes-image-2.5-flash", makeArgs({ n: 1 })),
   );
 });
 
 test("buildRequestBody maps prompt, model, size, and reference images", () => {
-  const body = buildRequestBody("a cat", "agnes-image-2.1-flash", {
+  const body = buildRequestBody("a cat", "agnes-image-2.5-flash", {
     size: "1024x1024",
     aspectRatio: null,
     referenceImages: [],
   });
-  assert.equal(body.model, "agnes-image-2.1-flash");
+  assert.equal(body.model, "agnes-image-2.5-flash");
   assert.equal(body.prompt, "a cat");
   assert.equal(body.size, "1024x1024");
   assert.deepEqual(body.extra_body, { response_format: "url" });
 
-  const bodyWithRef = buildRequestBody("a cat", "agnes-image-2.1-flash", {
+  const bodyWithRef = buildRequestBody("a cat", "agnes-image-2.5-flash", {
     size: null,
     aspectRatio: "3:4",
     referenceImages: ["https://example.com/ref.jpg"],

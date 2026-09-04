@@ -1,10 +1,10 @@
 # Sapiens AI Agnes Image
 
-Read when the user picks `--provider agnes` or sets `default_model.agnes`. Default model is `agnes-image-2.1-flash`.
+Read when the user picks `--provider agnes` or sets `default_model.agnes`. Default model is `agnes-image-2.5-flash`.
 
 ## Models
 
-**`agnes-image-2.1-flash`** (only model)
+**`agnes-image-2.5-flash`** (only model)
 
 - Text-to-image and image-to-image (with `--ref`) in a single `/images/generations` endpoint
 - Supports reference images as public URLs or Data URI (base64)

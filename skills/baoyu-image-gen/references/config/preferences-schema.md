@@ -31,7 +31,7 @@ default_model:
   minimax: null             # e.g., "image-01"
   replicate: null           # e.g., "google/nano-banana-2"
   codex-cli: null           # Logical label only — Codex image_gen has no user-selectable model. Default: "codex-image-gen"
-  agnes: null               # e.g., "agnes-image-2.1-flash"
+  agnes: null               # e.g., "agnes-image-2.5-flash"
 
 batch:
   max_workers: 10
@@ -123,7 +123,7 @@ default_model:
   zai: "glm-image"
   minimax: "image-01"
   replicate: "google/nano-banana-2"
-  agnes: "agnes-image-2.1-flash"
+  agnes: "agnes-image-2.5-flash"
 batch:
   max_workers: 10
   provider_limits:

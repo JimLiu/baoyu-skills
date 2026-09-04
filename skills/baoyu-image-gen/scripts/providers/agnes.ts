@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { CliArgs } from "../types";
 
-const DEFAULT_MODEL = "agnes-image-2.1-flash";
+const DEFAULT_MODEL = "agnes-image-2.5-flash";
 const DEFAULT_BASE_URL = "https://apihub.agnes-ai.com/v1";
 const DEFAULT_SIZE = "1024x1024";
 
