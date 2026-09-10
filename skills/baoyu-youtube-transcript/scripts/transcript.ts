@@ -99,12 +99,11 @@ export function parseTranscriptPayload(payload: string, url: string): Snippet[] 
   return parseTranscriptXml(payload);
 }
 
-function isCJK(ch: string): boolean {
+function isUnspacedCJK(ch: string): boolean {
   const code = ch.charCodeAt(0);
   return (code >= 0x4E00 && code <= 0x9FFF) ||
     (code >= 0x3040 && code <= 0x309F) ||
     (code >= 0x30A0 && code <= 0x30FF) ||
-    (code >= 0xAC00 && code <= 0xD7AF) ||
     (code >= 0x3400 && code <= 0x4DBF) ||
     (code >= 0xF900 && code <= 0xFAFF);
 }
@@ -152,7 +151,7 @@ function mergeTexts(texts: string[]): string {
     if (!next) continue;
     const lastChar = result[result.length - 1];
     const firstChar = next[0];
-    if (isCJK(lastChar) || isCJK(firstChar)) {
+    if (isUnspacedCJK(lastChar) || isUnspacedCJK(firstChar)) {
       result += next;
     } else {
       result = result.trimEnd() + " " + next.trimStart();
