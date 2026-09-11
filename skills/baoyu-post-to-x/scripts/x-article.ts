@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { parseMarkdown } from './md-to-html.js';
 import {
@@ -19,6 +20,12 @@ import {
 } from './x-utils.js';
 
 const X_ARTICLES_URL = 'https://x.com/compose/articles';
+
+export const CLICK_WRITE_BUTTON_EXPRESSION = `(() => {
+  const inner = document.querySelector('[data-testid="empty_state_button_text"]');
+  const clickable = inner?.closest('a, button, [role="button"]') ?? inner;
+  clickable?.click();
+})()`;
 
 const I18N_SELECTORS = {
   titleInput: [
@@ -169,7 +176,7 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
     if (writeButtonFound) {
       console.log('[x-article] Clicking Write button...');
       await cdp.send('Runtime.evaluate', {
-        expression: `document.querySelector('[data-testid="empty_state_button_text"]')?.click()`,
+        expression: CLICK_WRITE_BUTTON_EXPRESSION,
       }, { sessionId });
       await sleep(2000);
     } else {
@@ -823,7 +830,9 @@ async function main(): Promise<void> {
   await publishArticle({ markdownPath, title, coverImage, submit, profileDir });
 }
 
-await main().catch((err) => {
-  console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main().catch((err) => {
+    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  });
+}

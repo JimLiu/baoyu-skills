@@ -119,6 +119,37 @@ Code blocks become blockquotes (X doesn't support code)
 3. **Placeholders**: Images in content use `XIMGPH_N` format
 4. **Insertion**: Placeholders are found, selected, and replaced with actual images
 
+## Generated Cover Images
+
+X recommends a `5:2` article cover. When the Markdown lacks a good cover, or the user asks for one, generate a separate cover image before uploading the draft.
+
+1. Use the article title and opening sections to derive a simple visual metaphor.
+2. Generate a clean `5:2` cover with the available image-generation tool. If no image-generation tool is available, ask the user to provide a cover image or continue without generating one.
+3. Use no text, letters, logos, or watermark. Keep generous safe margins for X preview crops.
+4. Save the file in a durable path beside the article or project assets.
+5. Normalize the final asset to an exact `5:2` size such as `2000x800`:
+   ```bash
+   # macOS, for outputs already close to 5:2
+   sips -z 800 2000 input.png --out cover-5x2.png
+
+   # ImageMagick, for center-cropping without distortion
+   magick input.png -resize 2000x800^ -gravity center -extent 2000x800 cover-5x2.png
+   ```
+6. Verify dimensions before upload:
+   ```bash
+   sips -g pixelWidth -g pixelHeight cover-5x2.png
+   ```
+7. Inspect the result visually for clutter, text artifacts, and bad crops.
+8. Upload this generated image only to the article cover slot. Do not also insert it into the body unless the user asks.
+
+Prompt pattern:
+
+```text
+Create a concise 5:2 X Article cover for: <article title/theme>.
+Visualize the article's subject with a simple editorial illustration, generous safe margins, and no text.
+No letters, logos, UI brand names, watermark, or clutter.
+```
+
 ## Markdown to HTML Script
 
 Convert markdown and inspect structure:
@@ -173,27 +204,28 @@ JSON output:
 2. **Connect**: initialize the Chrome plugin browser client and verify with `browser.user.openTabs()`.
 3. **Parse Markdown**: run `md-to-html.ts --save-html /tmp/x-article-body.html > /tmp/x-article.json`.
 4. **Read the map**: use `/tmp/x-article.json` for `title`, `coverImage`, and `contentImages`.
-5. **Open X Articles**: open or claim a Chrome tab for `https://x.com/compose/articles`.
-6. **Create Draft**: click the create/write button if needed, or open the target draft.
-7. **Upload Cover**: use the Chrome plugin file chooser flow. If file upload returns `Not allowed`, report the Chrome Extension file-access fix and stop.
-8. **Fill Title**: fill the title field.
-9. **Paste Content**:
+5. **Prepare Cover**: if the user asks for a generated cover, or `coverImage` is missing/unsuitable, follow **Generated Cover Images** and use that file as `coverImage`.
+6. **Open X Articles**: open or claim a Chrome tab for `https://x.com/compose/articles`.
+7. **Create Draft**: click the create/write button if needed, or open the target draft.
+8. **Upload Cover**: use the Chrome plugin file chooser flow. If file upload returns `Not allowed`, report the Chrome Extension file-access fix and stop.
+9. **Fill Title**: fill the title field.
+10. **Paste Content**:
    - Run `copy-to-clipboard.ts html --file /tmp/x-article-body.html`.
    - Click the article body.
    - Press `Meta+V` on macOS or `Control+V` on Windows/Linux through the Chrome plugin.
    - Verify the article body appeared and contains `XIMGPH_` placeholders. On macOS, use `pbpaste` to verify shell-written system clipboard contents if paste is suspicious; `tab.clipboard.readText()` may not reflect the system clipboard after shell writes.
-10. **Insert Images**: for each `contentImages` item in placeholder order:
+11. **Insert Images**: for each `contentImages` item in placeholder order:
    - Locate the exact visible placeholder text (`XIMGPH_N`) and click it to put the insertion point there.
    - Open the editor toolbar dropdown `Insert` and choose `Media`.
    - In the `Insert` modal, click the icon button with `aria-label="Add photos or video"`; do not click the "Choose a file or drag it here" text/dropzone or hidden file input.
    - Use the Chrome plugin file chooser flow to upload that image's `localPath`.
    - Wait until the image block appears. If `XIMGPH_N` remains above the image, select exactly that placeholder and press `Delete` first; use `Backspace` only if `Delete` fails and the selected text is confirmed to be exactly the placeholder.
    - Verify that placeholder's count is `0` before continuing.
-11. **Verify**:
+12. **Verify**:
    - Inspect the editor for `XIMGPH_` residue.
    - Confirm the expected number of image blocks is visible.
    - Open Preview and verify title, cover, body, links, and images.
-12. **Publish Safety**: ask the user for explicit final confirmation before clicking `Publish`.
+13. **Publish Safety**: ask the user for explicit final confirmation before clicking `Publish`.
 
 If the Chrome plugin reports `native pipe is closed`, retry one lightweight browser call after 2 seconds, then run the Chrome skill health checks. If Chrome, the extension, and native host are healthy, ask the user before opening a new Chrome window and retrying.
 
@@ -202,48 +234,50 @@ If the Chrome plugin reports `native pipe is closed`, retry one lightweight brow
 1. **Detect Computer Use**: call `get_app_state` for `Google Chrome`; use `tool_search` first if the tools are not visible.
 2. **Parse Markdown**: run `md-to-html.ts --save-html /tmp/x-article-body.html > /tmp/x-article.json`.
 3. **Read the map**: use `/tmp/x-article.json` for `title`, `coverImage`, and `contentImages`.
-4. **Open X Articles**: use Chrome Computer Use to navigate to `https://x.com/compose/articles`.
-5. **Create Draft**: click the create/write button if needed, or open the target draft.
-6. **Upload Cover**: if `coverImage` exists, use Chrome's visible upload/file picker UI. If the file picker cannot be operated reliably, stop and ask for help rather than switching to CDP silently.
-7. **Fill Title**: type the title into the title field.
-8. **Paste Content**:
+4. **Prepare Cover**: if the user asks for a generated cover, or `coverImage` is missing/unsuitable, follow **Generated Cover Images** and use that file as `coverImage`.
+5. **Open X Articles**: use Chrome Computer Use to navigate to `https://x.com/compose/articles`.
+6. **Create Draft**: click the create/write button if needed, or open the target draft.
+7. **Upload Cover**: if `coverImage` exists, use Chrome's visible upload/file picker UI. If the file picker cannot be operated reliably, stop and ask for help rather than switching to CDP silently.
+8. **Fill Title**: type the title into the title field.
+9. **Paste Content**:
    - Run `copy-to-clipboard.ts html --file /tmp/x-article-body.html`.
    - Click the article body.
    - Press `super+v` on macOS or `control+v` on Windows/Linux with Computer Use.
-9. **Insert Images**: for each `contentImages` item in placeholder order:
+10. **Insert Images**: for each `contentImages` item in placeholder order:
    - Locate the exact visible placeholder text (`XIMGPH_N`) and click it to put the insertion point there.
    - Open the editor toolbar dropdown `Insert`, choose `Media`, then click the icon button with `aria-label="Add photos or video"` inside the modal.
    - Use the native file picker to choose that image's `localPath`.
    - Wait until the image block appears and upload activity is complete.
    - If `XIMGPH_N` remains above the inserted image, reselect exactly that placeholder text and press `Delete` first; use `Backspace` only if `Delete` fails and the Computer Use state confirms the selected text is exactly the placeholder.
    - Confirm that placeholder is gone before continuing.
-10. **Verify**:
+11. **Verify**:
    - Inspect the Computer Use state for `XIMGPH_` residue.
    - Confirm the expected number of image blocks is visible.
    - Open Preview and verify title, cover, body, links, and images.
-11. **Publish Safety**: ask the user for explicit final confirmation before clicking `Publish`.
+12. **Publish Safety**: ask the user for explicit final confirmation before clicking `Publish`.
 
 ## CDP Script Workflow (Fallback)
 
 1. **Parse Markdown**: Extract title, cover, content images, generate HTML
-2. **Launch Chrome**: Real browser with CDP, persistent login
-3. **Navigate**: Open `x.com/compose/articles`
-4. **Create Article**: Click create button if on list page
-5. **Upload Cover**: Use file input for cover image
-6. **Fill Title**: Type title into title field
-7. **Paste Content**: Copy HTML to clipboard, paste into editor
-8. **Insert Images**: For each placeholder in placeholder order:
+2. **Prepare Cover**: if the user asks for a generated cover, or the parsed cover is missing/unsuitable, follow **Generated Cover Images** and pass it with `--cover cover-5x2.png`
+3. **Launch Chrome**: Real browser with CDP, persistent login
+4. **Navigate**: Open `x.com/compose/articles`
+5. **Create Article**: Click create button if on list page
+6. **Upload Cover**: Use file input for cover image
+7. **Fill Title**: Type title into title field
+8. **Paste Content**: Copy HTML to clipboard, paste into editor
+9. **Insert Images**: For each placeholder in placeholder order:
    - Find and click the placeholder text in the editor
    - Use `Insert` -> `Media`
    - Click the modal's icon button labeled `Add photos or video`
    - Upload the matching image file
    - Delete the leftover placeholder text with `Delete` after the image appears
-9. **Post-Composition Check** (automatic):
+10. **Post-Composition Check** (automatic):
    - Scan editor for remaining `XIMGPH_` placeholders
    - Compare expected vs actual image count
    - Warn if issues found
-10. **Review**: Browser stays open for 60s preview
-11. **Publish**: Only with `--submit` flag and explicit user confirmation
+11. **Review**: Browser stays open for 60s preview
+12. **Publish**: Only with `--submit` flag and explicit user confirmation
 
 ## Example Session
 
