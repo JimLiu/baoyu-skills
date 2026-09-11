@@ -78,6 +78,12 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic portrait" --image out.p
 # Replicate Wan 2.7 Image Pro
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A concept frame" --image out.png --provider replicate --model wan-video/wan-2.7-image-pro --size 2048x1152
 
+# Atlas Cloud Nano Banana 2 text-to-image
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A product concept render" --image out.png --provider atlascloud --model google/nano-banana-2/text-to-image --ar 16:9
+
+# Atlas Cloud Nano Banana 2 edit with reference image
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Apply this color palette" --image out.png --provider atlascloud --ref source.png
+
 # Codex CLI (uses Codex / ChatGPT subscription — no OPENAI_API_KEY; requires `codex` on PATH and `codex login`)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic portrait" --image out.png --provider codex-cli --ar 16:9
 
