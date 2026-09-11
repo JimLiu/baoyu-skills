@@ -184,7 +184,7 @@ Ask method unless specified in EXTEND.md or CLI:
 
 Auto-generation: title = first H1/H2 or first sentence; summary = first paragraph, truncated to 120 chars.
 
-4. **Cover image** (required for API `article_type=news`): CLI `--cover` → frontmatter (`coverImage` / `featureImage` / `cover` / `image`) → `imgs/cover.png` → first inline image → stop and request one if still missing.
+4. **Cover image** (required for API `article_type=news`): CLI `--cover` → frontmatter (`coverImage` / `featureImage` / `cover_image` / `cover` / `image`) → `imgs/cover.png` → first inline image → stop and request one if still missing. Local paths and `http(s)://` URLs are both accepted.
 
 ### Step 4: Publish
 
