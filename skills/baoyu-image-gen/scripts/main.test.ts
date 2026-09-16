@@ -363,6 +363,7 @@ test("detectProvider rejects non-ref-capable providers and prefers Google first 
 test("detectProvider selects an available ref-capable provider for reference-image tasks", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: "openai-key",
     AZURE_OPENAI_API_KEY: null,
     AZURE_OPENAI_BASE_URL: null,
@@ -383,6 +384,7 @@ test("detectProvider selects an available ref-capable provider for reference-ima
 test("detectProvider selects Azure when only Azure credentials are configured", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: null,
     AZURE_OPENAI_API_KEY: "azure-key",
     AZURE_OPENAI_BASE_URL: "https://example.openai.azure.com",
@@ -405,6 +407,7 @@ test("detectProvider selects Azure when only Azure credentials are configured", 
 test("detectProvider selects Z.AI when credentials are present or the model id matches", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: null,
     AZURE_OPENAI_API_KEY: null,
     AZURE_OPENAI_BASE_URL: null,
@@ -426,6 +429,7 @@ test("detectProvider selects Z.AI when credentials are present or the model id m
 test("detectProvider infers Seedream from model id and allows Seedream reference-image workflows", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: null,
     OPENROUTER_API_KEY: null,
     DASHSCOPE_API_KEY: null,
@@ -460,6 +464,7 @@ test("detectProvider infers Seedream from model id and allows Seedream reference
 test("detectProvider allows DashScope reference-image workflows when explicitly chosen for wan2.7 models", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: null,
     AZURE_OPENAI_API_KEY: null,
     AZURE_OPENAI_BASE_URL: null,
@@ -487,6 +492,7 @@ test("detectProvider allows DashScope reference-image workflows when explicitly 
 test("detectProvider selects MiniMax when only MiniMax credentials are configured or the model id matches", (t) => {
   useEnv(t, {
     GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
     OPENAI_API_KEY: null,
     AZURE_OPENAI_API_KEY: null,
     AZURE_OPENAI_BASE_URL: null,
@@ -641,4 +647,75 @@ test("path normalization, worker count, and retry classification follow expected
     false,
   );
   assert.equal(isRetryableGenerationError(new Error("socket hang up")), true);
+});
+
+test("OrcaRouter is registered as a first-class provider across every central surface", (t: TestContext) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    ORCAROUTER_API_KEY: null,
+    GEMINI_API_KEY: null,
+    OPENAI_API_KEY: null,
+    AZURE_OPENAI_API_KEY: null,
+    AZURE_OPENAI_BASE_URL: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    ZAI_API_KEY: null,
+    BIGMODEL_API_KEY: null,
+    MINIMAX_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: null,
+    AGNES_API_KEY: null,
+    ORCAROUTER_API_KEY: "sk-orca-fake-main-key",
+  });
+
+  const args = parseArgs(["--provider", "orcarouter"]);
+  assert.equal(args.provider, "orcarouter");
+
+  const limits = getConfiguredProviderRateLimits({});
+  assert.ok(limits.orcarouter);
+  assert.ok(limits.orcarouter.concurrency > 0);
+
+  const config = parseSimpleYaml(
+    ["version: 1", "default_model:", "  orcarouter: google/gemini-3.1-flash-image-preview", "batch:", "  provider_limits:", "    orcarouter:", "      concurrency: 2"].join("\n"),
+  );
+  assert.equal(config.default_model?.orcarouter, "google/gemini-3.1-flash-image-preview");
+  assert.equal(config.batch?.provider_limits?.orcarouter?.concurrency, 2);
+
+  assert.equal(detectProvider(makeArgs()), "orcarouter");
+});
+
+test("OrcaRouter is selectable for reference-image workflows and never silently replaced", (t: TestContext) => {
+  useEnv(t, { ORCAROUTER_API_KEY: "sk-orca-fake-main-key", GOOGLE_API_KEY: "g" });
+
+  const args = makeArgs({ provider: "orcarouter", referenceImages: ["ref.png"] });
+  assert.equal(detectProvider(args), "orcarouter");
+});
+
+test("OrcaRouter env vars can set the default provider through EXTEND.md without touching other providers", () => {
+  const config = parseSimpleYaml(["version: 1", "default_provider: orcarouter"].join("\n"));
+  assert.equal(config.default_provider, "orcarouter");
+
+  const merged = mergeConfig(makeArgs(), config);
+  assert.equal(merged.provider, "orcarouter");
+});
+
+test("an unknown provider is still rejected after the OrcaRouter addition", () => {
+  assert.throws(() => parseArgs(["--provider", "orcarouterr"]), /Invalid provider/);
+  assert.throws(() => parseArgs(["--provider", "orca"]), /Invalid provider/);
+});
+
+test("the OrcaRouter CLI flags parse and default off", () => {
+  const defaults = parseArgs(["--prompt", "x"]);
+  assert.equal(defaults.orcarouterLogin, false);
+  assert.equal(defaults.orcarouterKey, null);
+  assert.equal(defaults.orcarouterLoginCode, null);
+  assert.equal(defaults.listModels, false);
+
+  assert.equal(parseArgs(["--orcarouter-login"]).orcarouterLogin, true);
+  assert.equal(parseArgs(["--list-models"]).listModels, true);
+  assert.equal(parseArgs(["--orcarouter-key", "sk-orca-x"]).orcarouterKey, "sk-orca-x");
+  assert.equal(parseArgs(["--orcarouter-login-code", "abc"]).orcarouterLoginCode, "abc");
+  assert.throws(() => parseArgs(["--orcarouter-key"]), /Missing value/);
 });

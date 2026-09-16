@@ -766,7 +766,7 @@ AI 驱动的生成后端。
 
 #### baoyu-image-gen
 
-基于 AI SDK 的图像生成，支持 OpenAI GPT Image 2、Azure OpenAI、Google、OpenRouter、DashScope（阿里通义万相）、MiniMax、即梦（Jimeng）、豆包（Seedream）和 Replicate API。支持文生图、参考图、宽高比、自定义尺寸、批量生成和质量预设。
+基于 AI SDK 的图像生成，支持 OpenAI GPT Image 2、Azure OpenAI、Google、OpenRouter、OrcaRouter、DashScope（阿里通义万相）、MiniMax、即梦（Jimeng）、豆包（Seedream）和 Replicate API。支持文生图、参考图、宽高比、自定义尺寸、批量生成和质量预设。
 
 ```bash
 # 基础生成（自动检测服务商）
@@ -789,6 +789,18 @@ AI 驱动的生成后端。
 
 # OpenRouter + 参考图
 /baoyu-image-gen --prompt "把它变成蓝色" --image out.png --provider openrouter --model google/gemini-3.1-flash-image --ref source.png
+
+# OrcaRouter（通过 ORCAROUTER_API_KEY 使用 API 密钥）
+/baoyu-image-gen --prompt "一只猫" --image cat.png --provider orcarouter
+
+# OrcaRouter 账号登录（OAuth 2.0 + PKCE：打印授权链接，再粘贴同意页上的验证码）
+/baoyu-image-gen --orcarouter-login
+
+# 列出该凭据真正可用的 OrcaRouter 模型
+/baoyu-image-gen --list-models
+
+# OrcaRouter + 参考图
+/baoyu-image-gen --prompt "把它变成蓝色" --image out.png --provider orcarouter --ref source.png
 
 # DashScope（阿里通义万相）
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider dashscope
@@ -835,14 +847,14 @@ AI 驱动的生成后端。
 | `--image` | 输出图片路径（必需） |
 | `--batchfile` | 多图批量生成的 JSON 文件 |
 | `--jobs` | 批量模式的并发 worker 数 |
-| `--provider` | `google`、`openai`、`azure`、`openrouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream`、`replicate` 或 `agnes` |
+| `--provider` | `google`、`openai`、`azure`、`openrouter`、`orcarouter`、`dashscope`、`zai`、`minimax`、`jimeng`、`seedream`、`replicate` 或 `agnes` |
 | `--model`, `-m` | 模型 ID 或部署名。Azure 使用部署名；OpenRouter 使用完整模型 ID；Z.AI 使用 `glm-image`；MiniMax 使用 `image-01` / `image-01-live` |
 | `--ar` | 宽高比（如 `16:9`、`1:1`、`4:3`） |
 | `--size` | 尺寸（如 `1024x1024`；`gpt-image-2` 支持最长边不超过 3840px 的有效自定义尺寸） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
 | `--imageSize` | Google/OpenRouter 使用的 `1K`、`2K`、`4K` |
 | `--imageApiDialect` | OpenAI 兼容网关的图像 API 方言（`openai-native` 或 `ratio-metadata`） |
-| `--ref` | 参考图片（Google、OpenAI、Azure OpenAI、OpenRouter、Replicate 支持的模型家族、MiniMax 或 Seedream 5.0/4.5/4.0） |
+| `--ref` | 参考图片（Google、OpenAI、Azure OpenAI、OpenRouter、OrcaRouter 的 Gemini 图像模型、Replicate 支持的模型家族、MiniMax 或 Seedream 5.0/4.5/4.0） |
 | `--n` | 单次请求生成图片数量（`replicate` 当前只支持 `--n 1`） |
 | `--json` | 输出 JSON 结果 |
 
@@ -852,6 +864,7 @@ AI 驱动的生成后端。
 | `OPENAI_API_KEY` | OpenAI API 密钥 | - |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API 密钥 | - |
 | `OPENROUTER_API_KEY` | OpenRouter API 密钥 | - |
+| `ORCAROUTER_API_KEY` | OrcaRouter API 密钥（`sk-orca-…`，https://www.orcarouter.ai/console/token） | - |
 | `GOOGLE_API_KEY` | Google API 密钥 | - |
 | `GEMINI_API_KEY` | `GOOGLE_API_KEY` 的别名 | - |
 | `DASHSCOPE_API_KEY` | DashScope API 密钥（阿里云） | - |
@@ -866,6 +879,7 @@ AI 驱动的生成后端。
 | `AZURE_OPENAI_DEPLOYMENT` | Azure 默认部署名 | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | 兼容旧配置的 Azure 部署/模型别名 | `gpt-image-2` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter 模型 | `google/gemini-3.1-flash-image` |
+| `ORCAROUTER_IMAGE_MODEL` | OrcaRouter 模型 | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google 模型 | `gemini-3-pro-image` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope 模型 | `qwen-image-2.0-pro` |
 | `ZAI_IMAGE_MODEL` | Z.AI 模型 | `glm-image` |
@@ -882,6 +896,9 @@ AI 驱动的生成后端。
 | `OPENROUTER_BASE_URL` | 自定义 OpenRouter 端点 | `https://openrouter.ai/api/v1` |
 | `OPENROUTER_HTTP_REFERER` | OpenRouter 归因用站点 URL | - |
 | `OPENROUTER_TITLE` | OpenRouter 归因用应用名 | - |
+| `ORCA_BASE_URL` | 自托管 OrcaRouter 共享源（认证与推理） | - |
+| `ORCA_AUTH_BASE_URL` | OrcaRouter 认证源（优先于 `ORCA_BASE_URL`） | `https://www.orcarouter.ai` |
+| `ORCA_API_BASE_URL` | OrcaRouter 推理源（优先于 `ORCA_BASE_URL`） | `https://api.orcarouter.ai/v1` |
 | `GOOGLE_BASE_URL` | 自定义 Google 端点 | - |
 | `DASHSCOPE_BASE_URL` | 自定义 DashScope 端点 | - |
 | `ZAI_BASE_URL` | 自定义 Z.AI 端点 | `https://api.z.ai/api/paas/v4` |
@@ -909,9 +926,9 @@ AI 驱动的生成后端。
 
 **服务商自动选择**：
 1. 如果指定了 `--provider` → 使用指定的
-2. 如果传了 `--ref` 且未指定 provider → 依次尝试 Google、OpenAI、Azure、OpenRouter、Replicate、Seedream、MiniMax，最后是 Agnes
+2. 如果传了 `--ref` 且未指定 provider → 依次尝试 Google、OpenAI、Azure、OpenRouter、OrcaRouter、Replicate、Seedream、MiniMax，最后是 Agnes
 3. 如果只有一个 API 密钥 → 使用对应服务商
-4. 如果多个可用 → 默认使用 Google，然后依次为 OpenAI、Azure、OpenRouter、DashScope、Z.AI、MiniMax、Replicate、即梦、豆包、Agnes
+4. 如果多个可用 → 默认使用 Google，然后依次为 OpenAI、Azure、OpenRouter、OrcaRouter、DashScope、Z.AI、MiniMax、Replicate、即梦、豆包、Agnes
 
 #### baoyu-danger-gemini-web
 

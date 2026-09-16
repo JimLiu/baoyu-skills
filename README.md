@@ -765,7 +765,7 @@ AI-powered generation backends.
 
 #### baoyu-image-gen
 
-AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
+AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, OpenRouter, OrcaRouter, DashScope (Aliyun Tongyi Wanxiang), MiniMax, Jimeng (即梦), Seedream (豆包), and Replicate APIs. Supports text-to-image, reference images, aspect ratios, custom sizes, batch generation, and quality presets.
 
 ```bash
 # Basic generation (auto-detect provider)
@@ -788,6 +788,18 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 
 # OpenRouter with reference images
 /baoyu-image-gen --prompt "Make it blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image --ref source.png
+
+# OrcaRouter (API key via ORCAROUTER_API_KEY)
+/baoyu-image-gen --prompt "A cat" --image cat.png --provider orcarouter
+
+# OrcaRouter account login (OAuth 2.0 + PKCE — prints a URL, then paste the code)
+/baoyu-image-gen --orcarouter-login
+
+# OrcaRouter models this credential can actually use
+/baoyu-image-gen --list-models
+
+# OrcaRouter with a reference image
+/baoyu-image-gen --prompt "Make it blue" --image out.png --provider orcarouter --ref source.png
 
 # DashScope (Aliyun Tongyi Wanxiang)
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider dashscope
@@ -834,7 +846,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `--image` | Output image path (required) |
 | `--batchfile` | JSON batch file for multi-image generation |
 | `--jobs` | Worker count for batch mode |
-| `--provider` | `google`, `openai`, `azure`, `openrouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, `replicate`, or `agnes` |
+| `--provider` | `google`, `openai`, `azure`, `openrouter`, `orcarouter`, `dashscope`, `zai`, `minimax`, `jimeng`, `seedream`, `replicate`, or `agnes` |
 | `--model`, `-m` | Model ID or deployment name. Azure uses deployment name; OpenRouter uses full model IDs; Z.AI uses `glm-image`; MiniMax uses `image-01` / `image-01-live` |
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`; `gpt-image-2` accepts valid custom sizes up to 3840px max edge) |
@@ -851,6 +863,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `OPENAI_API_KEY` | OpenAI API key | - |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API key | - |
 | `OPENROUTER_API_KEY` | OpenRouter API key | - |
+| `ORCAROUTER_API_KEY` | OrcaRouter API key (`sk-orca-…`, https://www.orcarouter.ai/console/token) | - |
 | `GOOGLE_API_KEY` | Google API key | - |
 | `GEMINI_API_KEY` | Alias for `GOOGLE_API_KEY` | - |
 | `DASHSCOPE_API_KEY` | DashScope API key (Aliyun) | - |
@@ -865,6 +878,7 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `AZURE_OPENAI_DEPLOYMENT` | Azure default deployment name | - |
 | `AZURE_OPENAI_IMAGE_MODEL` | Backward-compatible Azure deployment/model alias | `gpt-image-2` |
 | `OPENROUTER_IMAGE_MODEL` | OpenRouter model | `google/gemini-3.1-flash-image` |
+| `ORCAROUTER_IMAGE_MODEL` | OrcaRouter model | `google/gemini-3.1-flash-image-preview` |
 | `GOOGLE_IMAGE_MODEL` | Google model | `gemini-3-pro-image` |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model | `qwen-image-2.0-pro` |
 | `ZAI_IMAGE_MODEL` | Z.AI model | `glm-image` |
@@ -881,6 +895,9 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 | `OPENROUTER_BASE_URL` | Custom OpenRouter endpoint | `https://openrouter.ai/api/v1` |
 | `OPENROUTER_HTTP_REFERER` | Optional app/site URL for OpenRouter attribution | - |
 | `OPENROUTER_TITLE` | Optional app name for OpenRouter attribution | - |
+| `ORCA_BASE_URL` | Shared self-hosted OrcaRouter origin (auth + inference) | - |
+| `ORCA_AUTH_BASE_URL` | Explicit OrcaRouter auth origin (wins over `ORCA_BASE_URL`) | `https://www.orcarouter.ai` |
+| `ORCA_API_BASE_URL` | Explicit OrcaRouter inference origin (wins over `ORCA_BASE_URL`) | `https://api.orcarouter.ai/v1` |
 | `GOOGLE_BASE_URL` | Custom Google endpoint | - |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint | - |
 | `ZAI_BASE_URL` | Custom Z.AI endpoint | `https://api.z.ai/api/paas/v4` |
@@ -908,9 +925,9 @@ AI SDK-based image generation using OpenAI GPT Image 2, Azure OpenAI, Google, Op
 
 **Provider Auto-Selection**:
 1. If `--provider` is specified → use it
-2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, Replicate, Seedream, MiniMax, and finally Agnes
+2. If `--ref` is provided and no provider is specified → try Google, then OpenAI, Azure, OpenRouter, OrcaRouter, Replicate, Seedream, MiniMax, and finally Agnes
 3. If only one API key is available → use that provider
-4. If multiple providers are available → default to Google, then OpenAI, Azure, OpenRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream, Agnes
+4. If multiple providers are available → default to Google, then OpenAI, Azure, OpenRouter, OrcaRouter, DashScope, Z.AI, MiniMax, Replicate, Jimeng, Seedream, Agnes
 
 #### baoyu-danger-gemini-web
 

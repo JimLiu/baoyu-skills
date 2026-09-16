@@ -11,7 +11,7 @@ description: EXTEND.md YAML schema for baoyu-image-gen user preferences
 ---
 version: 1
 
-default_provider: null      # google|openai|azure|openrouter|dashscope|zai|minimax|replicate|jimeng|seedream|codex-cli|agnes|null (null = auto-detect; codex-cli is never auto-detected — pin it here or via --provider)
+default_provider: null      # google|openai|azure|openrouter|orcarouter|dashscope|zai|minimax|replicate|jimeng|seedream|codex-cli|agnes|null (null = auto-detect; codex-cli is never auto-detected — pin it here or via --provider)
 
 default_quality: null       # normal|2k|null (null = use default: 2k)
 
@@ -26,6 +26,7 @@ default_model:
   openai: null              # e.g., "gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2", "gpt-image-1.5"
   azure: null               # Azure deployment name, e.g., "gpt-image-2.5-flare" or "image-prod"
   openrouter: null          # e.g., "google/gemini-3.1-flash-image"
+  orcarouter: null          # e.g., "google/gemini-3.1-flash-image-preview" (see --list-models)
   dashscope: null           # e.g., "qwen-image-3.0-pro", "qwen-image-2.0-pro"
   zai: null                 # e.g., "glm-image"
   minimax: null             # e.g., "image-01"
@@ -49,6 +50,9 @@ batch:
       concurrency: 3
       start_interval_ms: 1100
     openrouter:
+      concurrency: 3
+      start_interval_ms: 1100
+    orcarouter:
       concurrency: 3
       start_interval_ms: 1100
     dashscope:
@@ -83,6 +87,7 @@ batch:
 | `default_model.openai` | string\|null | null | OpenAI default model |
 | `default_model.azure` | string\|null | null | Azure default deployment name |
 | `default_model.openrouter` | string\|null | null | OpenRouter default model |
+| `default_model.orcarouter` | string\|null | null | OrcaRouter default model (list live values with `--list-models`) |
 | `default_model.dashscope` | string\|null | null | DashScope default model |
 | `default_model.zai` | string\|null | null | Z.AI default model |
 | `default_model.minimax` | string\|null | null | MiniMax default model |
@@ -119,6 +124,7 @@ default_model:
   openai: "gpt-image-2.5-flare"
   azure: "gpt-image-2.5-flare"
   openrouter: "google/gemini-3.1-flash-image"
+  orcarouter: "google/gemini-3.1-flash-image-preview"
   dashscope: "qwen-image-2.0-pro"
   zai: "glm-image"
   minimax: "image-01"

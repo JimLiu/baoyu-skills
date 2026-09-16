@@ -39,6 +39,19 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --provid
 # OpenRouter (recommended default)
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openrouter
 
+# OrcaRouter (API key via ORCAROUTER_API_KEY, or authorize with --orcarouter-login)
+{bun} {baseDir}/scripts/main.ts --provider orcarouter --prompt "A cat" --image out.png
+
+# OrcaRouter explicit model from the discovered catalog
+{bun} {baseDir}/scripts/main.ts --provider orcarouter --model google/gemini-3.1-flash-image-preview \
+  --prompt "A landscape" --image out.png --ar 16:9
+
+# OrcaRouter with a reference image (Gemini image models route through chat/completions)
+{bun} {baseDir}/scripts/main.ts --provider orcarouter --prompt "Make it blue" --image out.png --ref source.png
+
+# OrcaRouter models this credential can actually use
+{bun} {baseDir}/scripts/main.ts --list-models
+
 # OpenRouter with reference
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --provider openrouter --model google/gemini-3.1-flash-image --ref source.png
 
