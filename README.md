@@ -200,14 +200,14 @@ Xiaohongshu image card series generator. Breaks down content into 1-10 cartoon-s
 
 #### baoyu-infographic
 
-Generate professional infographics with 21 layout types and 21 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics.
+Generate professional infographics with 21 layout types and 22 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics.
 
 ```bash
 # Auto-recommend combinations based on content
 /baoyu-infographic path/to/content.md
 
 # Specify layout
-/baoyu-infographic path/to/content.md --layout pyramid
+/baoyu-infographic path/to/content.md --layout hub-spoke
 
 # Specify style (default: craft-handmade)
 /baoyu-infographic path/to/content.md --style technical-schematic
@@ -223,37 +223,44 @@ Generate professional infographics with 21 layout types and 21 visual styles. An
 **Options**:
 | Option | Description |
 |--------|-------------|
-| `--layout <name>` | Information layout (20 options) |
-| `--style <name>` | Visual style (17 options, default: craft-handmade) |
+| `--layout <name>` | Information layout (21 options, default: bento-grid) |
+| `--style <name>` | Visual style (22 options, default: craft-handmade) |
 | `--aspect <ratio>` | Named: landscape (16:9), portrait (9:16), square (1:1). Custom: any W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
 | `--lang <code>` | Output language (en, zh, ja, etc.) |
+| `--no-confirm` | Skip the combination confirmation step and generate directly |
+| `--ref <files...>` | Reference images for style, palette, composition, or subject guidance |
 
 **Layouts** (information structure):
 
 | Layout | Best For |
 |--------|----------|
-| `bridge` | Problem-solution, gap-crossing |
-| `circular-flow` | Cycles, recurring processes |
-| `comparison-table` | Multi-factor comparisons |
-| `do-dont` | Correct vs incorrect practices |
-| `equation` | Formula breakdown, input-output |
-| `feature-list` | Product features, bullet points |
-| `fishbone` | Root cause analysis |
-| `funnel` | Conversion processes, filtering |
-| `grid-cards` | Multiple topics, overview |
+| `linear-progression` | Timelines, processes, tutorials |
+| `binary-comparison` | A vs B, before-after, pros-cons |
+| `comparison-matrix` | Multi-factor comparisons |
+| `hierarchical-layers` | Pyramids, priority levels |
+| `tree-branching` | Categories, taxonomies |
+| `hub-spoke` | Central concept with related items |
+| `structural-breakdown` | Exploded views, cross-sections |
+| `bento-grid` | Multiple topics, overview (default) |
 | `iceberg` | Surface vs hidden aspects |
-| `journey-path` | Customer journey, milestones |
-| `layers-stack` | Technology stack, layers |
-| `mind-map` | Brainstorming, idea mapping |
-| `nested-circles` | Levels of influence, scope |
-| `priority-quadrants` | Eisenhower matrix, 2x2 |
-| `pyramid` | Hierarchy, Maslow's needs |
-| `scale-balance` | Pros vs cons, weighing |
-| `timeline-horizontal` | History, chronological events |
-| `tree-hierarchy` | Org charts, taxonomy |
-| `venn` | Overlapping concepts |
+| `bridge` | Problem-solution |
+| `funnel` | Conversion, filtering |
+| `isometric-map` | Spatial relationships |
+| `dashboard` | Metrics, KPIs |
+| `periodic-table` | Categorized collections |
+| `comic-strip` | Narratives, sequences |
+| `story-mountain` | Plot structure, tension arcs |
+| `jigsaw` | Interconnected parts |
+| `venn-diagram` | Overlapping concepts |
+| `winding-roadmap` | Journey, milestones |
+| `circular-flow` | Cycles, recurring processes |
+| `dense-modules` | High-density modules, data-rich guides |
 
-**Layout Previews**:
+**Legacy Layout Previews**:
+
+> **Note:** These images retain the legacy layout names and are provided as visual references only. They do not represent the current `--layout` values listed above.
+>
+> **TODO:** Regenerate previews for all 21 current layouts and replace this gallery.
 
 | | | |
 |:---:|:---:|:---:|
@@ -293,8 +300,13 @@ Generate professional infographics with 21 layout types and 21 visual styles. An
 | `ikea-manual` | Minimal line art, assembly style |
 | `knolling` | Organized flat-lay, top-down |
 | `lego-brick` | Toy brick construction, playful |
+| `pop-laboratory` | Blueprint grid, coordinate markers, lab precision |
+| `morandi-journal` | Hand-drawn doodles, warm Morandi tones |
+| `retro-pop-grid` | 1970s pop art, Swiss grid, thick outlines |
+| `hand-drawn-edu` | Macaron pastels, hand-drawn wobble, stick figures |
+| `retro-popup-pop` | Retro popup collage, vintage UI, flat pop colors |
 
-**Style Previews**:
+**Selected Style Previews**:
 
 | | | |
 |:---:|:---:|:---:|
