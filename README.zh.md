@@ -266,6 +266,29 @@ npx skills add JimLiu/baoyu-design
 | `circular-flow` | 循环、周期性流程 |
 | `dense-modules` | 高密度模块、数据丰富的指南 |
 
+**旧版布局预览**：
+
+> **说明：** 以下图片沿用旧版布局名称，仅作为视觉参考，不代表上方当前可用的 `--layout` 参数。
+>
+> **TODO：** 按当前 21 种布局重新生成对应预览并替换此图库。
+
+| | | |
+|:---:|:---:|:---:|
+| ![bridge](./screenshots/infographic-layouts/bridge.webp) | ![circular-flow](./screenshots/infographic-layouts/circular-flow.webp) | ![comparison-table](./screenshots/infographic-layouts/comparison-table.webp) |
+| bridge | circular-flow | comparison-table |
+| ![do-dont](./screenshots/infographic-layouts/do-dont.webp) | ![equation](./screenshots/infographic-layouts/equation.webp) | ![feature-list](./screenshots/infographic-layouts/feature-list.webp) |
+| do-dont | equation | feature-list |
+| ![fishbone](./screenshots/infographic-layouts/fishbone.webp) | ![funnel](./screenshots/infographic-layouts/funnel.webp) | ![grid-cards](./screenshots/infographic-layouts/grid-cards.webp) |
+| fishbone | funnel | grid-cards |
+| ![iceberg](./screenshots/infographic-layouts/iceberg.webp) | ![journey-path](./screenshots/infographic-layouts/journey-path.webp) | ![layers-stack](./screenshots/infographic-layouts/layers-stack.webp) |
+| iceberg | journey-path | layers-stack |
+| ![mind-map](./screenshots/infographic-layouts/mind-map.webp) | ![nested-circles](./screenshots/infographic-layouts/nested-circles.webp) | ![priority-quadrants](./screenshots/infographic-layouts/priority-quadrants.webp) |
+| mind-map | nested-circles | priority-quadrants |
+| ![pyramid](./screenshots/infographic-layouts/pyramid.webp) | ![scale-balance](./screenshots/infographic-layouts/scale-balance.webp) | ![timeline-horizontal](./screenshots/infographic-layouts/timeline-horizontal.webp) |
+| pyramid | scale-balance | timeline-horizontal |
+| ![tree-hierarchy](./screenshots/infographic-layouts/tree-hierarchy.webp) | ![venn](./screenshots/infographic-layouts/venn.webp) | |
+| tree-hierarchy | venn | |
+
 **风格**（视觉美学）：
 
 | 风格 | 描述 |

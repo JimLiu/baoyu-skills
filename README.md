@@ -256,6 +256,29 @@ Generate professional infographics with 21 layout types and 22 visual styles. An
 | `circular-flow` | Cycles, recurring processes |
 | `dense-modules` | High-density modules, data-rich guides |
 
+**Legacy Layout Previews**:
+
+> **Note:** These images retain the legacy layout names and are provided as visual references only. They do not represent the current `--layout` values listed above.
+>
+> **TODO:** Regenerate previews for all 21 current layouts and replace this gallery.
+
+| | | |
+|:---:|:---:|:---:|
+| ![bridge](./screenshots/infographic-layouts/bridge.webp) | ![circular-flow](./screenshots/infographic-layouts/circular-flow.webp) | ![comparison-table](./screenshots/infographic-layouts/comparison-table.webp) |
+| bridge | circular-flow | comparison-table |
+| ![do-dont](./screenshots/infographic-layouts/do-dont.webp) | ![equation](./screenshots/infographic-layouts/equation.webp) | ![feature-list](./screenshots/infographic-layouts/feature-list.webp) |
+| do-dont | equation | feature-list |
+| ![fishbone](./screenshots/infographic-layouts/fishbone.webp) | ![funnel](./screenshots/infographic-layouts/funnel.webp) | ![grid-cards](./screenshots/infographic-layouts/grid-cards.webp) |
+| fishbone | funnel | grid-cards |
+| ![iceberg](./screenshots/infographic-layouts/iceberg.webp) | ![journey-path](./screenshots/infographic-layouts/journey-path.webp) | ![layers-stack](./screenshots/infographic-layouts/layers-stack.webp) |
+| iceberg | journey-path | layers-stack |
+| ![mind-map](./screenshots/infographic-layouts/mind-map.webp) | ![nested-circles](./screenshots/infographic-layouts/nested-circles.webp) | ![priority-quadrants](./screenshots/infographic-layouts/priority-quadrants.webp) |
+| mind-map | nested-circles | priority-quadrants |
+| ![pyramid](./screenshots/infographic-layouts/pyramid.webp) | ![scale-balance](./screenshots/infographic-layouts/scale-balance.webp) | ![timeline-horizontal](./screenshots/infographic-layouts/timeline-horizontal.webp) |
+| pyramid | scale-balance | timeline-horizontal |
+| ![tree-hierarchy](./screenshots/infographic-layouts/tree-hierarchy.webp) | ![venn](./screenshots/infographic-layouts/venn.webp) | |
+| tree-hierarchy | venn | |
+
 **Styles** (visual aesthetics):
 
 | Style | Description |
