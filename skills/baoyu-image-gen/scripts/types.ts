@@ -2,6 +2,7 @@ export type Provider =
   | "google"
   | "openai"
   | "openrouter"
+  | "orcarouter"
   | "dashscope"
   | "zai"
   | "minimax"
@@ -35,6 +36,10 @@ export type CliArgs = {
   jobs: number | null;
   json: boolean;
   help: boolean;
+  orcarouterLogin?: boolean;
+  orcarouterLoginCode?: string | null;
+  orcarouterKey?: string | null;
+  listModels?: boolean;
 };
 
 export type BatchTaskInput = {
@@ -72,6 +77,7 @@ export type ExtendConfig = {
     google: string | null;
     openai: string | null;
     openrouter: string | null;
+    orcarouter: string | null;
     dashscope: string | null;
     zai: string | null;
     minimax: string | null;

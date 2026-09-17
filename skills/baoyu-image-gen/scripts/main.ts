@@ -3,6 +3,20 @@ import process from "node:process";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { access, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import {
+  connectOrcaAccount,
+  createTerminalPrompt,
+  OrcaLoginError,
+} from "./orcarouter/login";
+import { resolveOrcaOrigins } from "./orcarouter/origins";
+import {
+  formatModelList,
+  getCredentialRemediation,
+  resolveEnvTarget,
+  saveOrcaCredential,
+} from "./orcarouter/commands";
+import { ensureImageCatalog } from "./orcarouter/discovery";
+import { ORCA_CREDENTIAL_ENV, ORCA_KEY_URL, maskSecret } from "./orcarouter/credentials";
 import type {
   BatchFile,
   BatchTaskInput,
@@ -58,6 +72,7 @@ const DEFAULT_PROVIDER_RATE_LIMITS: Record<Provider, ProviderRateLimit> = {
   google: { concurrency: 3, startIntervalMs: 1100 },
   openai: { concurrency: 3, startIntervalMs: 1100 },
   openrouter: { concurrency: 3, startIntervalMs: 1100 },
+  orcarouter: { concurrency: 3, startIntervalMs: 1100 },
   dashscope: { concurrency: 3, startIntervalMs: 1100 },
   zai: { concurrency: 3, startIntervalMs: 1100 },
   minimax: { concurrency: 3, startIntervalMs: 1100 },
@@ -80,7 +95,7 @@ Options:
   --image <path>            Output image path (required in single-image mode)
   --batchfile <path>        JSON batch file for multi-image generation
   --jobs <count>            Worker count for batch mode (default: auto, max from config, built-in default 10)
-  --provider google|openai|openrouter|dashscope|zai|minimax|replicate|jimeng|seedream|azure|codex-cli|agnes  Force provider (auto-detect by default)
+  --provider google|openai|openrouter|orcarouter|dashscope|zai|minimax|replicate|jimeng|seedream|azure|codex-cli|agnes  Force provider (auto-detect by default)
   -m, --model <id>          Model ID
   --ar <ratio>              Aspect ratio (e.g., 16:9, 1:1, 4:3)
   --size <WxH>              Size (e.g., 1024x1024)
@@ -91,6 +106,10 @@ Options:
   --ref <files...>          Reference images (Google, OpenAI, Azure, OpenRouter, Replicate supported families, MiniMax, Seedream 4.0/4.5/5.0, or DashScope wan2.7-image*)
   --n <count>               Number of images for the current task (default: 1; Replicate currently requires 1)
   --json                    JSON output
+  --orcarouter-login        Authorize with an OrcaRouter account (OAuth 2.0 + PKCE, out-of-band code)
+  --orcarouter-login-code <code>  Complete an OrcaRouter login with the code shown on the consent screen
+  --orcarouter-key <key>    Save an OrcaRouter API key into the .env store, then exit
+  --list-models             List the OrcaRouter models this credential can actually use, then exit
   -h, --help                Show help
 
 Batch file format:
@@ -143,6 +162,12 @@ Environment variables:
   OPENROUTER_BASE_URL       Custom OpenRouter endpoint
   OPENROUTER_HTTP_REFERER   Optional app URL for OpenRouter attribution
   OPENROUTER_TITLE          Optional app name for OpenRouter attribution
+  ORCAROUTER_API_KEY        OrcaRouter API key (sk-orca-...). Create one at https://www.orcarouter.ai/console/token
+  ORCAROUTER_IMAGE_MODEL    Default OrcaRouter image model (google/gemini-3.1-flash-image-preview)
+  ORCA_BASE_URL             Shared self-hosted OrcaRouter origin for auth and inference
+  ORCA_AUTH_BASE_URL        Explicit OrcaRouter auth origin (wins over ORCA_BASE_URL)
+  ORCA_API_BASE_URL         Explicit OrcaRouter inference origin (wins over ORCA_BASE_URL)
+                            (ORCAROUTER_BASE_URL / _AUTH_BASE_URL / _API_BASE_URL are accepted aliases)
   GOOGLE_BASE_URL           Custom Google endpoint
   DASHSCOPE_BASE_URL        Custom DashScope endpoint
   ZAI_BASE_URL              Custom Z.AI endpoint
@@ -189,6 +214,10 @@ export function parseArgs(argv: string[]): CliArgs {
     jobs: null,
     json: false,
     help: false,
+    orcarouterLogin: false,
+    orcarouterLoginCode: null,
+    orcarouterKey: null,
+    listModels: false,
   };
 
   const positional: string[] = [];
@@ -261,6 +290,7 @@ export function parseArgs(argv: string[]): CliArgs {
         v !== "google" &&
         v !== "openai" &&
         v !== "openrouter" &&
+        v !== "orcarouter" &&
         v !== "dashscope" &&
         v !== "zai" &&
         v !== "minimax" &&
@@ -343,6 +373,30 @@ export function parseArgs(argv: string[]): CliArgs {
       if (!v) throw new Error("Missing value for --n");
       out.n = parseInt(v, 10);
       if (isNaN(out.n) || out.n < 1) throw new Error(`Invalid count: ${v}`);
+      continue;
+    }
+
+    if (a === "--orcarouter-login") {
+      out.orcarouterLogin = true;
+      continue;
+    }
+
+    if (a === "--orcarouter-login-code") {
+      const v = argv[++i];
+      if (!v) throw new Error(`Missing value for ${a}`);
+      out.orcarouterLoginCode = v;
+      continue;
+    }
+
+    if (a === "--orcarouter-key") {
+      const v = argv[++i];
+      if (!v) throw new Error(`Missing value for ${a}`);
+      out.orcarouterKey = v;
+      continue;
+    }
+
+    if (a === "--list-models") {
+      out.listModels = true;
       continue;
     }
 
@@ -441,6 +495,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           google: null,
           openai: null,
           openrouter: null,
+          orcarouter: null,
           dashscope: null,
           zai: null,
           minimax: null,
@@ -472,6 +527,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           key === "google" ||
           key === "openai" ||
           key === "openrouter" ||
+          key === "orcarouter" ||
           key === "dashscope" ||
           key === "zai" ||
           key === "minimax" ||
@@ -493,6 +549,7 @@ export function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
           key === "google" ||
           key === "openai" ||
           key === "openrouter" ||
+          key === "orcarouter" ||
           key === "dashscope" ||
           key === "zai" ||
           key === "minimax" ||
@@ -662,6 +719,7 @@ export function getConfiguredProviderRateLimits(
     google: { ...DEFAULT_PROVIDER_RATE_LIMITS.google },
     openai: { ...DEFAULT_PROVIDER_RATE_LIMITS.openai },
     openrouter: { ...DEFAULT_PROVIDER_RATE_LIMITS.openrouter },
+    orcarouter: { ...DEFAULT_PROVIDER_RATE_LIMITS.orcarouter },
     dashscope: { ...DEFAULT_PROVIDER_RATE_LIMITS.dashscope },
     zai: { ...DEFAULT_PROVIDER_RATE_LIMITS.zai },
     minimax: { ...DEFAULT_PROVIDER_RATE_LIMITS.minimax },
@@ -672,7 +730,7 @@ export function getConfiguredProviderRateLimits(
     agnes: { ...DEFAULT_PROVIDER_RATE_LIMITS.agnes },
   };
 
-  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure", "codex-cli", "agnes"] as Provider[]) {
+  for (const provider of ["replicate", "google", "openai", "openrouter", "orcarouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure", "codex-cli", "agnes"] as Provider[]) {
     const envPrefix = `BAOYU_IMAGE_GEN_${provider.toUpperCase().replace(/-/g, "_")}`;
     const extendLimit = extendConfig.batch?.provider_limits?.[provider];
     configured[provider] = {
@@ -737,6 +795,7 @@ export function detectProvider(args: CliArgs): Provider {
     args.provider !== "openai" &&
     args.provider !== "azure" &&
     args.provider !== "openrouter" &&
+    args.provider !== "orcarouter" &&
     args.provider !== "replicate" &&
     args.provider !== "seedream" &&
     args.provider !== "minimax" &&
@@ -755,6 +814,7 @@ export function detectProvider(args: CliArgs): Provider {
   const hasAzure = !!(process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_BASE_URL);
   const hasOpenai = !!process.env.OPENAI_API_KEY;
   const hasOpenrouter = !!process.env.OPENROUTER_API_KEY;
+  const hasOrcarouter = !!process.env.ORCAROUTER_API_KEY;
   const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
   const hasZai = !!(process.env.ZAI_API_KEY || process.env.BIGMODEL_API_KEY);
   const hasMinimax = !!process.env.MINIMAX_API_KEY;
@@ -797,12 +857,13 @@ export function detectProvider(args: CliArgs): Provider {
     if (hasOpenai) return "openai";
     if (hasAzure) return "azure";
     if (hasOpenrouter) return "openrouter";
+    if (hasOrcarouter) return "orcarouter";
     if (hasReplicate) return "replicate";
     if (hasSeedream) return "seedream";
     if (hasMinimax) return "minimax";
     if (hasAgnes) return "agnes";
     throw new Error(
-      "Reference images require Google, OpenAI, Azure, OpenRouter, Replicate, supported Seedream models, MiniMax, or Agnes. Set GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, REPLICATE_API_TOKEN, ARK_API_KEY, MINIMAX_API_KEY, or AGNES_API_KEY, or remove --ref."
+      "Reference images require Google, OpenAI, Azure, OpenRouter, Replicate, supported Seedream models, MiniMax, or Agnes. Set GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, ORCAROUTER_API_KEY, REPLICATE_API_TOKEN, ARK_API_KEY, MINIMAX_API_KEY, or AGNES_API_KEY, or remove --ref."
     );
   }
 
@@ -811,6 +872,7 @@ export function detectProvider(args: CliArgs): Provider {
     hasOpenai && "openai",
     hasAzure && "azure",
     hasOpenrouter && "openrouter",
+    hasOrcarouter && "orcarouter",
     hasDashscope && "dashscope",
     hasZai && "zai",
     hasMinimax && "minimax",
@@ -824,7 +886,7 @@ export function detectProvider(args: CliArgs): Provider {
   if (available.length > 1) return available[0]!;
 
   throw new Error(
-    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, DASHSCOPE_API_KEY, ZAI_API_KEY, MINIMAX_API_KEY, REPLICATE_API_TOKEN, JIMENG keys, ARK_API_KEY, or AGNES_API_KEY.\n" +
+    "No API key found. Set GOOGLE_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY+AZURE_OPENAI_BASE_URL, OPENROUTER_API_KEY, DASHSCOPE_API_KEY, ZAI_API_KEY, MINIMAX_API_KEY, REPLICATE_API_TOKEN, JIMENG keys, ARK_API_KEY, AGNES_API_KEY, or ORCAROUTER_API_KEY.\n" +
       "Create ~/.baoyu-skills/.env or <cwd>/.baoyu-skills/.env with your keys."
   );
 }
@@ -889,6 +951,7 @@ async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
   if (provider === "minimax") return (await import("./providers/minimax")) as ProviderModule;
   if (provider === "replicate") return (await import("./providers/replicate")) as ProviderModule;
   if (provider === "openrouter") return (await import("./providers/openrouter")) as ProviderModule;
+  if (provider === "orcarouter") return (await import("./providers/orcarouter")) as ProviderModule;
   if (provider === "jimeng") return (await import("./providers/jimeng")) as ProviderModule;
   if (provider === "seedream") return (await import("./providers/seedream")) as ProviderModule;
   if (provider === "azure") return (await import("./providers/azure")) as ProviderModule;
@@ -917,6 +980,9 @@ function getModelForProvider(
     if (provider === "openai" && extendConfig.default_model.openai) return extendConfig.default_model.openai;
     if (provider === "openrouter" && extendConfig.default_model.openrouter) {
       return extendConfig.default_model.openrouter;
+    }
+    if (provider === "orcarouter" && extendConfig.default_model.orcarouter) {
+      return extendConfig.default_model.orcarouter;
     }
     if (provider === "dashscope" && extendConfig.default_model.dashscope) return extendConfig.default_model.dashscope;
     if (provider === "zai" && extendConfig.default_model.zai) return extendConfig.default_model.zai;
@@ -1162,7 +1228,7 @@ async function runBatchTasks(
   const acquireProvider = createProviderGate(providerRateLimits);
   const workerCount = getWorkerCount(tasks.length, jobs, maxWorkers);
   console.error(`Batch mode: ${tasks.length} tasks, ${workerCount} workers, parallel mode enabled.`);
-  for (const provider of ["replicate", "google", "openai", "openrouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure", "codex-cli", "agnes"] as Provider[]) {
+  for (const provider of ["replicate", "google", "openai", "openrouter", "orcarouter", "dashscope", "zai", "minimax", "jimeng", "seedream", "azure", "codex-cli", "agnes"] as Provider[]) {
     const limit = providerRateLimits[provider];
     console.error(`- ${provider}: concurrency=${limit.concurrency}, startIntervalMs=${limit.startIntervalMs}`);
   }
@@ -1253,6 +1319,76 @@ async function runBatchMode(args: CliArgs, extendConfig: Partial<ExtendConfig>):
   }
 }
 
+export async function runOrcaCommand(args: CliArgs): Promise<boolean> {
+  if (args.orcarouterKey) {
+    const target = await resolveEnvTarget();
+    const saved = await saveOrcaCredential(args.orcarouterKey, target);
+    console.log(`OrcaRouter API key saved as ${ORCA_CREDENTIAL_ENV} in the ${saved.scope} .env (${saved.masked}).`);
+    return true;
+  }
+
+  if (args.orcarouterLogin || args.orcarouterLoginCode) {
+    const target = await resolveEnvTarget();
+    let result;
+    if (args.orcarouterLoginCode) {
+      const { OrcaLoginSession } = await import("./orcarouter/login");
+      const origins = resolveOrcaOrigins();
+      const session = new OrcaLoginSession(origins.authBaseUrl, origins.apiBaseUrl, 1);
+      console.log(`OrcaRouter login — authorize at:\n${session.url()}`);
+      result = await session.exchange(args.orcarouterLoginCode);
+    } else {
+      result = await connectOrcaAccount({ prompt: await createTerminalPrompt() });
+    }
+
+    if (!result) {
+      console.error("OrcaRouter login did not return a credential.");
+      return true;
+    }
+
+    const saved = await saveOrcaCredential(result.credential.value, target);
+    if (result.scopeDowngrade) console.error(`Warning: ${result.scopeDowngrade}`);
+    console.log(
+      `OrcaRouter account authorized — credential saved as ${ORCA_CREDENTIAL_ENV} in the ${saved.scope} .env (${saved.masked}, scope ${result.credential.scope}). It is reused until you revoke it.`
+    );
+    return true;
+  }
+
+  return false;
+}
+
+async function runListModels(args: CliArgs): Promise<void> {
+  const apiKey = process.env[ORCA_CREDENTIAL_ENV];
+  if (!apiKey) throw new Error(getCredentialRemediation("missing"));
+
+  const origins = resolveOrcaOrigins();
+  const catalog = await ensureImageCatalog({
+    apiBaseUrl: origins.apiBaseUrl,
+    apiKey,
+    forceRefresh: true,
+  });
+
+  if (args.json) {
+    emitJson({
+      provider: "orcarouter",
+      catalogSource: catalog.source,
+      degraded: catalog.degraded,
+      degradedReason: catalog.degradedReason,
+      acceptedCount: catalog.acceptedCount,
+      rejectedCount: catalog.rejectedCount,
+      models: catalog.models.map((model) => ({
+        id: model.id,
+        endpointTypes: model.endpointTypes,
+        inputModalities: model.inputModalities,
+        outputModalities: model.outputModalities,
+      })),
+    });
+    return;
+  }
+
+  console.log(`OrcaRouter image models (catalog: ${catalog.source}${catalog.degraded ? `, degraded: ${catalog.degradedReason}` : ""}):`);
+  for (const line of formatModelList(catalog.models.map((model) => model.id))) console.log(line);
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -1261,6 +1397,14 @@ async function main(): Promise<void> {
   }
 
   await loadEnv();
+
+  if (await runOrcaCommand(args)) return;
+
+  if (args.listModels) {
+    await runListModels(args);
+    return;
+  }
+
   const extendConfig = await loadExtendConfig();
   const mergedArgs = mergeConfig(args, extendConfig);
   if (!mergedArgs.quality) mergedArgs.quality = "2k";
