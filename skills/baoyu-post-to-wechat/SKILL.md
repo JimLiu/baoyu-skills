@@ -190,6 +190,8 @@ Auto-generation: title = first H1/H2 or first sentence; summary = first paragrap
 
 **Important — never pre-convert markdown to HTML.** Publishing scripts handle the conversion internally and the two methods render images differently: API renders `<img>` tags for upload, browser uses placeholders for paste-and-replace. Passing a pre-converted HTML breaks one or the other.
 
+**Body image format**: WeChat body images do not support SVG; convert SVG files to PNG or JPG before publishing.
+
 **Markdown citation default**: for markdown input, ordinary external links are converted to bottom citations by default. Use `--no-cite` only if the user explicitly wants to keep inline links. Existing HTML input is left as-is.
 
 **API method** (accepts `.md` or `.html`):
