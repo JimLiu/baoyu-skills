@@ -35,7 +35,8 @@
         "./skills/baoyu-url-to-markdown",
         "./skills/baoyu-wechat-summary",
         "./skills/baoyu-xhs-images",
-        "./skills/baoyu-youtube-transcript"
+        "./skills/baoyu-youtube-transcript",
+        "./skills/baoyu-verify-document"
       ]
     }
   ]
