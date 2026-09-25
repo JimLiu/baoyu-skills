@@ -1393,4 +1393,4 @@ Published ClawHub skills follow ClawHub registry rules and are distributed under
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=JimLiu/baoyu-skills&type=Date)](https://www.star-history.com/#JimLiu/baoyu-skills&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=JimLiu/baoyu-skills&type=Date)](https://star-history.dera.page/#JimLiu/baoyu-skills&type=Date)
