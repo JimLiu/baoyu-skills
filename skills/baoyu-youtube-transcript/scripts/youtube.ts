@@ -1,5 +1,7 @@
 import { spawnSync } from "child_process";
-import { writeFileSync } from "fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 import { makeError, normalizeError, normalizePublishDate, shouldTryAlternateClient, shouldTryYtDlpFallback } from "./shared.ts";
 import { findTranscript, parseTranscriptPayload } from "./transcript.ts";
@@ -243,7 +245,12 @@ export async function fetchTranscriptWithFallback(
   ) => Promise<{ snippets: Snippet[]; language: string; languageCode: string }> = fetchTranscriptSnippets,
   fetchFallbackSource: (videoId: string) => Promise<VideoSource> | VideoSource = (requestedVideoId) =>
     buildYtDlpVideoSource(requestedVideoId, fetchYtDlpInfo(requestedVideoId)),
-  logWarning: (message: string) => void = (message) => console.error(message)
+  logWarning: (message: string) => void = (message) => console.error(message),
+  fetchYtDlpSnippets: (
+    videoId: string,
+    source: Extract<VideoSource, { kind: "yt-dlp" }>,
+    transcript: TranscriptInfo
+  ) => Promise<{ snippets: Snippet[]; language: string; languageCode: string }> = fetchTranscriptFromYtDlp
 ): Promise<{
   source: VideoSource;
   transcript: TranscriptInfo;
@@ -251,13 +258,19 @@ export async function fetchTranscriptWithFallback(
   language: string;
   languageCode: string;
 }> {
+  const fetchSelected = (
+    selectedSource: VideoSource,
+    selectedTranscript: TranscriptInfo
+  ) => selectedSource.kind === "yt-dlp"
+    ? fetchYtDlpSnippets(videoId, selectedSource, selectedTranscript)
+    : fetchSnippets(selectedTranscript, opts.translate || undefined);
   const transcript = findTranscript(
     source.transcripts,
     getRequestedLanguages(source, opts),
     opts.excludeGenerated,
     opts.excludeManual
   );
-  const result = await fetchSnippets(transcript, source.kind === "yt-dlp" ? undefined : opts.translate || undefined);
+  const result = await fetchSelected(source, transcript);
   if (result.snippets.length > 0) return { source, transcript, ...result };
 
   if (source.kind === "yt-dlp") {
@@ -272,14 +285,54 @@ export async function fetchTranscriptWithFallback(
     opts.excludeGenerated,
     opts.excludeManual
   );
-  const fallbackResult = await fetchSnippets(
-    fallbackTranscript,
-    fallbackSource.kind === "yt-dlp" ? undefined : opts.translate || undefined
-  );
+  const fallbackResult = await fetchSelected(fallbackSource, fallbackTranscript);
   if (!fallbackResult.snippets.length) {
     throw makeError(`Transcript fetch returned empty snippets for ${videoId} after yt-dlp fallback`, "EMPTY_TRANSCRIPT");
   }
   return { source: fallbackSource, transcript: fallbackTranscript, ...fallbackResult };
+}
+
+export async function fetchTranscriptFromYtDlp(
+  videoId: string,
+  source: Extract<VideoSource, { kind: "yt-dlp" }>,
+  transcript: TranscriptInfo
+): Promise<{ snippets: Snippet[]; language: string; languageCode: string }> {
+  const command = detectYtDlpCommand();
+  if (!command) throw makeError(`yt-dlp fallback unavailable for ${videoId}`, "YT_DLP_UNAVAILABLE");
+  const dir = mkdtempSync(join(tmpdir(), "baoyu-youtube-transcript-"));
+  try {
+    const infoPath = join(dir, "info.json");
+    writeFileSync(infoPath, JSON.stringify(source.info), { mode: 0o600 });
+    const args = [
+      ...command.args,
+      "--load-info-json",
+      infoPath,
+      "--skip-download",
+      transcript.isGenerated ? "--write-auto-subs" : "--write-subs",
+      "--sub-langs",
+      transcript.languageCode,
+      "--sub-format",
+      "json3/srv3/srv2/srv1/vtt/ttml/best",
+      "--output",
+      join(dir, "%(id)s.%(ext)s"),
+    ];
+    const cookiesFromBrowser = process.env.YOUTUBE_TRANSCRIPT_COOKIES_FROM_BROWSER?.trim();
+    if (cookiesFromBrowser) args.push("--cookies-from-browser", cookiesFromBrowser);
+    const result = spawnSync(command.command, args, { encoding: "utf8", maxBuffer: YT_DLP_MAX_BUFFER });
+    if (result.status !== 0) {
+      const detail = (result.stderr || "").trim() || (result.stdout || "").trim() || `exit ${result.status ?? "unknown"}`;
+      throw makeError(`yt-dlp subtitle download failed for ${videoId} (${command.label}): ${detail}`, "YT_DLP_FAILED");
+    }
+    const extensions = [".json3", ".srv3", ".srv2", ".srv1", ".vtt", ".ttml"];
+    const files = readdirSync(dir).filter((name) => extensions.some((ext) => name.endsWith(ext)));
+    files.sort((a, b) => extensions.findIndex((ext) => a.endsWith(ext)) - extensions.findIndex((ext) => b.endsWith(ext)));
+    const file = files[0];
+    if (!file) throw makeError(`yt-dlp did not write subtitles for ${videoId}`, "EMPTY_TRANSCRIPT");
+    const snippets = parseTranscriptPayload(readFileSync(join(dir, file), "utf8"), file);
+    return { snippets, language: transcript.language, languageCode: transcript.languageCode };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 export function detectYtDlpCommand(): { command: string; args: string[]; label: string } | null {

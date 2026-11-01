@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { findTranscript, parseTranscriptJson3, parseWebVtt } from "./transcript.ts";
+import { findTranscript, parseTranscriptJson3, parseTranscriptXml, parseWebVtt } from "./transcript.ts";
 import { buildTranscriptListFromYtDlp, fetchTranscriptWithFallback, resolveVideoSource, selectYtDlpTrack } from "./youtube.ts";
 
 test("selectYtDlpTrack prefers json3 over xml and vtt", () => {
@@ -57,6 +57,19 @@ test("parseTranscriptJson3 reads youtube timedtext json3 payloads", () => {
   assert.deepEqual(snippets, [
     { text: "hello world", start: 0.08, duration: 3.12 },
     { text: "again", start: 4, duration: 1.8 },
+  ]);
+});
+
+test("parseTranscriptXml reads current timedtext format 3 paragraphs", () => {
+  const snippets = parseTranscriptXml(`<?xml version="1.0" encoding="utf-8" ?>
+<timedtext format="3"><body>
+<p t="80" d="3120"><s ac="0">Hello</s><s t="400" ac="0"> world</s></p>
+<p t="4000" d="1800">Again &amp; again</p>
+</body></timedtext>`);
+
+  assert.deepEqual(snippets, [
+    { text: "Hello world", start: 0.08, duration: 3.12 },
+    { text: "Again & again", start: 4, duration: 1.8 },
   ]);
 });
 
@@ -172,7 +185,12 @@ test("fetchTranscriptWithFallback retries with yt-dlp when InnerTube transcript 
         }],
       };
     },
-    (message) => warnings.push(message)
+    (message) => warnings.push(message),
+    async (_videoId, _source, transcript) => ({
+      snippets: [{ text: "Recovered subtitle", start: 0, duration: 2 }],
+      language: transcript.language,
+      languageCode: transcript.languageCode,
+    })
   );
 
   assert.equal(fallbackCalled, true);
@@ -180,4 +198,50 @@ test("fetchTranscriptWithFallback retries with yt-dlp when InnerTube transcript 
   assert.equal(result.snippets.length, 1);
   assert.equal(result.snippets[0].text, "Recovered subtitle");
   assert.match(warnings[0] || "", /Retrying with yt-dlp fallback/);
+});
+
+test("fetchTranscriptWithFallback lets yt-dlp download cookie-bound subtitle tracks", async () => {
+  let directFetches = 0;
+  let ytDlpFetches = 0;
+  const result = await fetchTranscriptWithFallback(
+    "video12345ab",
+    {
+      kind: "yt-dlp",
+      info: { title: "Fallback" },
+      transcripts: [{
+        language: "English (auto-generated)",
+        languageCode: "en",
+        isGenerated: true,
+        isTranslatable: false,
+        baseUrl: "https://www.youtube.com/api/timedtext?expire=signed",
+        translationLanguages: [],
+      }],
+    },
+    {
+      languages: ["en"],
+      translate: "",
+      excludeGenerated: false,
+      excludeManual: false,
+    },
+    async () => {
+      directFetches += 1;
+      throw new Error("HTTP 429 fetching transcript");
+    },
+    async () => {
+      throw new Error("fallback source should not be requested twice");
+    },
+    () => {},
+    async (_videoId, _source, transcript) => {
+      ytDlpFetches += 1;
+      return {
+        snippets: [{ text: "Cookie-authenticated subtitle", start: 0, duration: 2 }],
+        language: transcript.language,
+        languageCode: transcript.languageCode,
+      };
+    }
+  );
+
+  assert.equal(directFetches, 0);
+  assert.equal(ytDlpFetches, 1);
+  assert.equal(result.snippets[0].text, "Cookie-authenticated subtitle");
 });

@@ -22,6 +22,22 @@ export function parseTranscriptXml(xml: string): Snippet[] {
       duration: parseFloat(match[2] || "0"),
     });
   }
+  if (snippets.length) return snippets;
+
+  // Current YouTube timedtext format 3 uses millisecond paragraph attributes
+  // and optional word-level <s> children instead of legacy <text> nodes.
+  const paragraphPattern = /<p\b([^>]*)>([\s\S]*?)<\/p>/g;
+  while ((match = paragraphPattern.exec(xml)) !== null) {
+    const start = match[1].match(/(?:^|\s)t="([^"]*)"/)?.[1];
+    const duration = match[1].match(/(?:^|\s)d="([^"]*)"/)?.[1];
+    const text = htmlUnescape(stripTags(match[2])).replace(/\s+/g, " ").trim();
+    if (!text || start === undefined) continue;
+    snippets.push({
+      text,
+      start: parseFloat(start) / 1000,
+      duration: parseFloat(duration || "0") / 1000,
+    });
+  }
   return snippets;
 }
 
