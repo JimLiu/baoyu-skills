@@ -5,20 +5,6 @@ description: Watermark configuration guide for baoyu-cover-image
 
 # Watermark Guide
 
-## Position Diagram
-
-```
-┌─────────────────────────────┐
-│                  [top-right]│
-│                             │
-│                             │
-│       COVER IMAGE           │
-│                             │
-│                             │
-│[bottom-left][bottom-center][bottom-right]│
-└─────────────────────────────┘
-```
-
 ## Position Recommendations
 
 | Position | Best For | Avoid When |

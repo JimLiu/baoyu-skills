@@ -72,21 +72,9 @@ Palette notes: [key characteristics from palette definition]
 [Reference images section if provided — REQUIRED, see below]
 ```
 
-## Reference-Driven Design ⚠️ HIGH PRIORITY
-
-When reference images are provided, they are the **primary visual input** and MUST strongly influence the output. The cover should look like it belongs to the same visual family as the references.
-
-**Passing `--ref` alone is NOT enough.** Image generation models often ignore reference images unless the prompt text explicitly describes what to reproduce. Always combine `--ref` with detailed textual instructions.
-
 ## Content-Driven Design
 
-- Article title and summary inform the visual metaphor choice
-- Keywords guide decorative elements and symbols
-- The skill controls visual style; the content drives meaning
-
-## Visual Element Selection
-
-Match content themes to icon vocabulary:
+Title and summary inform the visual metaphor; keywords guide decorative elements and symbols. The skill controls visual style; the content drives meaning. Match content themes to icon vocabulary:
 
 | Content Theme | Suggested Elements |
 |---------------|-------------------|
@@ -99,23 +87,9 @@ Match content themes to icon vocabulary:
 
 Full library: [../visual-elements.md](../visual-elements.md)
 
-## Type-Specific Composition
+## Type Composition & Title
 
-| Type | Composition Guidelines |
-|------|------------------------|
-| `hero` | Large focal visual (60-70% area), title overlay on visual, dramatic composition |
-| `conceptual` | Abstract shapes representing core concepts, information hierarchy, clean zones |
-| `typography` | Title as primary element (40%+ area), minimal supporting visuals, strong hierarchy |
-| `metaphor` | Concrete object/scene representing abstract idea, symbolic elements, emotional resonance |
-| `scene` | Atmospheric environment, narrative elements, mood-setting lighting and colors |
-| `minimal` | Single focal element, generous whitespace (60%+), essential shapes only |
-
-## Title Guidelines
-
-When text level includes title:
-- **Source**: Use the exact title provided by user, or extract from source content
-- **Do NOT invent titles**: Stay faithful to the original
-- Match confirmed language
+Type-specific composition: [../types.md](../types.md#type-specific-composition). When the text level includes a title, use the exact title provided by the user or extracted from source — never invent one — in the confirmed language.
 
 ## Watermark Application
 
@@ -130,11 +104,11 @@ Reference: `config/watermark-guide.md`
 
 ## Reference Image Handling
 
-When user provides reference images (`--ref` or pasted images):
+When the user provides reference images (`--ref` or pasted), references are the **primary visual input**: the cover should look like the same visual family.
 
-### ⚠️ CRITICAL - Frontmatter References
+### ⚠️ Frontmatter References
 
-**MUST add `references` field in YAML frontmatter** when reference files are saved to `refs/`:
+**MUST add `references` in YAML frontmatter** when reference files are saved to `refs/`:
 
 ```yaml
 ---
@@ -152,39 +126,23 @@ references:
 |-------|-------------|
 | `ref_id` | Sequential number (01, 02, ...) |
 | `filename` | Relative path from prompt file's parent directory |
-| `usage` | `direct` / `style` / `palette` |
-
-**Omit `references` field entirely** if no reference files saved (style extracted verbally only).
-
-### When to Include References in Frontmatter
+| `usage` | `direct` (matches desired output closely → pass to `--ref`) / `style` (describe style in prompt text) / `palette` (include colors in prompt) |
 
 | Situation | Frontmatter Action | Generation Action |
 |-----------|-------------------|-------------------|
 | Reference file saved to `refs/` | Add to `references` list ✓ | Pass via `--ref` parameter |
-| Style extracted verbally (no file) | Omit `references` field | Describe in prompt body only |
+| Style extracted verbally (no file) | Omit `references` field entirely | Describe in prompt body only |
 | File path in frontmatter but doesn't exist | ERROR - fix or remove | Generation will fail |
 
 **Before writing prompt with references, verify**: `test -f refs/ref-NN-{slug}.{ext}`
 
-### Reference Usage Types
-
-| Usage | When to Use | Generation Action |
-|-------|-------------|-------------------|
-| `direct` | Reference matches desired output closely | Pass to `--ref` parameter |
-| `style` | Extract visual style characteristics only | Describe style in prompt text |
-| `palette` | Extract color palette only | Include colors in prompt |
-
 ### Step 1: Analyze References
 
-For each reference image, extract:
-- **Style**: Rendering technique, line quality, texture
-- **Composition**: Layout, visual hierarchy, focal points
-- **Color mood**: Palette characteristics (without specific colors)
-- **Elements**: Key visual elements and symbols used
+Extract concrete elements per [reference-images.md](reference-images.md#deep-analysis-) (style, composition, color mood, key elements).
 
 ### Step 2: Embed in Prompt ⚠️ CRITICAL
 
-**Passing `--ref` alone is NOT enough.** Image generation models frequently ignore reference images unless the prompt text explicitly and forcefully describes what to reproduce. You MUST always write detailed textual instructions regardless of whether `--ref` is used.
+**Passing `--ref` alone is NOT enough** — models often ignore reference images unless the prompt text explicitly describes what to reproduce. Always write detailed textual instructions, with or without `--ref`.
 
 **If file saved (with or without `--ref` support)**:
 - Pass ref images via `--ref` parameter if skill supports it
@@ -236,19 +194,3 @@ CRITICAL: Apply these specific visual elements extracted from the reference imag
 ## Integration approach:
 [Same spatial layout instruction]
 ```
-
-### Reference Analysis Template
-
-Use this format when analyzing reference images. Extract **specific, concrete, reproducible** details — not vague summaries.
-
-| Aspect | Analysis Points | Good Example | Bad Example |
-|--------|-----------------|--------------|-------------|
-| **Brand elements** | Logos, wordmarks, distinctive typography | "Logo 'm' formed by 3 vertical lines" | "Has a logo" |
-| **Signature patterns** | Unique motifs, textures, geometric patterns | "Woven curves forming diamond grid" | "Has patterns" |
-| **Colors** | Exact hex values or close approximations | "#2D4A3E dark teal, #F5F0E0 cream" | "Dark and light" |
-| **Layout** | Spatial zones, banner placement, proportions | "Bottom 30% is dark banner with branding" | "Has a banner" |
-| **Typography** | Font style, weight, case, spacing, position | "Uppercase, wide letter-spacing, right-aligned" | "Has text" |
-| **Rendering** | Line quality, texture, depth treatment | "Topographic contour lines as background texture" | "Clean style" |
-| **Elements** | Icon vocabulary, decorative motifs | "Geometric intersecting line ornaments at corners" | "Has decorations" |
-
-**Output**: Each extracted element should be written as a **copy-pasteable prompt instruction** prefixed with "MUST" or "REQUIRED".

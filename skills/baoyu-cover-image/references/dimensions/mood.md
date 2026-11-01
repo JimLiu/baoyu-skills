@@ -5,8 +5,6 @@ description: Emotional intensity dimension for cover images
 
 # Mood Dimension
 
-Controls emotional intensity and visual weight of cover images.
-
 ## Values
 
 | Value | Contrast | Saturation | Weight | Energy |
@@ -89,19 +87,6 @@ Dynamic, high-impact visual presence.
 - Strong contrast ratios
 - Dynamic color combinations (4+ colors)
 
-## Type Compatibility
-
-| Type | subtle | balanced | bold |
-|------|:------:|:--------:|:----:|
-| hero | ✓ | ✓✓ | ✓✓ |
-| conceptual | ✓✓ | ✓✓ | ✓ |
-| typography | ✓ | ✓✓ | ✓✓ |
-| metaphor | ✓✓ | ✓✓ | ✓ |
-| scene | ✓✓ | ✓✓ | ✓ |
-| minimal | ✓✓ | ✓✓ | ✗ |
-
-✓✓ = highly recommended | ✓ = compatible | ✗ = not recommended
-
 ## Palette Interaction
 
 Mood modifies the base palette characteristics:
@@ -128,14 +113,4 @@ Mood adjusts rendering characteristics:
 | chalk | Lighter chalk, more board showing | Standard chalk | Heavy chalk, vivid colors, dense marks |
 | screen-print | Fewer colors (2), lighter halftone | Standard 3-4 colors, medium halftone | More colors (4-5), dense halftone, stronger misregistration |
 
-## Auto Selection
-
-When `--mood` is omitted, select based on signals:
-
-| Signals | Mood Level |
-|---------|------------|
-| Professional, corporate, thought leadership, academic, luxury | `subtle` |
-| General, educational, standard, blog, documentation | `balanced` |
-| Launch, announcement, promotion, event, gaming, entertainment | `bold` |
-
-Default: `balanced`
+Type compatibility: [../compatibility.md](../compatibility.md#type--mood). Auto selection: [../auto-selection.md](../auto-selection.md#auto-mood-selection).

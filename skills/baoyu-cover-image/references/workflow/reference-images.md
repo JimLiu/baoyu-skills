@@ -1,7 +1,5 @@
 # Reference Image Handling
 
-Guide for processing user-provided reference images in cover generation.
-
 ## Input Detection
 
 | Input Type | Action |
@@ -50,9 +48,9 @@ When user can't provide file path:
 3. DO NOT add `references` to prompt frontmatter
 4. Append extracted style/colors directly to prompt text
 
-## Deep Analysis ⚠️ CRITICAL
+## Deep Analysis ⚠️
 
-References are high-priority inputs. Extract **specific, concrete, reproducible** elements:
+Extract **specific, concrete, reproducible** elements:
 
 | Analysis | Description | Example (good vs bad) |
 |----------|-------------|----------------------|
@@ -61,14 +59,16 @@ References are high-priority inputs. Extract **specific, concrete, reproducible*
 | **Color palette** | Exact hex values for key colors | Good: "#2D4A3E dark teal, #F5F0E0 cream" / Bad: "Dark and light colors" |
 | **Layout structure** | Specific spatial arrangement | Good: "Bottom 30% dark banner with branding" / Bad: "Has a banner" |
 | **Typography** | Font style, weight, spacing, case | Good: "Uppercase, wide letter-spacing" / Bad: "Has text" |
+| **Rendering** | Line quality, texture, depth treatment | Good: "Topographic contour lines as background texture" / Bad: "Clean style" |
+| **Elements** | Icon vocabulary, decorative motifs | Good: "Geometric intersecting line ornaments at corners" / Bad: "Has decorations" |
 | **Content/subject** | What the reference depicts | Factual description |
 | **Usage recommendation** | `direct` / `style` / `palette` | Based on analysis |
 
-**Output format**: List each element as bullet that can be copy-pasted into prompt as mandatory instruction.
+**Output format**: each element as a bullet that can be copy-pasted into the prompt as a mandatory instruction prefixed with "MUST" or "REQUIRED".
 
 ### Character Analysis ⚠️ If Reference Contains People
 
-Use `usage: direct` so model sees the reference image. Additionally describe per character: **appearance**, **pose**, **clothing** → with **transformation rules** (stylize to match rendering).
+Use `usage: direct` so the model sees the reference image, and also describe per character: **appearance**, **pose**, **clothing** → with **transformation rules** (stylize to match rendering).
 
 | Extract | Good | Bad |
 |---------|------|-----|
@@ -77,7 +77,7 @@ Use `usage: direct` so model sees the reference image. Additionally describe per
 | Clothing | "Dark T-shirt, business casual" | "Formal" |
 | Transform | "Flat-vector cartoon, keep hair color & clothing" | "Make cartoon" |
 
-Use `usage: direct`. Output each character as MUST/REQUIRED prompt instruction.
+Output each character as a MUST/REQUIRED prompt instruction.
 
 ## Verification Output
 
@@ -98,7 +98,7 @@ Reference Style Extracted (no file):
 
 ## Priority Rules
 
-When user provides references, they are **HIGH PRIORITY**:
+References are **HIGH PRIORITY** inputs:
 
 - **References override defaults**: If reference conflicts with preferred palette/rendering, reference takes precedence
 - **Concrete > abstract**: Extract specific elements — not vague "clean style"

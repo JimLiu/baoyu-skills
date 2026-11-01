@@ -62,70 +62,10 @@ custom_palettes:
 | `default_aspect` | string | "2.35:1" | Default aspect ratio |
 | `quick_mode` | bool | false | Skip confirmation step |
 | `language` | string | null | Output language (null = auto-detect) |
-| `preferred_image_backend` | string | `auto` | Image backend selection. `auto` = prefer runtime-native tool, fall back to the only installed backend, ask if multiple non-native are present. `ask` = always confirm on every run. `<backend-id>` (e.g., `codex-imagegen`, `baoyu-image-gen`, `image_generate`) = pin this backend when available; fall back to `auto` when it isn't. Absent = `auto`. Resolution logic is documented in `SKILL.md`'s `## Image Generation Tools` section. |
+| `preferred_image_backend` | string | `auto` | Image backend selection. `auto` = prefer runtime-native tool, fall back to the only installed backend, ask if multiple non-native are present. `ask` = always confirm on every run. `<backend-id>` (e.g., `codex-imagegen`, `baoyu-image-gen`, `image_generate`) = pin this backend when available; fall back to `auto` when it isn't. Absent = `auto`. Resolution logic: `SKILL.md` `## Image Generation Tools`. |
 | `custom_palettes` | array | [] | User-defined palettes |
 
-## Type Options
-
-| Value | Description |
-|-------|-------------|
-| `hero` | Large visual impact, title overlay |
-| `conceptual` | Concept visualization, abstract core ideas |
-| `typography` | Text-focused layout, prominent title |
-| `metaphor` | Visual metaphor, concrete expressing abstract |
-| `scene` | Atmospheric scene, narrative feel |
-| `minimal` | Minimalist composition, generous whitespace |
-
-## Palette Options
-
-| Value | Description |
-|-------|-------------|
-| `warm` | Friendly, approachable — orange, golden yellow, terracotta |
-| `elegant` | Sophisticated, refined — soft coral, muted teal, dusty rose |
-| `cool` | Technical, professional — engineering blue, navy, cyan |
-| `dark` | Cinematic, premium — electric purple, cyan, magenta |
-| `earth` | Natural, organic — forest green, sage, earth brown |
-| `vivid` | Energetic, bold — bright red, neon green, electric blue |
-| `pastel` | Gentle, whimsical — soft pink, mint, lavender |
-| `mono` | Clean, focused — black, near-black, white |
-| `retro` | Nostalgic, vintage — muted orange, dusty pink, maroon |
-
-## Rendering Options
-
-| Value | Description |
-|-------|-------------|
-| `flat-vector` | Clean outlines, uniform fills, geometric icons |
-| `hand-drawn` | Sketchy, organic, imperfect strokes, paper texture |
-| `painterly` | Soft brush strokes, color bleeds, watercolor feel |
-| `digital` | Polished, precise edges, subtle gradients, UI components |
-| `pixel` | Pixel grid, dithering, chunky 8-bit shapes |
-| `chalk` | Chalk strokes, dust effects, blackboard texture |
-
-## Text Options
-
-| Value | Description |
-|-------|-------------|
-| `none` | Pure visual, no text elements |
-| `title-only` | Single headline |
-| `title-subtitle` | Title + subtitle |
-| `text-rich` | Title + subtitle + keyword tags (2-4) |
-
-## Mood Options
-
-| Value | Description |
-|-------|-------------|
-| `subtle` | Low contrast, muted colors, calm aesthetic |
-| `balanced` | Medium contrast, normal saturation, versatile |
-| `bold` | High contrast, vivid colors, dynamic energy |
-
-## Position Options
-
-| Value | Description |
-|-------|-------------|
-| `bottom-right` | Lower right corner (default, most common) |
-| `bottom-left` | Lower left corner |
-| `bottom-center` | Bottom center |
-| `top-right` | Upper right corner |
+Value lists for type / palette / rendering / text / mood: SKILL.md Options. Watermark positions: [watermark-guide.md](watermark-guide.md).
 
 ## Aspect Ratio Options
 
