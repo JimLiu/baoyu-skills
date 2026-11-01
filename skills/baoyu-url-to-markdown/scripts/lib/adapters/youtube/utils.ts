@@ -52,6 +52,11 @@ export function parseYouTubeVideoId(url: URL): string | null {
     return liveMatch[1];
   }
 
+  const embedMatch = url.pathname.match(/^\/embed\/([^/?#]+)/);
+  if (embedMatch) {
+    return embedMatch[1];
+  }
+
   return null;
 }
 
