@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { findTranscript, parseTranscriptJson3, parseTranscriptXml, parseWebVtt } from "./transcript.ts";
+import { findTranscript, parseTranscriptJson3, parseTranscriptXml, parseWebVtt, segmentIntoSentences } from "./transcript.ts";
 import { buildTranscriptListFromYtDlp, fetchTranscriptWithFallback, resolveVideoSource, selectYtDlpTrack } from "./youtube.ts";
 
 test("selectYtDlpTrack prefers json3 over xml and vtt", () => {
@@ -244,4 +244,29 @@ test("fetchTranscriptWithFallback lets yt-dlp download cookie-bound subtitle tra
   assert.equal(directFetches, 0);
   assert.equal(ytDlpFetches, 1);
   assert.equal(result.snippets[0].text, "Cookie-authenticated subtitle");
+});
+
+test("segmentIntoSentences preserves spaces between Korean snippets", () => {
+  const sentences = segmentIntoSentences([
+    { text: "저희는", start: 0, duration: 1 },
+    { text: "그런 문제점을", start: 1, duration: 1 },
+    { text: "해결했습니다.", start: 2, duration: 1 },
+  ]);
+
+  assert.equal(sentences[0].text, "저희는 그런 문제점을 해결했습니다.");
+});
+
+test("segmentIntoSentences keeps Chinese and Japanese snippets unspaced", () => {
+  const chinese = segmentIntoSentences([
+    { text: "我们", start: 0, duration: 1 },
+    { text: "解决了", start: 1, duration: 1 },
+    { text: "问题。", start: 2, duration: 1 },
+  ]);
+  const japanese = segmentIntoSentences([
+    { text: "これは", start: 0, duration: 1 },
+    { text: "テストです。", start: 1, duration: 1 },
+  ]);
+
+  assert.equal(chinese[0].text, "我们解决了问题。");
+  assert.equal(japanese[0].text, "これはテストです。");
 });
