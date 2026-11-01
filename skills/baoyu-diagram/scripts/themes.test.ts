@@ -33,6 +33,13 @@ test("flattenVars inlines theme values, SVG-defined values and fallbacks", () =>
   assert.doesNotMatch(svg, /:root/);
 });
 
+test("flattenVars keeps functional and nested fallbacks intact", () => {
+  const svg = '<rect fill="var(--bg, rgb(255,255,255))"/><rect fill="var(--nope, rgba(1,2,3,0.5))"/><rect fill="var(--nope, var(--text))"/>';
+  const { svg: out, missing } = flattenVars(svg, loadTheme("light"));
+  assert.deepEqual(missing, []);
+  assert.equal(out, '<rect fill="#f8fafc"/><rect fill="rgba(1,2,3,0.5)"/><rect fill="#0f172a"/>');
+});
+
 test("flattenVars reports variables it cannot resolve", () => {
   const { missing } = flattenVars('<rect fill="var(--typo)"/>', loadTheme("dark"));
   assert.deepEqual(missing, ["--typo"]);

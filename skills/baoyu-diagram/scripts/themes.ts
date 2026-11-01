@@ -64,16 +64,47 @@ export function flattenVars(svg: string, theme: Record<string, string>): { svg: 
   const vars = { ...own, ...theme };
   let count = 0;
   const missing = new Set<string>();
-  const out = svg
-    .replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)/g, (match, name: string, fallback?: string) => {
-      const value = vars[name] ?? fallback?.trim();
-      if (value === undefined) {
-        missing.add(name);
-        return match;
+
+  // Scan for var( ... ) with balanced parentheses, so fallbacks like
+  // rgb(255,255,255) or a nested var() stay intact.
+  const resolve = (text: string): string => {
+    let result = "";
+    let i = 0;
+    while (i < text.length) {
+      const start = text.indexOf("var(", i);
+      if (start === -1) {
+        result += text.slice(i);
+        break;
       }
-      count++;
-      return value;
-    })
-    .replace(/:root\s*\{[^}]*\}/s, "");
+      result += text.slice(i, start);
+      let depth = 1;
+      let j = start + 4;
+      while (j < text.length && depth > 0) {
+        if (text[j] === "(") depth++;
+        else if (text[j] === ")") depth--;
+        j++;
+      }
+      if (depth > 0) {
+        result += text.slice(start);
+        break;
+      }
+      const inner = text.slice(start + 4, j - 1);
+      const comma = inner.indexOf(",");
+      const name = (comma === -1 ? inner : inner.slice(0, comma)).trim();
+      const fallback = comma === -1 ? undefined : inner.slice(comma + 1).trim();
+      const value = vars[name] ?? (fallback ? resolve(fallback) : undefined);
+      if (value === undefined || !name.startsWith("--")) {
+        missing.add(name);
+        result += text.slice(start, j);
+      } else {
+        count++;
+        result += value;
+      }
+      i = j;
+    }
+    return result;
+  };
+
+  const out = resolve(svg).replace(/:root\s*\{[^}]*\}/s, "");
   return { svg: out, count, missing: [...missing] };
 }
