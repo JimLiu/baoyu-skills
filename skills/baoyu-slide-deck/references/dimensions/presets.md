@@ -1,7 +1,5 @@
 # Preset → Dimension Mapping
 
-Maps 16 preset styles to their dimension combinations.
-
 ## Mapping Table
 
 | Preset | Texture | Mood | Typography | Density |
@@ -24,92 +22,29 @@ Maps 16 preset styles to their dimension combinations.
 | vector-illustration | clean | vibrant | humanist | balanced |
 | vintage | paper | warm | editorial | balanced |
 
-## Preset Details
+## Preset Feel
 
-### blueprint
-- **Dimensions**: grid + cool + technical + balanced
-- **Feel**: Engineering precision, analytical clarity
-- **Auto-select**: architecture, system, data, analysis, technical
+Auto-select signals: SKILL.md `### Auto-Selection`.
 
-### chalkboard
-- **Dimensions**: organic + warm + handwritten + balanced
-- **Feel**: Classroom warmth, educational
-- **Auto-select**: classroom, teaching, school, chalkboard
-
-### corporate
-- **Dimensions**: clean + professional + geometric + balanced
-- **Feel**: Business credibility, institutional trust
-- **Auto-select**: investor, quarterly, business, corporate
-
-### minimal
-- **Dimensions**: clean + neutral + geometric + minimal
-- **Feel**: Maximum sophistication, executive focus
-- **Auto-select**: executive, minimal, clean, simple
-
-### sketch-notes
-- **Dimensions**: organic + warm + handwritten + balanced
-- **Feel**: Friendly learning, approachable education
-- **Auto-select**: tutorial, learn, education, guide, beginner
-
-### hand-drawn-edu
-- **Dimensions**: organic + macaron + handwritten + balanced
-- **Feel**: Hand-drawn educational infographic, macaron pastel zones
-- **Auto-select**: hand-drawn, infographic, diagram, process, onboarding
-
-### watercolor
-- **Dimensions**: organic + warm + humanist + minimal
-- **Feel**: Artistic, natural, lifestyle
-- **Auto-select**: lifestyle, wellness, travel, artistic
-
-### dark-atmospheric
-- **Dimensions**: clean + dark + editorial + balanced
-- **Feel**: Cinematic, entertainment
-- **Auto-select**: entertainment, music, gaming, atmospheric
-
-### notion
-- **Dimensions**: clean + neutral + geometric + dense
-- **Feel**: SaaS professional, data-forward
-- **Auto-select**: saas, product, dashboard, metrics
-
-### bold-editorial
-- **Dimensions**: clean + vibrant + editorial + balanced
-- **Feel**: Magazine impact, keynote drama
-- **Auto-select**: launch, marketing, keynote, magazine
-
-### editorial-infographic
-- **Dimensions**: clean + cool + editorial + dense
-- **Feel**: Publication quality, informative
-- **Auto-select**: explainer, journalism, science communication
-
-### fantasy-animation
-- **Dimensions**: organic + vibrant + handwritten + minimal
-- **Feel**: Magical, storytelling
-- **Auto-select**: story, fantasy, animation, magical
-
-### intuition-machine
-- **Dimensions**: clean + cool + technical + dense
-- **Feel**: Technical briefing, bilingual documentation
-- **Auto-select**: briefing, academic, research, bilingual
-
-### pixel-art
-- **Dimensions**: pixel + vibrant + technical + balanced
-- **Feel**: Retro gaming, developer culture
-- **Auto-select**: gaming, retro, pixel, developer
-
-### scientific
-- **Dimensions**: clean + cool + technical + dense
-- **Feel**: Academic precision, research quality
-- **Auto-select**: biology, chemistry, medical, scientific
-
-### vector-illustration
-- **Dimensions**: clean + vibrant + humanist + balanced
-- **Feel**: Flat design, friendly creative
-- **Auto-select**: creative, children, kids, cute
-
-### vintage
-- **Dimensions**: paper + warm + editorial + balanced
-- **Feel**: Historical, heritage storytelling
-- **Auto-select**: history, heritage, vintage, expedition
+| Preset | Feel |
+|--------|------|
+| blueprint | Engineering precision, analytical clarity |
+| chalkboard | Classroom warmth, educational |
+| corporate | Business credibility, institutional trust |
+| minimal | Maximum sophistication, executive focus |
+| sketch-notes | Friendly learning, approachable education |
+| hand-drawn-edu | Hand-drawn educational infographic, macaron pastel zones |
+| watercolor | Artistic, natural, lifestyle |
+| dark-atmospheric | Cinematic, entertainment |
+| notion | SaaS professional, data-forward |
+| bold-editorial | Magazine impact, keynote drama |
+| editorial-infographic | Publication quality, informative |
+| fantasy-animation | Magical, storytelling |
+| intuition-machine | Technical briefing, bilingual documentation |
+| pixel-art | Retro gaming, developer culture |
+| scientific | Academic precision, research quality |
+| vector-illustration | Flat design, friendly creative |
+| vintage | Historical, heritage storytelling |
 
 ## Building Custom Combinations
 

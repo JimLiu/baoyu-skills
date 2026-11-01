@@ -5,11 +5,7 @@ description: First-time setup flow for baoyu-comic preferences
 
 # First-Time Setup
 
-## Overview
-
-When no EXTEND.md is found, guide user through preference setup.
-
-**⛔ BLOCKING OPERATION**: This setup MUST complete before ANY other workflow steps. Do NOT:
+**⛔ BLOCKING**: When no EXTEND.md is found, this setup MUST complete before ANY other workflow steps. Do NOT:
 - Ask about content/source material
 - Ask about art style or tone
 - Ask about layout preferences
@@ -17,31 +13,9 @@ When no EXTEND.md is found, guide user through preference setup.
 
 ONLY ask the questions in this setup flow, save EXTEND.md, then continue.
 
-## Setup Flow
-
-```
-No EXTEND.md found
-        │
-        ▼
-┌─────────────────────┐
-│ AskUserQuestion     │
-│ (all questions)     │
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ Create EXTEND.md    │
-└─────────────────────┘
-        │
-        ▼
-    Continue to Step 1
-```
-
 ## Questions
 
-**Language**: Use user's input language or preferred language for all questions. Do not always use English.
-
-Use single AskUserQuestion with multiple questions (AskUserQuestion auto-adds "Other" option):
+Ask in the user's input/preferred language (not always English). Use a single AskUserQuestion call with all questions (it auto-adds an "Other" option):
 
 ### Question 1: Watermark
 

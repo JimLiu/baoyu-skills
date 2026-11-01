@@ -5,8 +5,6 @@ description: Typography style dimension for cover images
 
 # Font Dimension
 
-Controls typography style and character feel.
-
 ## Values
 
 | Font | Visual Style | Line Quality | Character |
@@ -118,17 +116,6 @@ Bold, decorative typography for maximum impact.
 
 `clean` — Universal, pairs well with most rendering styles.
 
-## Rendering Compatibility
-
-| Font × Rendering | flat-vector | hand-drawn | painterly | digital | pixel | chalk | screen-print |
-|------------------|:-----------:|:----------:|:---------:|:-------:|:-----:|:-----:|:------------:|
-| clean | ✓✓ | ✗ | ✗ | ✓✓ | ✓ | ✗ | ✓ |
-| handwritten | ✓ | ✓✓ | ✓✓ | ✓ | ✗ | ✓✓ | ✗ |
-| serif | ✓ | ✗ | ✓ | ✓✓ | ✗ | ✗ | ✓ |
-| display | ✓✓ | ✓ | ✓ | ✓✓ | ✓✓ | ✓ | ✓✓ |
-
-✓✓ = highly recommended | ✓ = compatible | ✗ = not recommended
-
 ## Type Compatibility
 
 | Font × Type | hero | conceptual | typography | metaphor | scene | minimal |
@@ -150,15 +137,4 @@ Font style adapts to palette characteristics:
 | Vintage (retro) | Modern contrast | Nostalgic fit | Period-appropriate | Retro headlines |
 | Duotone (duotone) | Sharp contrast | Not recommended | Dramatic pairing | Cinematic impact |
 
-## Auto Selection
-
-When `--font` is omitted, select based on signals:
-
-| Signals | Font |
-|---------|------|
-| Personal, lifestyle, human, warm, friendly, story | `handwritten` |
-| Technical, professional, clean, modern, minimal, data | `clean` |
-| Editorial, academic, luxury, classic, literary | `serif` |
-| Announcement, entertainment, promotion, bold, event, gaming | `display` |
-
-Default: `clean`
+Rendering compatibility: [../compatibility.md](../compatibility.md#font--rendering). Auto selection: [../auto-selection.md](../auto-selection.md#auto-font-selection).

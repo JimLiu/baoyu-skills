@@ -6,11 +6,11 @@ version: 1.118.0
 
 # Diagram Generator
 
-Create professional SVG diagrams across multiple diagram types. Each SVG embeds its own styles and uses CSS custom properties for theme switching; it loads nothing over the network.
+Create SVG diagrams. Each SVG embeds its own styles, uses CSS custom properties for theming, and loads nothing over the network.
 
 ## Output Files
 
-For a diagram saved as `<name>.svg`, the skill produces exactly these files:
+For a diagram saved as `<name>.svg`, produce exactly these files:
 
 | File | What it is | Made by |
 |------|-----------|---------|
@@ -21,21 +21,13 @@ For a diagram saved as `<name>.svg`, the skill produces exactly these files:
 
 If the user asks for only one theme, or only SVG, produce just those files.
 
-## Theme System (CSS Custom Properties)
+## Themes
 
-All colors in the SVG are controlled via CSS custom properties (CSS variables) defined in the `:root` block of the `<style>` element. To switch between dark and light themes, run:
+All colors are CSS custom properties defined in the `:root` block of the SVG's `<style>`; markup references them as `var(--bg)`, `var(--color-primary-fill)`, etc. Never hardcode color values in SVG attributes.
 
-```
-bun {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light [--output=<path>]
-```
+Theme values live in `{baseDir}/themes/<name>.json` — one flat JSON object mapping CSS property names (keys starting with `--`) to colors. Other keys (e.g. `"description"`) are metadata, ignored by scripts. Built-in: `dark.json`, `light.json`.
 
-This produces a light-themed SVG without modifying the original dark-themed source. The LLM should always generate SVGs using CSS variable references (e.g., `var(--bg)`, `var(--color-primary-fill)`) instead of hardcoded color values.
-
-### Theme Files ({baseDir}/themes/)
-
-Theme color values live in `{baseDir}/themes/<name>.json` — one flat JSON object per theme, mapping CSS custom property names (keys starting with `--`) to color values. Other keys (e.g. `"description"`) are allowed as metadata and ignored by the scripts. Built-in themes: `dark.json`, `light.json`.
-
-**Custom themes:** anyone can extend the skill by dropping a new `.json` file into `themes/` — no script changes needed:
+**Custom themes:** drop a new `.json` into `themes/` — no script changes needed:
 
 ```json
 // themes/my-brand.json
@@ -52,11 +44,9 @@ Theme color values live in `{baseDir}/themes/<name>.json` — one flat JSON obje
 }
 ```
 
-Then apply it with `--theme=my-brand` (`theme-switch.ts`, `main.ts` and `flatten-vars.ts` all support this). Any variable omitted from a custom theme simply won't be replaced by that theme. When generating SVGs for a custom theme, use its variable values in the `:root` block.
+Apply with `--theme=my-brand` (`theme-switch.ts`, `main.ts` and `flatten-vars.ts` all support it). Variables omitted from a custom theme are not replaced. When generating SVGs for a custom theme, use its values in the `:root` block.
 
-### CSS Custom Properties Reference
-
-These variables are defined in the `:root` block. **Never hardcode color values** — always use `var(--variable-name)` in SVG attributes.
+### CSS Custom Properties
 
 | Variable | Dark Theme Default | Light Theme Value | Usage |
 |----------|-------------------|-------------------|-------|
@@ -83,25 +73,11 @@ These variables are defined in the `:root` block. **Never hardcode color values*
 | `--color-highlight-fill` | `rgba(59,130,246,0.3)` | `rgba(59,130,246,0.12)` | Active state, focus, current step |
 | `--color-highlight-stroke` | `#60a5fa` | `#3b82f6` | Highlight border |
 
-## Supported Diagram Types
-
-| Type | When to Use | Key Characteristics |
-|------|-------------|-------------------|
-| **Architecture** | System components & relationships | Grouped boxes, connection arrows, region boundaries |
-| **Flowchart** | Decision logic, process steps | Diamond decisions, rounded step boxes, directional flow |
-| **Sequence** | Time-ordered interactions between actors | Vertical lifelines, horizontal messages, activation bars |
-| **Structural** | Class diagrams, ER diagrams, org charts | Compartmented boxes, typed relationships (inheritance, composition) |
-| **Mind Map** | Brainstorming, topic exploration | Central node, radiating branches, organic layout |
-| **Timeline** | Chronological events | Horizontal/vertical axis, event markers, period spans |
-| **Illustrative** | Conceptual explanations, comparisons | Free-form layout, icons, annotations, visual metaphors |
-| **State Machine** | State transitions, lifecycle | Rounded state nodes, labeled transitions, start/end markers |
-| **Data Flow** | Data transformation pipelines | Process bubbles, data stores, external entities |
-
 ## Design System
 
 ### Typography
 
-Use a locally installed monospace font stack. Do not `@import` web fonts or reference any remote resource: the SVG must render the same offline, and the PNG converter cannot fetch fonts anyway.
+Use a locally installed monospace font stack. Do not `@import` web fonts or reference any remote resource: the SVG must render the same offline, and the PNG converter cannot fetch fonts.
 
 ```svg
 <style>
@@ -156,7 +132,7 @@ Font sizes by role:
 
 ### SVG Structure & Layering
 
-Draw elements in this order to get correct z-ordering (SVG paints back-to-front):
+Draw in this order (SVG paints back-to-front):
 
 1. Background fill + grid pattern
 2. Region/group boundaries (dashed outlines)
@@ -167,7 +143,7 @@ Draw elements in this order to get correct z-ordering (SVG paints back-to-front)
 7. Legend (bottom-right or bottom area, outside all boundaries)
 8. Title block (top-left)
 
-The opaque masking rect trick is essential — semi-transparent component fills will show arrows underneath without it:
+The opaque mask rect is required — semi-transparent component fills otherwise show arrows underneath:
 
 ```svg
 <!-- Mask layer: opaque background to hide arrows -->
@@ -180,7 +156,7 @@ The opaque masking rect trick is essential — semi-transparent component fills 
 
 ### Spacing Rules
 
-These prevent overlapping — follow them strictly:
+Follow strictly to prevent overlaps:
 
 - **Component box height:** 50-70px (standard), 80-120px (large/complex)
 - **Minimum gap between components:** 40px vertical, 30px horizontal
@@ -241,71 +217,32 @@ These prevent overlapping — follow them strictly:
 <text x="X+10" y="Y+14" fill="var(--color-alert-stroke)" font-size="8" font-weight="500">VPC / Security Group</text>
 ```
 
-## Type-Specific Layout Guidance
+## Diagram Types & Layout
 
-Determine this SKILL.md file's directory path as `{baseDir}`. Read the reference file for the specific diagram type before starting layout. Reference files are located at `{baseDir}/references/` and contain detailed layout algorithms and examples.
+Determine this SKILL.md file's directory path as `{baseDir}`. Before layout, read the type's reference in `{baseDir}/references/` if one exists.
 
-### Architecture Diagrams
-→ Read `{baseDir}/references/architecture.md`
-
-Key points: left-to-right or top-to-bottom data flow. Group related services in region boundaries. Use buses/connectors between layers. Place databases at the bottom or right.
-
-### Flowcharts
-→ Read `{baseDir}/references/flowchart.md`
-
-Key points: top-to-bottom primary flow. Diamonds for decisions with Yes/No labels on exit arrows. Rounded rectangles for start/end. Use the Highlight color for the happy path.
-
-### Sequence Diagrams
-→ Read `{baseDir}/references/sequence.md`
-
-Key points: actors as boxes at top, vertical dashed lifelines, horizontal arrows for messages (solid=sync, dashed=return). Time flows downward. Activation bars show processing. Number messages if complex.
-
-### Structural Diagrams
-→ Read `{baseDir}/references/structural.md`
-
-Key points: compartmented boxes (name / attributes / methods for class diagrams). Relationship lines: solid with filled diamond=composition, solid with empty diamond=aggregation, dashed arrow=dependency, solid triangle=inheritance.
-
-### Mind Maps
-Free-form radiating layout from a central concept. Use organic curves (`<path>` with cubic beziers) for branches. Vary branch colors using the palette. Larger font for central node, decreasing as you go outward.
-
-### Timelines
-Horizontal or vertical axis line. Event markers as circles or diamonds on the axis. Description text offset to alternating sides to avoid overlap. Use color to categorize event types.
-
-### State Machines
-Rounded-rect states with double-border for composite states. Filled circle for initial state, bullseye for final state. Curved arrows for self-transitions. Label all transitions with `event [guard] / action` format.
+| Type | When to use | Reference | Layout key points |
+|------|-------------|-----------|-------------------|
+| Architecture | System components & relationships | `references/architecture.md` | LTR or TTB data flow; group related services in region boundaries; buses/connectors between layers; databases at bottom or right |
+| Flowchart | Decision logic, process steps | `references/flowchart.md` | Top-to-bottom primary flow; diamonds with Yes/No labels on exit arrows; rounded rects for start/end; Highlight color for the happy path |
+| Sequence | Time-ordered interactions between actors | `references/sequence.md` | Actor boxes at top, vertical dashed lifelines; horizontal messages (solid=sync, dashed=return); time flows down; activation bars; number messages if complex |
+| Structural | Class/ER diagrams, org charts | `references/structural.md` | Compartmented boxes (name / attributes / methods); filled diamond=composition, empty diamond=aggregation, dashed arrow=dependency, solid triangle=inheritance |
+| Mind Map | Brainstorming, topic exploration | — | Radiating layout from a central concept; cubic-bezier `<path>` branches; vary branch colors; font size decreases outward |
+| Timeline | Chronological events | — | Horizontal or vertical axis; circle/diamond event markers, period spans; descriptions on alternating sides; color by event type |
+| State Machine | State transitions, lifecycle | — | Rounded-rect states, double border for composite; filled circle = initial, bullseye = final; curved self-transitions; label transitions `event [guard] / action` |
+| Illustrative | Conceptual explanations, comparisons | — | Free-form layout, icons, annotations, visual metaphors |
+| Data Flow | Data transformation pipelines | — | Process bubbles, data stores, external entities |
 
 ## Output Rules
 
 1. Each SVG is a **single file with no external resources** — no `@import`, web fonts, remote images or scripts
-2. Set `viewBox` to fit all content with 30px padding; do NOT set fixed `width`/`height` attributes (let the SVG scale responsively)
-3. Include `xmlns="http://www.w3.org/2000/svg"` on the root `<svg>` element
-4. Put all `<style>`, `<defs>`, markers, and patterns at the top of the SVG
-5. Use `text-anchor="middle"` for centered labels; ensure text doesn't overflow boxes
-6. **Chinese text support:** When labels contain Chinese characters, use `font-family: 'JetBrains Mono', 'Noto Sans SC', 'PingFang SC', sans-serif'` and increase box widths — CJK characters are wider
-7. **CSS Variables Required:** All color values MUST use CSS custom property references (e.g., `var(--bg)`, `var(--color-primary-fill)`). Never hardcode hex/rgb color values directly in SVG attributes. This enables theme switching via the post-processing script.
-8. **Save location:** If the input is a file, save to `{inputFileDir}/diagram/`. Otherwise save to `{projectDir}/diagram/{topic-slug}/`. Create the directory if it doesn't exist
-
-## Theme Switching
-
-After generating the SVG, use the theme-switch script to produce alternative theme versions:
-
-```bash
-# Generate light theme version (default: dark)
-${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light
-
-# Generate with custom output path
-${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light --output=path/to/output.svg
-
-# Generate dark theme explicitly
-${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=dark
-
-# Use a custom theme (from {baseDir}/themes/<name>.json)
-${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=my-brand
-```
-
-The script reads the SVG, finds the `:root { ... }` CSS custom property definitions in the `<style>` block, and replaces them with the target theme's color values. All `var(--variable)` references in the SVG markup remain unchanged — only the definitions are swapped.
-
-Without `--output`, the result is written next to the input as `<name>.<theme>.svg`. The source SVG already carries the dark values, so there is no need to run `--theme=dark` on it.
+2. Set `viewBox` to fit all content with 30px padding; do NOT set fixed `width`/`height` attributes
+3. Include `xmlns="http://www.w3.org/2000/svg"` on the root `<svg>`
+4. Put all `<style>`, `<defs>`, markers, and patterns at the top
+5. Use `text-anchor="middle"` for centered labels; text must not overflow boxes
+6. **Chinese text:** use `font-family: 'JetBrains Mono', 'Noto Sans SC', 'PingFang SC', sans-serif'` and widen boxes — CJK characters are wider
+7. **CSS variables required:** every color is a `var(--...)` reference so theme switching works
+8. **Save location:** input is a file → `{inputFileDir}/diagram/`; otherwise `{projectDir}/diagram/{topic-slug}/`. Create the directory if missing
 
 ## Scripts
 
@@ -313,19 +250,29 @@ Determine this SKILL.md file's directory path as `{baseDir}`. Scripts live in `{
 
 - `theme-switch.ts` — write the SVG with another theme's variable values
 - `main.ts` — convert an SVG to a @2x PNG
-- `flatten-vars.ts` — inline CSS variables into literal colors (only needed for other non-browser tools; `main.ts` does this itself)
+- `flatten-vars.ts` — inline CSS variables into literal colors (only for other non-browser tools; `main.ts` does this itself)
 
 Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun.
 
+### Theme switch
+
+```bash
+${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light [--output=path/to/output.svg]
+${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=dark
+${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=my-brand   # {baseDir}/themes/<name>.json
+```
+
+Replaces the `:root { ... }` definitions with the target theme's values; `var(--...)` references stay unchanged and the source is not modified. Without `--output`, writes `<name>.<theme>.svg` next to the input. The source already carries dark values, so `--theme=dark` on it is unnecessary.
+
 ### Dependencies
 
-`main.ts` needs `sharp`, pinned in `{baseDir}/scripts/package.json` with a lockfile. Install it once:
+`main.ts` needs `sharp`, pinned in `{baseDir}/scripts/package.json` with a lockfile. Install once:
 
 ```bash
 cd {baseDir}/scripts && ${BUN_X} install
 ```
 
-If `sharp` is missing, `main.ts` stops with an error that gives this command. It never installs anything by itself. In that case, deliver the SVG files and tell the user how to enable PNG output. `theme-switch.ts` and `flatten-vars.ts` have no dependencies.
+If `sharp` is missing, `main.ts` stops with an error that gives this command; it never installs anything itself. Then deliver the SVG files and tell the user how to enable PNG output. `theme-switch.ts` and `flatten-vars.ts` have no dependencies.
 
 ### SVG → @2x PNG
 
@@ -339,7 +286,7 @@ Options:
 - `-o, --output <path>` — Custom output path (default: `<input>@2x.png`)
 - `--json` — JSON output
 
-`sharp` (librsvg) does not understand CSS `var()`, so `main.ts` first replaces every `var(--xxx)` with the chosen theme's literal value and drops the `:root` block. It fails if the SVG references a variable that neither the theme nor the SVG defines. SVGs with hardcoded colors (legacy diagrams) are converted as-is.
+`sharp` (librsvg) does not understand CSS `var()`, so `main.ts` replaces every `var(--xxx)` with the theme's literal value and drops the `:root` block. It fails if the SVG references a variable that neither the theme nor the SVG defines. SVGs with hardcoded colors (legacy diagrams) are converted as-is.
 
 To flatten without converting (e.g. for another renderer):
 
@@ -349,14 +296,12 @@ ${BUN_X} {baseDir}/scripts/flatten-vars.ts <svg-path> <output-path> [--theme=<na
 
 ## Process
 
-1. Identify the diagram type from the user's request
-2. Read the relevant reference file if one exists for that type
-3. Plan the layout: list all components, determine grouping and flow direction, calculate positions
-4. Write the SVG following the layering order above, using **CSS variable references** for all color values (never hardcode colors)
-5. Include the `:root { ... }` CSS custom property definitions in the `<style>` block (use the dark theme defaults from the CSS Custom Properties table)
-6. Verify spacing rules — no overlaps, legends outside boundaries, viewBox large enough
-7. Save the SVG file as `<name>.svg` (this is the dark version)
-8. Run `${BUN_X} {baseDir}/scripts/theme-switch.ts <name>.svg --theme=light` → `<name>.light.svg`
-9. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg` → `<name>@2x.png`
-10. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg --theme light -o <name>.light@2x.png` → `<name>.light@2x.png`
-11. Present the files listed in Output Files to the user
+1. Identify the diagram type; read its reference file if one exists
+2. Plan the layout: list components, grouping and flow direction, calculate positions
+3. Write the SVG in the layering order above, colors via CSS variables only, with the `:root { ... }` block using the dark defaults from the CSS Custom Properties table
+4. Verify spacing rules — no overlaps, legends outside boundaries, viewBox large enough
+5. Save as `<name>.svg` (the dark version)
+6. Run `${BUN_X} {baseDir}/scripts/theme-switch.ts <name>.svg --theme=light` → `<name>.light.svg`
+7. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg` → `<name>@2x.png`
+8. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg --theme light -o <name>.light@2x.png` → `<name>.light@2x.png`
+9. Present the files listed in Output Files to the user

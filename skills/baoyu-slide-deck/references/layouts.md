@@ -1,6 +1,6 @@
 # Layout Gallery
 
-Optional layout hints for individual slides. Specify in outline's `// LAYOUT` section.
+Optional per-slide layout hints. Add `Layout: <name>` in the slide's `// LAYOUT` section.
 
 ## Slide-Specific Layouts
 
@@ -35,8 +35,6 @@ Optional layout hints for individual slides. Specify in outline's `// LAYOUT` se
 | `tree-branching` | Parent-child hierarchy | Org charts, taxonomies |
 | `iceberg` | Visible vs hidden layers | Surface vs depth |
 | `bridge` | Gap with connection | Problem-solution |
-
-**Usage**: Add `Layout: <name>` in slide's `// LAYOUT` section.
 
 ## Layout Selection Tips
 

@@ -1,27 +1,6 @@
 # Infographic Content Analysis Framework
 
-Deep analysis framework applying instructional design principles to infographic creation.
-
-## Purpose
-
-Before creating an infographic, thoroughly analyze the source material to:
-- Understand the content at a deep level
-- Identify clear learning objectives for the viewer
-- Structure information for maximum clarity and retention
-- Match content to optimal layout×style combinations
-- Preserve all source data verbatim
-
-## Instructional Design Mindset
-
-Approach content analysis as a **world-class instructional designer**:
-
-| Principle | Application |
-|-----------|-------------|
-| **Deep Understanding** | Read the entire document before analyzing any part |
-| **Learner-Centered** | Focus on what the viewer needs to understand |
-| **Visual Storytelling** | Use visuals to communicate, not just decorate |
-| **Cognitive Load** | Simplify complex ideas without losing accuracy |
-| **Data Integrity** | Never alter, summarize, or paraphrase source facts |
+Read the entire source before analyzing; focus on what the viewer needs to understand; use visuals to communicate, not decorate; simplify without losing accuracy; never alter, summarize, or paraphrase source facts.
 
 ## Analysis Dimensions
 
@@ -166,17 +145,3 @@ After viewing this infographic, the viewer should understand:
 2. **[Layout] + [Style]**: [Brief rationale]
 3. **[Layout] + [Style]**: [Brief rationale]
 ```
-
-## Analysis Checklist
-
-Before proceeding to structured content generation:
-
-- [ ] Have I read the entire source document?
-- [ ] Can I summarize the main topic in 1-2 sentences?
-- [ ] Have I identified 1-3 clear learning objectives?
-- [ ] Do I understand the target audience?
-- [ ] Have I classified the content type correctly?
-- [ ] Have I extracted all data points verbatim?
-- [ ] Have I identified visual opportunities?
-- [ ] Have I extracted design instructions from user input?
-- [ ] Have I recommended 3 layout×style combinations?

@@ -1,7 +1,5 @@
 # Content & Style Rules
 
-Guidelines for slide deck content quality and style consistency.
-
 ## Content Rules
 
 ### 1. Respect Reader Attention
@@ -76,20 +74,3 @@ Throughout the deck:
 | Footers | None (no slide numbers, logos) |
 | Language Priority | `--lang` → source language → ask user |
 | Tone | Direct, confident (avoid AI phrases) |
-
-## Style Quick Reference
-
-| Style | Visual Summary |
-|-------|----------------|
-| `sketch-notes` | Hand-drawn, warm off-white, conceptual icons |
-| `blueprint` | Technical schematics, grid texture, blue tones |
-| `bold-editorial` | High contrast, dark backgrounds, magazine impact |
-| `vector-illustration` | Flat vector, black outlines, retro colors |
-| `minimal` | Maximum whitespace, single accent, zen-like |
-| `storytelling` | Full-bleed imagery, cinematic, emotional |
-| `warm` | Soft gradients, rounded shapes, wellness palette |
-| `notion` | Dashboard aesthetic, clean data viz, SaaS-inspired |
-| `corporate` | Navy/gold, structured layouts, business polish |
-| `playful` | Vibrant coral/teal/yellow, dynamic, energetic |
-
-Full style specifications: `references/styles/<style>.md`

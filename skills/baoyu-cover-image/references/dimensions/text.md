@@ -5,8 +5,6 @@ description: Text density dimension for cover images
 
 # Text Dimension
 
-Controls text density and information hierarchy on cover images.
-
 ## Values
 
 | Value | Title | Subtitle | Tags | Visual Area |
@@ -47,7 +45,7 @@ Single headline, maximum impact.
 - Reserved zone: top or bottom 15%
 - Visual supports title message
 
-**Title Guidelines**:
+**Title Guidelines** (all title levels):
 - Use exact title from source content or user-provided title
 - Do NOT invent or modify titles
 - Match content language
@@ -66,10 +64,6 @@ Title with supporting context.
 - Subtitle: secondary element
 - Reserved zone: 25%
 - Clear hierarchy between title/subtitle
-
-**Title Guidelines**:
-- Use exact title from source content or user-provided title
-- Do NOT invent or modify titles
 
 **Subtitle Guidelines**:
 - Clarify or contextualize title
@@ -93,38 +87,10 @@ Information-dense cover with multiple text elements.
 - Reserved zone: 40%
 - Clear visual hierarchy
 
-**Title Guidelines**:
-- Use exact title from source content or user-provided title
-- Do NOT invent or modify titles
-
 **Tag Guidelines**:
 - 2-4 tags maximum
 - Short keywords (1-2 words each)
 - Positioned as badges/labels
 - Can highlight: category, date, author, key features
 
-## Type Compatibility
-
-| Type | none | title-only | title-subtitle | text-rich |
-|------|:----:|:----------:|:--------------:|:---------:|
-| hero | ✓ | ✓✓ | ✓✓ | ✓ |
-| conceptual | ✓✓ | ✓✓ | ✓ | ✓ |
-| typography | ✗ | ✓ | ✓✓ | ✓✓ |
-| metaphor | ✓✓ | ✓ | ✓ | ✗ |
-| scene | ✓✓ | ✓ | ✓ | ✗ |
-| minimal | ✓✓ | ✓✓ | ✓ | ✗ |
-
-✓✓ = highly recommended | ✓ = compatible | ✗ = not recommended
-
-## Auto Selection
-
-When `--text` is omitted, select based on signals:
-
-| Signals | Text Level |
-|---------|------------|
-| Visual-only, photography, abstract, art | `none` |
-| Article, blog, standard cover | `title-only` |
-| Series, tutorial, technical with context | `title-subtitle` |
-| Announcement, features, multiple points, infographic | `text-rich` |
-
-Default: `title-only`
+Type compatibility: [../compatibility.md](../compatibility.md#type--text). Auto selection: [../auto-selection.md](../auto-selection.md#auto-text-selection).

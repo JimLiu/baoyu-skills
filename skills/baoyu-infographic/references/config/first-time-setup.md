@@ -5,42 +5,13 @@ description: First-time setup flow for baoyu-infographic preferences
 
 # First-Time Setup
 
-## Overview
+When no EXTEND.md is found, run this setup before generating any infographic.
 
-When no EXTEND.md is found, guide the user through preference setup before generating any infographic. Saved preferences shift Step-3 recommendations and Step-4 defaults only — they never bypass Step 4 confirmation (see the `## Confirmation Policy` section in SKILL.md).
-
-**⛔ BLOCKING OPERATION**: This setup MUST complete before ANY other workflow steps. Do NOT:
-- Ask about source content or topic
-- Ask about layout, style, or aspect
-- Begin Step 1.2 content analysis
-
-ONLY ask the questions in this setup flow, save EXTEND.md, then continue to Step 1.2.
-
-## Setup Flow
-
-```
-No EXTEND.md found
-        │
-        ▼
-┌─────────────────────┐
-│ AskUserQuestion     │
-│ (all questions)     │
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ Create EXTEND.md    │
-└─────────────────────┘
-        │
-        ▼
-    Continue to Step 1.2
-```
+**⛔ BLOCKING**: complete it before ANY other workflow step — do not ask about source content, topic, layout, style, or aspect, and do not begin Step 1.2. Ask only these questions, save EXTEND.md, then continue to Step 1.2.
 
 ## Questions
 
-**Language**: Use the user's input language for question text. Do not always default to English.
-
-Use a single `AskUserQuestion` with multiple questions (the runtime auto-adds an "Other" option):
+Ask in the user's input language (not always English), in a single `AskUserQuestion` with all questions (the runtime auto-adds "Other"):
 
 ### Question 1: Preferred Layout
 
@@ -146,8 +117,6 @@ custom_styles: []
 ---
 ```
 
-`preferred_image_backend: auto` is the baked-in default — first-time setup never asks about it. The `## Image Generation Tools` rule in SKILL.md then picks the runtime-native tool (Codex `imagegen`, Hermes `image_generate`, etc.) when one is available, and falls back to installed backends like `baoyu-image-gen`.
+`preferred_image_backend: auto` is the baked-in default — setup never asks about it.
 
-## Modifying Preferences Later
-
-See the `## Changing Preferences` section in `SKILL.md` for the canonical list of common edits (pin backend, change layout/style defaults, retrigger setup). Full schema: `references/config/preferences-schema.md`.
+Later changes: `## Changing Preferences` in `SKILL.md`; full schema: `references/config/preferences-schema.md`.

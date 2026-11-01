@@ -18,7 +18,7 @@ references:                    # ⚠️ ONLY if files EXIST in references/ direc
 [Type-specific template content below...]
 ```
 
-**⚠️ CRITICAL - When to include `references` field**:
+**When to include `references`**:
 
 | Situation | Action |
 |-----------|--------|
@@ -26,98 +26,40 @@ references:                    # ⚠️ ONLY if files EXIST in references/ direc
 | Style extracted verbally (no file) | DO NOT include in frontmatter, append to prompt body instead |
 | File path in frontmatter but file doesn't exist | ERROR - remove references field |
 
-**Reference Usage Types** (only when file exists):
+Usage (only when file exists): `direct` → pass to `--ref`; `style` → describe style in prompt text; `palette` → include colors in prompt.
 
-| Usage | Description | Generation Action |
-|-------|-------------|-------------------|
-| `direct` | Primary visual reference | Pass to `--ref` parameter |
-| `style` | Style characteristics only | Describe style in prompt text |
-| `palette` | Color palette extraction | Include colors in prompt |
-
-**If no reference file but style/palette extracted verbally**, append directly to prompt body:
+Verbally extracted style/palette (no file) goes in the prompt body:
 ```
 COLORS (from reference):
 - Primary: #E8756D coral
 - Secondary: #7ECFC0 mint
-...
 
 STYLE (from reference):
 - Clean lines, minimal shadows
 - Gradient backgrounds
-...
 ```
 
 ---
 
-## Default Composition Requirements
+## Default Prompt Additions
 
-**Apply to ALL prompts by default**:
-
-| Requirement | Description |
-|-------------|-------------|
-| **Clean composition** | Simple layouts, no visual clutter |
-| **White space** | Generous margins, breathing room around elements |
-| **No complex backgrounds** | Solid colors or subtle gradients only, avoid busy textures |
-| **Centered or content-appropriate** | Main visual elements centered or positioned by content needs |
-| **Matching graphics** | Use graphic elements that align with content theme |
-| **Highlight core info** | White space draws attention to key information |
-
-**Add to ALL prompts**:
+**Composition** — clean, uncluttered layouts; generous white space and margins that draw attention to key info; solid or subtly graded backgrounds (no busy textures); elements centered or placed by content needs; graphics matching the content theme. Add to ALL prompts:
 > Clean composition with generous white space. Simple or no background. Main elements centered or positioned by content needs.
 
----
-
-## Color Specification Rules
-
-Colors in prompts use hex codes for **rendering guidance only** — they tell the model which colors to use, NOT what text to display.
-
-**⚠️ CRITICAL**: Image generation models sometimes render color names and hex values as visible text labels in the image (e.g., painting "Macaron Blue #A8D8EA" as a label). This must be prevented.
-
-**Add to ALL prompts that contain a COLORS section**:
+**Colors** — hex codes are rendering guidance only. Models sometimes paint color names / hex values as visible labels (e.g., "Macaron Blue #A8D8EA"); prevent it. Add to ALL prompts that contain a COLORS section:
 > Color values (#hex) and color names are rendering guidance only — do NOT display color names, hex codes, or palette labels as visible text in the image.
 
----
-
-## Character Rendering
-
-When depicting people:
-
-| Guideline | Description |
-|-----------|-------------|
-| **Style** | Simplified cartoon silhouettes or symbolic expressions |
-| **Avoid** | Realistic human portrayals, detailed faces |
-| **Diversity** | Varied body types when showing multiple people |
-| **Emotion** | Express through posture and simple gestures |
-
-**Add to ALL prompts with human figures**:
+**Characters** — simplified cartoon silhouettes or symbolic figures; no realistic portrayals or detailed faces; varied body types for groups; emotion through posture and simple gestures. Add to ALL prompts with human figures:
 > Human figures: simplified stylized silhouettes or symbolic representations, not photorealistic.
 
----
-
-## Text in Illustrations
-
-| Element | Guideline |
-|---------|-----------|
-| **Size** | Large, prominent, immediately readable |
-| **Style** | Handwritten fonts preferred for warmth |
-| **Content** | Concise keywords and core concepts only |
-| **Language** | Match article language |
-
-**Add to prompts with text**:
+**Text** — large, prominent, readable; handwritten fonts preferred; concise keywords only; match article language. Add to prompts with text:
 > Text should be large and prominent with handwritten-style fonts. Keep minimal, focus on keywords.
 
 ---
 
 ## Principles
 
-Good prompts must include:
-
-1. **Layout Structure First**: Describe composition, zones, flow direction
-2. **Specific Data/Labels**: Use actual numbers, terms from article
-3. **Visual Relationships**: How elements connect
-4. **Semantic Colors**: Meaning-based color choices (red=warning, green=efficient)
-5. **Style Characteristics**: Line treatment, texture, mood
-6. **Aspect Ratio**: End with ratio and complexity level
+Good prompts include: layout structure first (composition, zones, flow direction); specific data/labels from the article; visual relationships; semantic colors (red=warning, green=efficient); style characteristics (line treatment, texture, mood); aspect ratio and complexity level at the end. Avoid vague descriptions ("a nice image"), literal metaphors, missing concrete labels, and generic decoration.
 
 ## Type-Specific Templates
 
@@ -412,7 +354,7 @@ TEXTURE: Halftone transitions between sides
 
 ## Palette Override
 
-When a palette is specified (via `--palette` or preset), it overrides the style's default colors:
+When a palette is specified (via `--palette` or preset):
 
 1. Read style file → get rendering rules (Visual Elements, Style Rules, line treatment)
 2. Read palette file (`palettes/<palette>.md`) → get Colors + Background
@@ -439,16 +381,9 @@ COLORS: Warm Cream background (#F5F0E8), Macaron Blue (#A8D8EA), Mint (#B5E5CF),
 ELEMENTS: Geometric simplified icons, no gradients, playful decorative elements
 ```
 
-When no palette is specified, use the style's built-in Color Palette as before.
+No palette → use the style's built-in Color Palette.
 
 ---
-
-## What to Avoid
-
-- Vague descriptions ("a nice image")
-- Literal metaphor illustrations
-- Missing concrete labels/annotations
-- Generic decorative elements
 
 ## Watermark Integration
 

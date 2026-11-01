@@ -2,8 +2,6 @@
 
 ## Core Styles
 
-Simplified style tier for quick selection:
-
 | Core Style | Maps To | Best For |
 |------------|---------|----------|
 | `hand-drawn` | sketch-notes | **Default.** Warm cream paper, black hand-drawn lines, pastel blocks — educational infographics, concept explainers, onboarding, general knowledge articles |
@@ -14,7 +12,7 @@ Simplified style tier for quick selection:
 | `scene` | warm/watercolor | Narratives, emotional, lifestyle |
 | `poster` | screen-print | Opinion, editorial, cultural, cinematic |
 
-Use Core Styles for most cases. **When no strong content signal is detected, default to `hand-drawn` (→ sketch-notes).** See full Style Gallery below for granular control.
+Use Core Styles for most cases; default to `hand-drawn` (→ sketch-notes) when no strong content signal is detected.
 
 ---
 
@@ -63,7 +61,7 @@ Full specifications: `references/styles/<style>.md`
 
 ## Auto Selection by Type
 
-When no content signal matches strongly, `sketch-notes` is the default primary for every diagrammatic type. Only override with another primary when the content analysis in Step 2 surfaces a clear signal (technical/data/narrative/opinion).
+With no strong content signal, `sketch-notes` is the default primary for every diagrammatic type; use another primary only when Step 2 surfaces a clear signal (technical/data/narrative/opinion).
 
 | Type | Primary Style | Secondary Styles |
 |------|---------------|------------------|
@@ -222,15 +220,5 @@ Palettes override a style's default colors. Combine any style with any palette: 
 | `neon` | Vibrant neon (pink, cyan, yellow) on dark purple | Gaming, retro, pop culture |
 | `mono-ink` | Black ink on pure white with sparse semantic accents (coral red, muted teal, dusty lavender) | Professional visual notes, Before/After, manifestos |
 
-Full specifications: `references/palettes/<palette>.md`
-
-When no palette is specified, the style's built-in Color Palette is used.
-
-## Palette Override Rules
-
-1. Read style file → rendering rules (Visual Elements, Style Rules)
-2. Read palette file → Colors + Background
-3. Palette colors **replace** style's default Color Palette
-4. Palette Background **replaces** style's default Background color
-5. Style's texture description is preserved
+Full specifications: `references/palettes/<palette>.md`. No palette → the style's built-in Color Palette. Override rules: [prompt-construction.md](prompt-construction.md#palette-override).
 

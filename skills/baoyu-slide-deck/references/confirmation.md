@@ -1,6 +1,6 @@
 # Confirmation Questions
 
-Concrete option copy for the confirmation steps. SKILL.md lists which questions to ask — this file gives the verbatim options used in Claude Code. Adapt copy to the runtime's native user-input tool; the intent matters more than the exact wording.
+Option copy for the confirmation steps (SKILL.md says which to ask). Adapt to the runtime's native user-input tool; intent matters more than exact wording.
 
 ## Round 1 (Always)
 

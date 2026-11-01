@@ -13,7 +13,7 @@ metadata:
 
 # Slide Deck Generator
 
-Transform content into professional slide deck images. The deck is designed for **reading and sharing** (self-explanatory slides, logical scroll flow, social-media-friendly) rather than live presentation — that assumption drives every layout and density decision below.
+Decks are designed for **reading and sharing** (self-explanatory slides, logical scroll flow, social-media-friendly), not live presentation — this drives every layout and density decision.
 
 ## User Input Tools
 
@@ -50,19 +50,17 @@ Change the pinned backend via `## Changing Preferences` below. Tool names above 
 
 ## Batch Generation Policy
 
-After every prompt file for the current generation group has been saved and verified, generate slide images in batches by default.
+After every prompt file for the current generation group is saved and verified, generate slide images in batches by default:
 
-Priority order:
-
-1. Use the chosen backend's native batch / multi-task interface if it exists. Each task must keep its own prompt file, output path, aspect ratio, session ID, and direct reference images.
-2. If no native batch interface exists but the runtime can issue parallel tool calls, dispatch up to `generation_batch_size` slide images at a time. Default: `4`. An explicit user request in the current message, such as `--batch-size 4` or "并行4张一起生成", overrides EXTEND.md.
-3. If neither native batch nor parallel tool calls are available, generate sequentially.
+1. Use the backend's native batch / multi-task interface if it exists. Each task keeps its own prompt file, output path, aspect ratio, session ID, and direct reference images.
+2. Else, if the runtime can issue parallel tool calls, dispatch up to `generation_batch_size` slide images at a time (default `4`). An explicit request in the current message (e.g. `--batch-size 4`, "并行4张一起生成") overrides EXTEND.md.
+3. Else generate sequentially.
 
 Rules:
 
 - Never start the first batch until all selected slide prompt files exist on disk.
 - Retry failed items once without regenerating successful items.
-- Do not use subagents merely to parallelize image rendering. Use subagents only for separate prompt iteration or creative exploration.
+- Do not use subagents merely to parallelize image rendering; use them only for separate prompt iteration or creative exploration.
 - Merge PPTX/PDF only after all selected slide images are generated.
 
 ## Confirmation Policy
@@ -104,7 +102,7 @@ Respond in the user's language across questions, progress reports, error message
 
 ## Style System
 
-17 presets covering technical / educational / lifestyle / editorial use cases. Every preset is a combination of four dimensions (texture / mood / typography / density). If the user picks "Custom dimensions" in Round 1, Round 2 of the confirmation asks one question per dimension — options and verbatim copy live in `references/confirmation.md`.
+Each preset combines four dimensions (texture / mood / typography / density). If the user picks "Custom dimensions" in Round 1, Round 2 asks one question per dimension (copy in `references/confirmation.md`).
 
 ### Presets (17)
 
@@ -143,7 +141,7 @@ Full per-dimension specs: `references/dimensions/*.md`.
 
 ### Auto-Selection
 
-Match content signals to a preset. Pick the first row whose signal keywords appear in the source; fall back to `blueprint` if nothing matches.
+Pick the first row whose signal keywords appear in the source; fall back to `blueprint`.
 
 | Signals in source | Preset |
 |-------------------|--------|
@@ -176,9 +174,9 @@ Match content signals to a preset. Pick the first row whose signal keywords appe
 
 ## Reference Images
 
-Users may supply reference images to guide style, palette, layout, or subject.
+User-supplied images guide style, palette, layout, or subject.
 
-**Intake**: Accept via `--ref <files...>` or when the user provides file paths / pastes images in conversation.
+**Intake** via `--ref <files...>` or file paths / pasted images in conversation:
 - File path → copy to `{slide-deck-dir}/refs/NN-ref-{slug}.{ext}`
 - Pasted image with no path → ask for the path, or extract style traits verbally as a text fallback
 
@@ -215,11 +213,9 @@ slide-deck/{topic-slug}/
 
 **Slug**: 2-4 words, kebab-case, extracted from topic. "Introduction to Machine Learning" → `intro-machine-learning`.
 
-**Backup rule** (applies across steps): if a file about to be written already exists, rename it to `<name>-backup-YYYYMMDD-HHMMSS.<ext>` before writing the new one. This protects user edits and enables rollback.
+**Backup rule** (all steps): if a file about to be written already exists, rename it to `<name>-backup-YYYYMMDD-HHMMSS.<ext>` first.
 
 ## Workflow
-
-Copy this checklist and check off items as you complete them:
 
 ```
 - [ ] Step 1: Setup & analyze
@@ -253,15 +249,11 @@ Save findings to `analysis.md`: topic, audience, signals, recommended style and 
 
 ### Step 2: Confirmation ⚠️ REQUIRED
 
-**Hard gate**: this step is mandatory per the [Confirmation Policy](#confirmation-policy) — Steps 3+ cannot start until the user confirms here (or explicitly opts out with "直接生成" / equivalent wording in the current request).
+**Hard gate** per the [Confirmation Policy](#confirmation-policy): Steps 3+ wait for the user's answer here unless the current request explicitly opts out ("直接生成" or equivalent).
 
 **Round 1 (always)** — batch five questions in one `AskUserQuestion` call: style, audience, slide count, review-outline?, review-prompts?. Verbatim options in `references/confirmation.md`.
 
-Summary displayed before the questions:
-- Content type + topic
-- Detected language
-- Recommended style (based on signals)
-- Recommended slide count (based on length)
+Show before the questions: content type + topic, detected language, recommended style (from signals), recommended slide count (from length).
 
 **Round 2 (only if "Custom dimensions" in Round 1)** — batch four questions: texture, mood, typography, density. Verbatim options in `references/confirmation.md`. The four answers replace the preset.
 
@@ -297,11 +289,11 @@ Display the prompts index (`# | Filename | Slide Title`) and ask: proceed / edit
 ### Step 7: Generate Images
 
 1. Resolve the image backend via the Image Generation Tools rule at the top — ask once if multiple are installed.
-   - **`codex-imagegen` invocation**: when the rule resolves to `codex-imagegen`, see [references/codex-imagegen.md](references/codex-imagegen.md) for the invocation contract (preferred `baoyu-image-gen --provider codex-cli` path, runtime wrapper discovery, parameter notes, stdout schema, batch semantics — n=1 per call so slide batches must dispatch one wrapper call per slide).
-2. Confirm every `prompts/NN-slide-{slug}.md` exists (hard requirement; prompt files are the reproducibility record regardless of backend).
+   - For `codex-imagegen`, follow [references/codex-imagegen.md](references/codex-imagegen.md) (n=1 per call, so slide batches dispatch one wrapper call per slide).
+2. Confirm every `prompts/NN-slide-{slug}.md` exists (hard requirement).
 3. Session ID: `slides-{topic-slug}-{timestamp}` — pass to the backend only if it supports sessions.
 4. Build a task list for selected slides with each slide's prompt file, output PNG path, aspect ratio, session ID, and verified direct references.
-5. Dispatch slide images in batches per the `## Batch Generation Policy`: backend native batch first, runtime parallel tool calls second, sequential only as fallback. Backup rule applies to PNG files before dispatch. Report progress as `Generated X/N`. Retry only failed items once before reporting an error.
+5. Dispatch per `## Batch Generation Policy`. Backup rule applies to PNG files before dispatch. Report progress as `Generated X/N`. Retry only failed items once before reporting an error.
 
 `--regenerate N` jumps to this step for the named slides only. `--images-only` starts here with existing prompts.
 
@@ -338,7 +330,7 @@ PDF: {topic-slug}.pdf
 | Add | Create new prompt at position, generate image, renumber subsequent `NN` (slugs unchanged), update `outline.md`, re-merge |
 | Delete | Remove PNG + prompt, renumber subsequent, update `outline.md`, re-merge |
 
-Always update the prompt file before regenerating the image — this keeps the prompts directory as the source of truth and makes changes reproducible. Only `NN` changes on renumber; slugs stay stable so references remain valid.
+Always update the prompt file before regenerating the image (prompts are the source of truth). Only `NN` changes on renumber; slugs stay stable.
 
 Text correction policy:
 
@@ -348,33 +340,21 @@ Text correction policy:
 
 See `references/modification-guide.md` for full details.
 
-## References
+## Other References
 
-| File | Content |
-|------|---------|
-| `references/confirmation.md` | Verbatim AskUserQuestion option copy for every confirmation |
-| `references/analysis-framework.md` | Content analysis framework |
-| `references/outline-template.md` | Outline structure |
-| `references/base-prompt.md` | Base prompt body for image generation |
-| `references/layouts.md` | Layout options |
-| `references/design-guidelines.md` | Audience, typography, color selection |
-| `references/content-rules.md` | Content guidelines |
-| `references/modification-guide.md` | Edit/add/delete workflows |
-| `references/styles/<preset>.md` | Per-preset specifications |
-| `references/dimensions/*.md` | Per-dimension specifications |
-| `references/config/preferences-schema.md` | EXTEND.md schema |
+- `references/design-guidelines.md` — audience, typography, color selection
+- `references/content-rules.md` — content and style rules
 
 ## Notes
 
-- Image generation takes ~10-30s per slide; report progress between them.
 - For sensitive public figures, prefer stylized alternatives to avoid likeness issues.
 - Maintain visual consistency via the session ID when the backend supports it.
 
 ## Changing Preferences
 
-EXTEND.md lives at the first matching path listed in Step 1.1. Two ways to change it:
+EXTEND.md lives at the first matching path in Step 1.1.
 
-- **Edit directly** — open EXTEND.md and change fields. Full schema: `references/config/preferences-schema.md`.
+- **Edit directly** — full schema: `references/config/preferences-schema.md`.
 - **Common one-line edits**:
   - `preferred_image_backend: auto` — default; runtime-native tool wins, falls back to the only installed backend, asks only if multiple non-native are present.
   - `preferred_image_backend: codex-imagegen` — pin to Codex's built-in.

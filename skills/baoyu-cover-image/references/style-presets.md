@@ -31,9 +31,4 @@
 | `propaganda` | `vivid` | `screen-print` |
 | `cinematic` | `duotone` | `screen-print` |
 
-## Override Examples
-
-- `--style blueprint --rendering hand-drawn` = cool palette with hand-drawn rendering
-- `--style elegant --palette warm` = warm palette with hand-drawn rendering
-
-Explicit `--palette`/`--rendering` flags always override preset values.
+Explicit `--palette`/`--rendering` flags always override preset values (e.g., `--style blueprint --rendering hand-drawn` = cool palette + hand-drawn).

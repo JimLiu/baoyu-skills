@@ -1,38 +1,6 @@
 # Structured Content Template
 
-Template for generating structured infographic content that informs the visual designer.
-
-## Purpose
-
-This document bridges content analysis and visual design:
-- Transforms source material into designer-ready format
-- Organizes learning objectives into visual sections
-- Preserves all source data verbatim
-- Separates content from design instructions
-
-## Instructional Design Process
-
-### Phase 1: High-Level Outline
-
-1. **Title**: Capture the essence in a compelling headline
-2. **Overview**: Brief description (1-2 sentences)
-3. **Learning Objectives**: List what the viewer will understand
-
-### Phase 2: Section Development
-
-For each learning objective:
-
-1. **Key Concept**: One-sentence summary of the section
-2. **Content**: Points extracted verbatim from source
-3. **Visual Element**: What should be shown visually
-4. **Text Labels**: Exact text for headlines, subheads, labels
-
-### Phase 3: Data Integrity Check
-
-Verify all source data is:
-- Copied exactly (no paraphrasing)
-- Attributed correctly (for quotes)
-- Formatted consistently
+Bridges content analysis and visual design: organizes learning objectives into visual sections, preserves source data verbatim, keeps design instructions separate.
 
 ## Critical Rules
 
@@ -41,7 +9,7 @@ Verify all source data is:
 | **Output format** | Markdown only | Use proper headers, lists, code blocks |
 | **Tone** | Expert trainer | Knowledgeable, clear, encouraging |
 | **No new information** | Only source content | Don't add examples not in source |
-| **Verbatim data** | Exact copies | "73% increase" not "significant increase" |
+| **Verbatim data** | Exact copies, quotes attributed, formatted consistently | "73% increase" not "significant increase" |
 
 ## Structured Content Format
 
@@ -80,23 +48,7 @@ The viewer will understand:
 
 ---
 
-## Section 2: [Section Title]
-
-**Key Concept**: [One-sentence summary]
-
-**Content**:
-- [Point 1]
-- [Point 2]
-
-**Visual Element**: [Description]
-
-**Text Labels**:
-- Headline: "[text]"
-- Labels: "[Label 1]", "[Label 2]"
-
----
-
-[Continue for each section...]
+[Repeat per learning objective...]
 
 ---
 
@@ -228,17 +180,3 @@ Extracted from user's steering prompt:
 - Label: "[Metric name]"
 - Context: "[Brief context]"
 ```
-
-## Quality Checklist
-
-Before finalizing structured content:
-
-- [ ] Title captures the main message
-- [ ] Learning objectives are clear and measurable
-- [ ] Each section maps to an objective
-- [ ] All content is verbatim from source
-- [ ] Visual elements are clearly described
-- [ ] Text labels are specified exactly
-- [ ] Data points are collected and verified
-- [ ] Design instructions are separated
-- [ ] No new information has been added

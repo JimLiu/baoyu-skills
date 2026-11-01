@@ -1,7 +1,5 @@
 # Step 2: Confirm Options
 
-## Purpose
-
 Validate all 6 dimensions + aspect ratio.
 
 ## Skip Conditions
@@ -35,9 +33,7 @@ Quick Mode: Auto-selected dimensions
 
 **Language**: Auto-determined (user's input language > saved preference > source language). No need to ask.
 
-Present ALL options in a **single AskUserQuestion call** (4 questions max).
-
-Skip any question where the dimension is already specified via CLI flag or `--style` preset.
+Present ALL options in a **single AskUserQuestion call** (4 questions max). Skip any question whose dimension is already specified via CLI flag or `--style` preset.
 
 ### Q1: Type (skip if `--type`)
 
@@ -147,6 +143,4 @@ options:
 
 *Note*: "Other" (auto-added) allows typing custom combo. Parse `/`-separated values matching the question format.
 
-## After Response
-
-Proceed to Step 3 with confirmed dimensions.
+Then proceed to Step 3 with confirmed dimensions.

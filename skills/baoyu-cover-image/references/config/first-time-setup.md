@@ -5,43 +5,13 @@ description: First-time setup flow for baoyu-cover-image preferences
 
 # First-Time Setup
 
-## Overview
+When no EXTEND.md is found, run this setup.
 
-When no EXTEND.md is found, guide user through preference setup.
-
-**⛔ BLOCKING OPERATION**: This setup MUST complete before ANY other workflow steps. Do NOT:
-- Ask about reference images
-- Ask about content/article
-- Ask about dimensions (type, palette, rendering)
-- Proceed to content analysis
-
-ONLY ask the questions in this setup flow, save EXTEND.md, then continue.
-
-## Setup Flow
-
-```
-No EXTEND.md found
-        │
-        ▼
-┌─────────────────────┐
-│ AskUserQuestion     │
-│ (all questions)     │
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ Create EXTEND.md    │
-└─────────────────────┘
-        │
-        ▼
-    Continue to Step 1
-```
+**⛔ BLOCKING**: complete it before ANY other workflow step — do not ask about reference images, content, or dimensions (type, palette, rendering), and do not start content analysis. Ask only these questions, save EXTEND.md, then continue.
 
 ## Questions
 
-**Language**: Use user's input language or saved language preference.
-
-Use AskUserQuestion with ALL questions in ONE call:
+Ask in the user's input language or saved language preference, with ALL questions in ONE AskUserQuestion call:
 
 ### Question 1: Watermark
 
@@ -193,10 +163,6 @@ custom_palettes: []
 ---
 ```
 
-`preferred_image_backend: auto` is the baked-in default — first-time setup does not ask about it. The `## Image Generation Tools` rule in SKILL.md then picks the runtime-native tool (Codex `imagegen`, Hermes `image_generate`, etc.) when available, and falls back to installed backends.
+`preferred_image_backend: auto` is the baked-in default — setup does not ask about it.
 
-## Modifying Preferences Later
-
-See the `## Changing Preferences` section in `SKILL.md` for the canonical list of common edits (pin backend, change defaults, retrigger setup). Full schema: `preferences-schema.md`.
-
-**EXTEND.md Supports**: Watermark | Preferred type | Preferred palette | Preferred rendering | Preferred text | Preferred mood | Default aspect ratio | Default output directory | Quick mode | Image backend preference | Custom palette definitions | Language preference
+Later changes: `## Changing Preferences` in `SKILL.md`; full schema: `preferences-schema.md`.

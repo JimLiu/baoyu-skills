@@ -51,8 +51,6 @@ Content signals determine default art + tone + layout (or preset).
 
 ## Compatibility Matrix
 
-Art Style × Tone combinations work best when matched appropriately:
-
 | Art Style | ✓✓ Best | ✓ Works | ✗ Avoid |
 |-----------|---------|---------|---------|
 | ligne-claire | neutral, warm | dramatic, vintage, energetic | romantic, action |

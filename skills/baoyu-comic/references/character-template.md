@@ -2,7 +2,7 @@
 
 ## Character Document Format
 
-Create `characters/characters.md` with the following structure:
+`characters/characters.md` structure:
 
 ```markdown
 # Character Definitions - [Comic Title]
@@ -46,7 +46,7 @@ Create `characters/characters.md` with the following structure:
 
 ## Reference Sheet Image Prompt
 
-After character definitions, include a prompt for generating the reference sheet:
+Append a prompt for generating the reference sheet:
 
 ```markdown
 ## Reference Sheet Prompt
@@ -171,10 +171,3 @@ For biographies spanning many years, define age variants:
 | Define color codes | Use specific color names or hex codes |
 | Include age markers | Wrinkles, posture, clothing style matching era |
 | Reference real people | For historical figures, note "based on 1940s photographs" |
-
-## Why Character Reference Matters
-
-Without unified character definition, AI generates inconsistent appearances. The reference sheet provides:
-1. Visual anchors for consistent features
-2. Color palettes for consistent coloring
-3. Expression documentation for emotional portrayals
