@@ -13,7 +13,7 @@ metadata:
 
 # Markdown Formatter
 
-Transforms plain text or markdown into well-structured, reader-friendly markdown. The goal is to help readers quickly grasp key points, highlights, and structure — without changing any original content.
+Make plain text or markdown scannable so readers grasp key points and structure fast.
 
 **Core principle**: Only adjust formatting and fix obvious typos. Never add, delete, or rewrite content.
 
@@ -29,7 +29,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
+`{baseDir}` = this SKILL.md's directory. `${BUN_X}` = `bun` if installed; else `npx -y bun` if `npx` available; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
 
 | Script | Purpose |
 |--------|---------|
@@ -39,7 +39,7 @@ Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First one found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -47,9 +47,7 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-format-markdown/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-format-markdown/EXTEND.md` | User home |
 
-If none found, use defaults — no first-time setup required for this skill.
-
-**EXTEND.md supports**:
+None found → use defaults (no first-time setup for this skill).
 
 | Setting | Values | Default | Description |
 |---------|--------|---------|-------------|
@@ -58,24 +56,15 @@ If none found, use defaults — no first-time setup required for this skill.
 | `auto_select_summary` | `true`/`false` | `false` | Skip summary selection only |
 | Other | — | — | Default formatting options, typography preferences |
 
-## Usage
-
-The workflow has two phases: **Analyze** (understand the content) then **Format** (apply formatting). Claude performs content analysis and formatting (Steps 1-5), then runs the script for typography fixes (Step 6).
-
 ## Workflow
+
+The agent analyzes and formats (Steps 1-5), then runs the typography script (Step 6).
 
 ### Step 1: Read & Detect Content Type
 
-Read the user-specified file, then detect content type:
+Read the file. It is **Markdown** if it has `---` YAML frontmatter, `#`/`##`/`###` headings, or `**bold**`/`*italic*`/lists/code blocks/blockquotes; otherwise **plain text**.
 
-| Indicator | Classification |
-|-----------|----------------|
-| Has `---` YAML frontmatter | Markdown |
-| Has `#`, `##`, `###` headings | Markdown |
-| Has `**bold**`, `*italic*`, lists, code blocks, blockquotes | Markdown |
-| None of above | Plain text |
-
-**If Markdown detected, use `AskUserQuestion` to ask:**
+If Markdown, ask:
 
 ```
 Detected existing markdown formatting. What would you like to do?
@@ -95,94 +84,53 @@ Detected existing markdown formatting. What would you like to do?
    - No copy created, modifies original file directly
 ```
 
-**Based on user choice:**
-- **Optimize**: Continue to Step 2 (full workflow)
-- **Keep original**: Skip to Step 5, copy file then run Step 6
-- **Typography only**: Skip to Step 6, run on original file directly
+- **Optimize** → Step 2 (full workflow)
+- **Keep original** → skip to Step 5 (copy file), then Step 6
+- **Typography only** → skip to Step 6 on the original file
 
 ### Step 2: Analyze Content (Reader's Perspective)
 
-Read the entire content carefully. Think from a reader's perspective: what would help them quickly understand and remember the key information?
-
-Produce an analysis covering these dimensions:
-
-**2.1 Highlights & Key Insights**
-- Core arguments or conclusions the author makes
-- Surprising facts, data points, or counterintuitive claims
-- Memorable quotes or well-phrased sentences (golden quotes)
-
-**2.2 Structure Assessment**
-- Does the content have a clear logical flow? What is it?
-- Are there natural section boundaries that lack headings?
-- Are there long walls of text that could benefit from visual breaks?
-
-**2.3 Reader-Important Information**
-- Actionable advice or takeaways
-- Definitions, explanations of key concepts
-- Lists or enumerations buried in prose
-- Comparisons or contrasts that would be clearer as tables
-
-**2.4 Formatting Issues**
-- Missing or inconsistent heading hierarchy
-- Paragraphs that mix multiple topics
-- Parallel items written as prose instead of lists
-- Code, commands, or technical terms not marked as code
-- Obvious typos or formatting errors
-
-**Save analysis to file**: `{original-filename}-analysis.md`
-
-The analysis file serves as the blueprint for Step 3. Use this format:
+Read the whole text and ask what would help a reader quickly understand and remember it. Save `{original-filename}-analysis.md` — the blueprint for Step 4:
 
 ```markdown
 # Content Analysis: {filename}
 
 ## Highlights & Key Insights
-- [list findings]
+- [core arguments/conclusions, surprising facts or data, counterintuitive claims, golden quotes]
 
 ## Structure Assessment
 - Current flow: [describe]
-- Suggested sections: [list heading candidates with brief rationale]
+- Suggested sections: [heading candidates with brief rationale; unheaded section boundaries; walls of text needing breaks]
 
 ## Reader-Important Information
-- [list actionable items, key concepts, buried lists, potential tables]
+- [actionable takeaways, key definitions, lists buried in prose, comparisons that should be tables]
 
 ## Formatting Issues
-- [list specific issues with location references]
+- [specific issues with location: heading hierarchy, mixed-topic paragraphs, parallel items as prose, unmarked code/commands/terms]
 
 ## Typos Found
-- [list any obvious typos with corrections, or "None found"]
+- [obvious typos with corrections, or "None found"]
 ```
 
 ### Step 3: Check/Create Frontmatter, Title & Summary
 
-Check for YAML frontmatter (`---` block). Create if missing.
+Create a YAML frontmatter block if missing.
 
 | Field | Processing |
 |-------|------------|
-| `title` | See **Title Generation** below |
+| `title` | See **Title Generation** |
 | `slug` | Infer from file path or generate from title |
-| `summary` | One-sentence concise summary (see **Summary Generation** below) |
-| `description` | Longer descriptive summary (see **Summary Generation** below) |
-| `coverImage` | Check if `imgs/cover.png` exists in same directory; if so, use relative path |
+| `summary` | One-sentence summary (see **Summary Generation**) |
+| `description` | Longer descriptive summary (see **Summary Generation**) |
+| `coverImage` | If `imgs/cover.png` exists in the same directory, use its relative path |
 
 #### Title Generation
 
-Whether or not a title already exists, run the title optimization flow unless `auto_select_title` is set.
+Run this flow even if a title exists, unless `auto_select_title` is set.
 
-**Preparation** — read the full text and extract:
-- Core argument (one sentence: "what is this article about?")
-- Most impactful opinion or conclusion
-- Reader pain point or curiosity trigger
-- Most memorable metaphor or golden quote
-
-**Generate candidates** using formulas from `references/title-formulas.md`:
-
-1. Select the **2-3 best-matching hook formulas** based on the article's content, tone, and structure (see "When to pick each formula" in the reference)
-2. Generate **1-2 straightforward titles** (descriptive or declarative, no formula — clear and accurate)
-3. If the user specifies a direction (e.g., "make it suspenseful"), prioritize that direction
-4. Total: **4-5 candidates**
-
-Present via `AskUserQuestion`:
+1. Extract: core argument (one sentence), most impactful opinion/conclusion, reader pain point or curiosity trigger, most memorable metaphor or golden quote
+2. Using [references/title-formulas.md](references/title-formulas.md): pick the **2-3 best-matching hook formulas** ("When to pick each formula"), plus **1-2 straightforward titles** (descriptive or declarative, no formula). If the user gave a direction (e.g., "make it suspenseful"), prioritize it. Total **4-5 candidates**, obeying the reference's principles and prohibited patterns
+3. Ask, strongest hook first and marked `(recommended)`:
 
 ```
 Pick a title:
@@ -196,74 +144,49 @@ Pick a title:
 Enter number, or type a custom title:
 ```
 
-Put the strongest hook first and mark it `(recommended)`. See `references/title-formulas.md` for principles and prohibited patterns.
-
-If the first line is an H1, extract it to frontmatter and remove it from the body. If frontmatter already has a `title`, include it as context but still generate fresh candidates — the existing title may be weak.
-
-**Skip behavior**: If `auto_select: true` or `auto_select_title: true`, skip the user prompt and use the top candidate directly.
+- First line is an H1 → move it to frontmatter and remove it from the body. An existing frontmatter `title` is context only; still generate fresh candidates.
+- `auto_select: true` or `auto_select_title: true` → skip the prompt, use the top candidate.
+- Once the title is in frontmatter, the body must NOT contain an H1.
 
 #### Summary Generation
 
-Generate two versions directly (no user selection), both stored in frontmatter:
+Generate both directly (no user selection):
 
 | Field | Length | Purpose |
 |-------|--------|---------|
-| `summary` | 1 sentence, ~50-80 chars | Concise hook — for feeds, social sharing, SEO meta |
-| `description` | 2-3 sentences, ~100-200 chars | Richer context — for article previews, newsletter blurbs |
+| `summary` | 1 sentence, ~50-80 chars | Concise hook — feeds, social sharing, SEO meta |
+| `description` | 2-3 sentences, ~100-200 chars | Richer context — article previews, newsletter blurbs |
 
-**Principles**:
-
-- Convey **core value** to the reader, not just the topic
-- Use concrete details (numbers, outcomes, specific methods) over vague descriptions
-- `summary` should be punchy and self-contained; `description` can expand with supporting details
-- If frontmatter already has `summary` or `description`, keep the existing one and only generate the missing field
-
-**Prohibited patterns**:
-
-- "This article introduces...", "This article explores..."
-- Pure topic description without value proposition
-- Repeating the title in different words
-
-Once the title is in frontmatter, the body should NOT contain an H1 (avoid duplication).
+- Convey **core value** to the reader, not just the topic; prefer concrete details (numbers, outcomes, specific methods)
+- `summary` punchy and self-contained; `description` may add supporting details
+- Keep an existing `summary`/`description`; only generate the missing one
+- Prohibited: "This article introduces...", "This article explores..."; pure topic description without value; restating the title
 
 ### Step 4: Format Content
 
-Apply formatting guided by the Step 2 analysis. The goal is making the content scannable and the key points impossible to miss.
+Guided by the Step 2 analysis, make content scannable and key points impossible to miss, using headings (`##`/`###`), bold, ordered/unordered lists, tables, inline/fenced code (commands, paths, technical terms), blockquotes, and `---` for major transitions.
 
-**Formatting toolkit:**
+**Don't:**
+- Add sentences, explanations, or commentary
+- Delete or shorten any content
+- Rephrase or rewrite the author's words
+- Add editorializing headings (e.g., "Amazing Discovery" — use neutral descriptive ones)
+- Over-format: not every sentence needs bold, not every paragraph a heading
 
-| Element | When to use | Format |
-|---------|-------------|--------|
-| Headings | Natural topic boundaries, section breaks | `##`, `###` hierarchy |
-| Bold | Key conclusions, important terms, core takeaways | `**bold**` |
-| Unordered lists | Parallel items, feature lists, examples | `- item` |
-| Ordered lists | Sequential steps, ranked items, procedures | `1. item` |
-| Tables | Comparisons, structured data, option matrices | Markdown table |
-| Code | Commands, file paths, technical terms, variable names | `` `inline` `` or fenced blocks |
-| Blockquotes | Notable quotes, important warnings, cited text | `> quote` |
-| Separators | Major topic transitions | `---` |
-
-**Formatting principles — what NOT to do:**
-- Do NOT add sentences, explanations, or commentary
-- Do NOT delete or shorten any content
-- Do NOT rephrase or rewrite the author's words
-- Do NOT add headings that editorialize (e.g., "Amazing Discovery" — use neutral descriptive headings)
-- Do NOT over-format: not every sentence needs bold, not every paragraph needs a heading
-
-**Formatting principles — what TO do:**
+**Do:**
 - Preserve the author's voice, tone, and every word
-- **Bold key conclusions and core takeaways** — the sentences a reader would highlight
-- Extract parallel items from prose into lists only when the structure is clearly there
-- Add headings where the topic genuinely shifts — prefer vivid, specific headings over generic ones (e.g., "3 天搞定 vs 传统方案" over "方案对比")
-- Use tables for comparisons or structured data buried in prose
-- Use blockquotes for golden quotes, memorable statements, or important warnings
-- Fix obvious typos (based on Step 2 findings)
+- **Bold key conclusions and core takeaways** — what a reader would highlight
+- Turn prose into lists only when the parallel structure is clearly there
+- Add headings where the topic genuinely shifts — vivid and specific over generic (e.g., "3 天搞定 vs 传统方案" over "方案对比")
+- Tables for comparisons or structured data buried in prose
+- Blockquotes for golden quotes, memorable statements, or important warnings
+- Fix obvious typos (from Step 2)
+- Specify the language on code blocks (e.g., `python`, `javascript`)
+- Maintain CJK/English spacing standards
 
 ### Step 5: Save Formatted File
 
-Save as `{original-filename}-formatted.md`
-
-**Backup existing file:**
+Save as `{original-filename}-formatted.md`, backing up any existing one:
 
 ```bash
 if [ -f "{filename}-formatted.md" ]; then
@@ -273,13 +196,9 @@ fi
 
 ### Step 6: Execute Typography Script
 
-Run the formatting script on the output file:
-
 ```bash
 ${BUN_X} {baseDir}/scripts/main.ts {output-file-path} [options]
 ```
-
-**Script Options:**
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
@@ -290,28 +209,11 @@ ${BUN_X} {baseDir}/scripts/main.ts {output-file-path} [options]
 | `--emphasis` | `-e` | Fix CJK emphasis punctuation issues | true |
 | `--no-emphasis` | | Do not fix CJK emphasis issues | |
 
-**Examples:**
-
-```bash
-# Default: spacing + emphasis enabled, quotes disabled
-${BUN_X} {baseDir}/scripts/main.ts article.md
-
-# Enable all features including quote replacement
-${BUN_X} {baseDir}/scripts/main.ts article.md --quotes
-
-# Only fix emphasis issues, skip spacing
-${BUN_X} {baseDir}/scripts/main.ts article.md --no-spacing
-```
-
-**Script performs (based on options):**
-1. Fix CJK emphasis/bold punctuation issues (default: enabled)
-2. Add CJK/English mixed text spacing via autocorrect (default: enabled)
-3. Replace ASCII quotes with fullwidth quotes (default: disabled)
-4. Format frontmatter YAML (always enabled)
+Frontmatter YAML is always formatted. Examples: `main.ts article.md` (defaults), `--quotes` (add quote replacement), `--no-spacing` (emphasis only).
 
 ### Step 7: Completion Report
 
-Display a report summarizing all changes made:
+Report actual changes; omit categories with none:
 
 ```
 **Formatting Complete**
@@ -341,15 +243,6 @@ Display a report summarizing all changes made:
 - Quote replacement: [applied/skipped]
 ```
 
-Adjust the report to reflect actual changes — omit categories where no changes were made.
-
-## Notes
-
-- Preserve original writing style and tone
-- Specify correct language for code blocks (e.g., `python`, `javascript`)
-- Maintain CJK/English spacing standards
-- The analysis file is a working document — it helps maintain consistency between what was identified and what was formatted
-
 ## Extension Support
 
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.
+Custom configurations via EXTEND.md — see **Preferences** above.
