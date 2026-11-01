@@ -13,8 +13,6 @@ metadata:
 
 # Gemini Web Client
 
-Text/image generation via Gemini Web API. Supports reference images and multi-turn conversations.
-
 ## User Input Tools
 
 When this skill prompts the user, follow this tool-selection rule (priority order):
@@ -27,15 +25,8 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-**Important**: All scripts are located in the `scripts/` subdirectory of this skill.
+`{baseDir}` = this SKILL.md's directory; scripts are at `{baseDir}/scripts/<script-name>.ts`. Resolve `${BUN_X}`: `bun` if installed; else `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
 
-**Agent Execution Instructions**:
-1. Determine this SKILL.md file's directory path as `{baseDir}`
-2. Script path = `{baseDir}/scripts/<script-name>.ts`
-3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
-4. Replace all `{baseDir}` and `${BUN_X}` in this document with actual values
-
-**Script Reference**:
 | Script | Purpose |
 |--------|---------|
 | `scripts/main.ts` | CLI entry point for text/image generation |
@@ -43,14 +34,11 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Consent Check (REQUIRED)
 
-Before first use, verify user consent for reverse-engineered API usage.
-
-**Consent file locations**:
+Before first use, verify user consent for reverse-engineered API usage. Consent file:
 - macOS: `~/Library/Application Support/baoyu-skills/gemini-web/consent.json`
 - Linux: `~/.local/share/baoyu-skills/gemini-web/consent.json`
 - Windows: `%APPDATA%\baoyu-skills\gemini-web\consent.json`
 
-**Flow**:
 1. Check if consent file exists with `accepted: true` and `disclaimerVersion: "1.0"`
 2. If valid consent exists → print warning with `acceptedAt` date, proceed
 3. If no consent → show disclaimer, ask user via `AskUserQuestion`:
@@ -58,11 +46,9 @@ Before first use, verify user consent for reverse-engineered API usage.
    - "No, I decline" → output decline message, stop
 4. Consent file format: `{"version":1,"accepted":true,"acceptedAt":"<ISO>","disclaimerVersion":"1.0"}`
 
----
-
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -70,30 +56,19 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-gemini-web/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-danger-gemini-web/EXTEND.md` | User home |
 
-If none found, use defaults.
-
-**EXTEND.md supports**: Default model, proxy settings, custom data directory.
+If none found, use defaults. **EXTEND.md supports**: default model, proxy settings, custom data directory.
 
 ## Usage
 
 ```bash
-# Text generation
-${BUN_X} {baseDir}/scripts/main.ts "Your prompt"
+${BUN_X} {baseDir}/scripts/main.ts "Your prompt"                                     # text
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Your prompt" --model gemini-3-flash
-
-# Image generation
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cute cat" --image cat.png
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cute cat" --image cat.png             # image
 ${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
-
-# Vision input (reference images)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "Describe this" --reference image.png
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Describe this" --reference image.png    # vision input
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Create variation" --reference a.png --image out.png
-
-# Multi-turn conversation
-${BUN_X} {baseDir}/scripts/main.ts "Remember: 42" --sessionId session-abc
+${BUN_X} {baseDir}/scripts/main.ts "Remember: 42" --sessionId session-abc           # multi-turn
 ${BUN_X} {baseDir}/scripts/main.ts "What number?" --sessionId session-abc
-
-# JSON output
 ${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 ```
 
@@ -103,7 +78,7 @@ ${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 |--------|-------------|
 | `--prompt`, `-p` | Prompt text |
 | `--promptfiles` | Read prompt from files (concatenated) |
-| `--model`, `-m` | Model: gemini-3-pro (default), gemini-3-flash, gemini-3-flash-thinking, gemini-3.1-pro-preview |
+| `--model`, `-m` | Model (see Models; default `gemini-3-pro`) |
 | `--image [path]` | Generate image (default: generated.png) |
 | `--reference`, `--ref` | Reference images for vision input |
 | `--sessionId` | Session ID for multi-turn conversation |
@@ -124,15 +99,9 @@ ${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 
 ## Authentication
 
-First run opens browser for Google auth. Cookies cached automatically.
+First run opens a browser for Google auth; cookies are cached. Force refresh: `--login`. Override browser: `GEMINI_WEB_CHROME_PATH`. Auto-detected browsers: Chrome, Chrome Canary/Beta, Chromium, Edge.
 
-When no explicit profile dir is set, cookie refresh may reuse an already-running local Chrome/Chromium debugging session tied to a standard user-data dir.
-Set `--profile-dir` or `GEMINI_WEB_CHROME_PROFILE_DIR` to force a dedicated profile and skip existing-session reuse.
-This is a best-effort CDP session reuse path, not the Chrome DevTools MCP prompt-based `--autoConnect` flow described in Chrome's official docs.
-
-Supported browsers (auto-detected): Chrome, Chrome Canary/Beta, Chromium, Edge.
-
-Force refresh: `--login` flag. Override browser: `GEMINI_WEB_CHROME_PATH` env var.
+Without an explicit profile dir, cookie refresh may reuse an already-running local Chrome/Chromium debugging session tied to a standard user-data dir (best-effort CDP reuse, not Chrome DevTools MCP's `--autoConnect` flow). Set `--profile-dir` or `GEMINI_WEB_CHROME_PROFILE_DIR` to force a dedicated profile and skip that reuse.
 
 ## Environment Variables
 
@@ -146,9 +115,7 @@ Force refresh: `--login` flag. Override browser: `GEMINI_WEB_CHROME_PATH` env va
 
 ## Sessions
 
-Session files stored in data directory under `sessions/<id>.json`.
-
-Contains: `id`, `metadata` (Gemini chat state), `messages` array, timestamps.
+Stored in the data directory as `sessions/<id>.json`, containing `id`, `metadata` (Gemini chat state), `messages` array, timestamps.
 
 ## Extension Support
 

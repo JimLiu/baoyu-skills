@@ -1,8 +1,6 @@
 # EXTEND.md Schema for baoyu-translate
 
-## Format
-
-EXTEND.md uses YAML format:
+YAML format:
 
 ```yaml
 # Default target language (ISO code or common name)
@@ -75,7 +73,7 @@ glossaries:
 
 ## Glossary File Format
 
-External glossary files (`glossary_files`) support two formats:
+`glossary_files` accepts two formats (absolute paths or relative to EXTEND.md):
 
 **Markdown table** (`.md`):
 ```markdown
@@ -93,8 +91,6 @@ External glossary files (`glossary_files`) support two formats:
   to: "Transformer"
   note: "Keep English"
 ```
-
-Paths can be absolute or relative to the EXTEND.md file location.
 
 ## Priority
 

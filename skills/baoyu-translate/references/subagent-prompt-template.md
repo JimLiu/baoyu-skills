@@ -1,12 +1,9 @@
 # Subagent Translation Prompt Template
 
-Two parts:
-1. **`02-prompt.md`** — Shared context (saved to output directory). Contains background, glossary, challenges, and principles. No task-specific instructions.
-2. **Subagent spawn prompt** — Task instructions passed when spawning each subagent. One subagent per chunk (or per source file if non-chunked).
+1. **`02-prompt.md`** — shared context saved to the output directory (background, glossary, challenges, principles; no task instructions). The main agent inlines relevant context from `01-analysis.md` (if it exists).
+2. **Subagent spawn prompt** — task instructions per subagent: one per chunk, spawned in parallel (or one per source file if non-chunked).
 
-The main agent reads `01-analysis.md` (if exists), inlines all relevant context into `02-prompt.md`, then spawns subagents in parallel with task instructions referencing that file.
-
-Replace `{placeholders}` with actual values. Omit sections marked "if analysis exists" for quick mode.
+Replace `{placeholders}`. Omit sections marked "if analysis exists" for quick mode.
 
 ---
 

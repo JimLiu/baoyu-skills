@@ -1,25 +1,6 @@
 # Usage Examples
 
-Extended CLI examples. SKILL.md shows the minimum set; read this file when the user asks about provider-specific invocation, batch generation, or less-common flags.
-
-## Core Patterns
-
-```bash
-# Basic text-to-image
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image cat.png
-
-# With aspect ratio
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A landscape" --image out.png --ar 16:9
-
-# High quality
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --quality 2k
-
-# Prompt from files
-${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
-
-# With reference images (any provider family that supports refs)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref source.png
-```
+Basic patterns are in SKILL.md "Usage".
 
 ## Per-Provider
 
@@ -94,18 +75,12 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic scene" --image out.txt 
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Apply this style" --image out.png --provider agnes --ref source.png
 ```
 
-Notes on `codex-cli`:
-- Never auto-selected — pin via `--provider codex-cli` or `default_provider: codex-cli` in EXTEND.md.
-- Only `n=1` supported (Codex `image_gen` returns one image per call); `--size`, `--imageSize`, `--quality`, and `--imageApiDialect` are ignored or rejected.
-- Typically 5–10× slower than direct OpenAI / Google API calls (except on cache hits). Tune via `BAOYU_CODEX_IMAGEGEN_TIMEOUT_MS`, `BAOYU_CODEX_IMAGEGEN_RETRIES`, and `BAOYU_CODEX_IMAGEGEN_CACHE_DIR`.
+`codex-cli` limits (never auto-selected, `n=1` only, ignored flags, latency, tuning env vars): `references/providers/codex-cli.md`.
 
 ## Batch Mode
 
 ```bash
-# Batch from saved prompt files
 ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json
-
-# Batch with explicit worker count
 ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4 --json
 ```
 

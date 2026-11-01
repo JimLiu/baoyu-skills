@@ -5,42 +5,11 @@ description: First-time setup flow for baoyu-translate preferences
 
 # First-Time Setup
 
-## Overview
-
-When no EXTEND.md is found, guide user through preference setup.
-
-**BLOCKING OPERATION**: This setup MUST complete before ANY translation. Do NOT:
-- Start translating content
-- Ask about files or output paths
-- Proceed to any workflow steps
-
-ONLY ask the questions in this setup flow, save EXTEND.md, then continue.
-
-## Setup Flow
-
-```
-No EXTEND.md found
-        |
-        v
-+---------------------+
-| AskUserQuestion     |
-| (all questions)     |
-+---------------------+
-        |
-        v
-+---------------------+
-| Create EXTEND.md    |
-+---------------------+
-        |
-        v
-    Continue translation
-```
+**BLOCKING**: runs when no EXTEND.md is found and must finish before any translation. Ask only these questions (don't start translating or ask about files/output paths), save EXTEND.md, then continue.
 
 ## Questions
 
-**Language**: Use user's input language or saved language preference.
-
-Use AskUserQuestion with ALL questions in ONE call:
+Use the user's input language (or saved language preference). Ask all questions in ONE call:
 
 ### Question 1: Target Language
 
@@ -141,11 +110,10 @@ options:
 
 ## After Setup
 
-1. Create directory if needed
-2. Write EXTEND.md with selected values
-3. Confirm: "Preferences saved to [path]"
-4. Mention: "You can add custom glossary terms to EXTEND.md anytime. See the `glossary` section in the file for the format."
-5. Continue with translation using saved preferences
+1. Create the directory if needed; write EXTEND.md with the selected values
+2. Confirm: "Preferences saved to [path]"
+3. Mention: "You can add custom glossary terms to EXTEND.md anytime. See the `glossary` section in the file for the format."
+4. Continue the translation
 
 ## EXTEND.md Template
 
@@ -164,6 +132,4 @@ style: [storytelling/formal/technical/literal/academic/business/humorous/convers
 #     note: "Usage context"
 ```
 
-## Modifying Preferences Later
-
-Users can edit EXTEND.md directly or delete it to trigger setup again.
+Users can edit EXTEND.md later, or delete it to rerun setup.

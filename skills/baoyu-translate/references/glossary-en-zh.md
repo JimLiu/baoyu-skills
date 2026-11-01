@@ -1,6 +1,6 @@
 # English → Chinese Glossary
 
-Terms where standard translation is non-obvious or easily mistranslated. Common terms with straightforward translations (e.g., Machine Learning → 机器学习) are omitted — the model already knows these.
+Only non-obvious or easily mistranslated terms; straightforward ones (e.g., Machine Learning → 机器学习) are omitted.
 
 | English | Chinese | Notes |
 |---------|---------|-------|

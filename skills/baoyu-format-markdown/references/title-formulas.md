@@ -1,7 +1,5 @@
 # Title Formulas Reference
 
-8 hook formulas + straightforward style for balanced title generation.
-
 ## Hook Formulas
 
 | # | Formula | Characteristics | Example |
@@ -30,12 +28,10 @@
 
 ## Straightforward Style
 
-Not every title needs a hook. Straightforward titles work well as alternatives:
+Hook-free alternatives for readers who prefer clarity over curiosity:
 
 - **Descriptive**: clearly state the topic and scope
 - **Declarative**: state the main conclusion or thesis directly
-
-These provide balance — readers who prefer clarity over curiosity will appreciate them.
 
 ## Title Principles
 

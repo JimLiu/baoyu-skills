@@ -13,11 +13,11 @@ metadata:
 
 # Image Compressor
 
-Compresses images using best available tool (sips → cwebp → ImageMagick → Sharp).
+Tool auto-selection order: sips → cwebp → ImageMagick → Sharp.
 
 ## Script Directory
 
-Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
+`{baseDir}` = this SKILL.md's directory. Resolve `${BUN_X}`: `bun` if installed; else `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
 
 | Script | Purpose |
 |--------|---------|
@@ -25,7 +25,7 @@ Scripts in `scripts/` subdirectory. `{baseDir}` = this SKILL.md's directory path
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -33,15 +33,18 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-compress-image/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-compress-image/EXTEND.md` | User home |
 
-If none found, use defaults.
-
-**EXTEND.md supports**: Default format, default quality, keep-original preference.
+If none found, use defaults. **EXTEND.md supports**: default format, default quality, keep-original preference.
 
 ## Usage
 
 ```bash
 ${BUN_X} {baseDir}/scripts/main.ts <input> [options]
+${BUN_X} {baseDir}/scripts/main.ts image.png                    # → WebP, replaces original
+${BUN_X} {baseDir}/scripts/main.ts image.png -f png --keep      # keep PNG format and original
+${BUN_X} {baseDir}/scripts/main.ts ./images/ -r -q 75           # directory, recursive
 ```
+
+Output: `image.png → image.webp (245KB → 89KB, 64% reduction)`
 
 ## Options
 
@@ -54,27 +57,6 @@ ${BUN_X} {baseDir}/scripts/main.ts <input> [options]
 | `--keep` | `-k` | Keep original | false |
 | `--recursive` | `-r` | Process subdirs | false |
 | `--json` | | JSON output | false |
-
-## Examples
-
-```bash
-# Single file → WebP (replaces original)
-${BUN_X} {baseDir}/scripts/main.ts image.png
-
-# Keep PNG format
-${BUN_X} {baseDir}/scripts/main.ts image.png -f png --keep
-
-# Directory recursive
-${BUN_X} {baseDir}/scripts/main.ts ./images/ -r -q 75
-
-# JSON output
-${BUN_X} {baseDir}/scripts/main.ts image.png --json
-```
-
-**Output**:
-```
-image.png → image.webp (245KB → 89KB, 64% reduction)
-```
 
 ## Extension Support
 

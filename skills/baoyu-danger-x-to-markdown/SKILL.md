@@ -13,9 +13,7 @@ metadata:
 
 # X to Markdown
 
-Converts X content to markdown:
-- Tweets/threads → Markdown with YAML front matter
-- X Articles → Full content extraction
+Tweets/threads → markdown with YAML front matter; X Articles → full content.
 
 ## User Input Tools
 
@@ -29,66 +27,43 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-Scripts located in `scripts/` subdirectory.
+1. `{baseDir}` = this SKILL.md's directory; script = `{baseDir}/scripts/main.ts`
+2. `${BUN_X}` = `bun` if installed; else `npx -y bun` if `npx` available; else suggest installing bun
 
-**Path Resolution**:
-1. `{baseDir}` = this SKILL.md's directory
-2. Script path = `{baseDir}/scripts/main.ts`
-3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
+## Consent Requirement (before any conversion)
 
-## Consent Requirement
+1. Read the consent file:
+   - macOS: `~/Library/Application\ Support/baoyu-skills/x-to-markdown/consent.json`
+   - Linux: `~/.local/share/baoyu-skills/x-to-markdown/consent.json`
+2. `accepted: true` and `disclaimerVersion: "1.0"` → print `Warning: Using reverse-engineered X API. Accepted on: <acceptedAt>` and proceed.
+3. Missing or version mismatch → show this disclaimer and ask "Yes, I accept" | "No, I decline":
+   ```
+   DISCLAIMER
 
-**Before any conversion**, check and obtain consent.
+   This tool uses a reverse-engineered X API, NOT official.
 
-### Consent Flow
+   Risks:
+   - May break if X changes API
+   - No guarantees or support
+   - Possible account restrictions
+   - Use at your own risk
 
-**Step 1**: Check consent file
-
-```bash
-# macOS
-cat ~/Library/Application\ Support/baoyu-skills/x-to-markdown/consent.json
-
-# Linux
-cat ~/.local/share/baoyu-skills/x-to-markdown/consent.json
-```
-
-**Step 2**: If `accepted: true` and `disclaimerVersion: "1.0"` → print warning and proceed:
-```
-Warning: Using reverse-engineered X API. Accepted on: <acceptedAt>
-```
-
-**Step 3**: If missing or version mismatch → display disclaimer:
-```
-DISCLAIMER
-
-This tool uses a reverse-engineered X API, NOT official.
-
-Risks:
-- May break if X changes API
-- No guarantees or support
-- Possible account restrictions
-- Use at your own risk
-
-Accept terms and continue?
-```
-
-Use `AskUserQuestion` with options: "Yes, I accept" | "No, I decline"
-
-**Step 4**: On accept → create consent file:
-```json
-{
-  "version": 1,
-  "accepted": true,
-  "acceptedAt": "<ISO timestamp>",
-  "disclaimerVersion": "1.0"
-}
-```
-
-**Step 5**: On decline → output "User declined. Exiting." and stop.
+   Accept terms and continue?
+   ```
+4. Accept → write the consent file:
+   ```json
+   {
+     "version": 1,
+     "accepted": true,
+     "acceptedAt": "<ISO timestamp>",
+     "disclaimerVersion": "1.0"
+   }
+   ```
+5. Decline → output "User declined. Exiting." and stop.
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First one found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -96,47 +71,14 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md` | User home |
 
-| Result | Action |
-|--------|--------|
-| Found | Read, parse, apply settings |
-| Not found | **MUST** run first-time setup (see below) — do NOT silently create defaults |
+Found → read and apply. Not found → **BLOCKING** first-time setup: ask the questions in [references/config/first-time-setup.md](references/config/first-time-setup.md) (Media, Output, Save — all in one call) before any conversion, write EXTEND.md at the chosen location, confirm "Preferences saved to [path]", then continue. Never create EXTEND.md with defaults without asking.
 
-**EXTEND.md supports**: Download media by default, default output directory.
+| Key | Default | Values |
+|-----|---------|--------|
+| `download_media` | `ask` | `ask` (prompt each time) / `1` (always) / `0` (never) |
+| `default_output_dir` | empty (= `./x-to-markdown/`) | path or empty |
 
-### First-Time Setup (BLOCKING)
-
-**CRITICAL**: When EXTEND.md is not found, you **MUST use `AskUserQuestion`** to ask the user for their preferences before creating EXTEND.md. **NEVER** create EXTEND.md with defaults without asking. This is a **BLOCKING** operation — do NOT proceed with any conversion until setup is complete.
-
-Use `AskUserQuestion` with ALL questions in ONE call:
-
-**Question 1** — header: "Media", question: "How to handle images and videos in tweets?"
-- "Ask each time (Recommended)" — After saving markdown, ask whether to download media
-- "Always download" — Always download media to local imgs/ and videos/ directories
-- "Never download" — Keep original remote URLs in markdown
-
-**Question 2** — header: "Output", question: "Default output directory?"
-- "x-to-markdown (Recommended)" — Save to ./x-to-markdown/{username}/{tweet-id}.md
-- (User may choose "Other" to type a custom path)
-
-**Question 3** — header: "Save", question: "Where to save preferences?"
-- "User (Recommended)" — ~/.baoyu-skills/ (all projects)
-- "Project" — .baoyu-skills/ (this project only)
-
-After user answers, create EXTEND.md at the chosen location, confirm "Preferences saved to [path]", then continue.
-
-Full reference: [references/config/first-time-setup.md](references/config/first-time-setup.md)
-
-### Supported Keys
-
-| Key | Default | Values | Description |
-|-----|---------|--------|-------------|
-| `download_media` | `ask` | `ask` / `1` / `0` | `ask` = prompt each time, `1` = always download, `0` = never |
-| `default_output_dir` | empty | path or empty | Default output directory (empty = `./x-to-markdown/`) |
-
-**Value priority**:
-1. CLI arguments (`--download-media`, `-o`)
-2. EXTEND.md
-3. Skill defaults
+Value priority: CLI arguments (`--download-media`, `-o`) → EXTEND.md → skill defaults.
 
 ## Usage
 
@@ -147,21 +89,15 @@ ${BUN_X} {baseDir}/scripts/main.ts <url> --download-media
 ${BUN_X} {baseDir}/scripts/main.ts <url> --json
 ```
 
-## Options
-
 | Option | Description |
 |--------|-------------|
 | `<url>` | Tweet or article URL |
 | `-o <path>` | Output path |
 | `--json` | JSON output |
-| `--download-media` | Download image/video assets to local `imgs/` and `videos/`, and rewrite markdown links to local relative paths |
+| `--download-media` | Download images/videos to local `imgs/` and `videos/` next to the markdown, rewrite links to local relative paths |
 | `--login` | Refresh cookies only |
 
-## Supported URLs
-
-- `https://x.com/<user>/status/<id>`
-- `https://twitter.com/<user>/status/<id>`
-- `https://x.com/i/article/<id>`
+Supported URLs: `https://x.com/<user>/status/<id>`, `https://twitter.com/<user>/status/<id>`, `https://x.com/i/article/<id>`
 
 ## Output
 
@@ -176,39 +112,22 @@ coverImage: "https://pbs.twimg.com/media/example.jpg"
 Content...
 ```
 
-**File structure**: `x-to-markdown/{username}/{tweet-id}/{content-slug}.md`
+File structure: `x-to-markdown/{username}/{tweet-id}/{content-slug}.md`
 
-When `--download-media` is enabled:
-- Images are saved to `imgs/` next to the markdown file
-- Videos are saved to `videos/` next to the markdown file
-- Markdown media links are rewritten to local relative paths
+## Media Download
 
-## Media Download Workflow
+By EXTEND.md `download_media`: `1` → run with `--download-media`; `0` → run without; `ask` (default):
 
-Based on `download_media` setting in EXTEND.md:
-
-| Setting | Behavior |
-|---------|----------|
-| `1` (always) | Run script with `--download-media` flag |
-| `0` (never) | Run script without `--download-media` flag |
-| `ask` (default) | Follow the ask-each-time flow below |
-
-### Ask-Each-Time Flow
-
-1. Run script **without** `--download-media` → markdown saved
-2. Check saved markdown for remote media URLs (`https://` in image/video links)
-3. **If no remote media found** → done, no prompt needed
-4. **If remote media found** → use `AskUserQuestion`:
-   - header: "Media", question: "Download N images/videos to local files?"
-   - "Yes" — Download to local directories
-   - "No" — Keep remote URLs
-5. If user confirms → run script **again** with `--download-media` (overwrites markdown with localized links)
+1. Run **without** `--download-media` → markdown saved
+2. Check it for remote media (`https://` image/video links); none → done, no prompt
+3. Otherwise ask (header "Media", question "Download N images/videos to local files?"): "Yes" — download to local directories / "No" — keep remote URLs
+4. Yes → rerun **with** `--download-media` (overwrites markdown with localized links)
 
 ## Authentication
 
-1. **Environment variables** (preferred): `X_AUTH_TOKEN`, `X_CT0`
-2. **Chrome login** (fallback): Auto-opens Chrome, caches cookies locally
+1. Environment variables (preferred): `X_AUTH_TOKEN`, `X_CT0`
+2. Chrome login (fallback): auto-opens Chrome, caches cookies locally
 
 ## Extension Support
 
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.
+Custom configurations via EXTEND.md — see **Preferences** above.

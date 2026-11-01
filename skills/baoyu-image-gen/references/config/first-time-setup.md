@@ -5,39 +5,17 @@ description: First-time setup and default model selection flow for baoyu-image-g
 
 # First-Time Setup
 
-## Overview
-
 Triggered when:
-1. No EXTEND.md found → full setup (provider + model + preferences)
-2. EXTEND.md found but `default_model.[provider]` is null → model selection only
+1. No EXTEND.md found → full setup (Flow 1), create EXTEND.md
+2. EXTEND.md found but `default_model.[provider]` is null → model question only (Flow 2), update EXTEND.md
 
-## Setup Flow
+Then continue with generation. Ask in the user's input language or saved language preference.
 
-```
-No EXTEND.md found          EXTEND.md found, model null
-        │                            │
-        ▼                            ▼
-┌─────────────────────┐    ┌──────────────────────┐
-│ AskUserQuestion     │    │ AskUserQuestion      │
-│ (full setup)        │    │ (model only)         │
-└─────────────────────┘    └──────────────────────┘
-        │                            │
-        ▼                            ▼
-┌─────────────────────┐    ┌──────────────────────┐
-│ Create EXTEND.md    │    │ Update EXTEND.md     │
-└─────────────────────┘    └──────────────────────┘
-        │                            │
-        ▼                            ▼
-    Continue                     Continue
-```
-
-## Flow 1: No EXTEND.md (Full Setup)
-
-**Language**: Use user's input language or saved language preference.
+## Flow 1: Full Setup
 
 Use AskUserQuestion with ALL questions in ONE call:
 
-### Question 1: Default Provider
+1. **Provider**:
 
 ```yaml
 header: "Provider"
@@ -63,89 +41,9 @@ options:
     description: "Sapiens AI Agnes - optimized for high information density, complex layouts, reference-image support"
 ```
 
-### Question 2: Default Google Model
+2. **Model** — only for these choices, using the matching question under [Model Questions](#model-questions): Google (also when auto-detect / no explicit provider), OpenRouter, Azure OpenAI, MiniMax, Z.AI.
 
-Only show if user selected Google or auto-detect (no explicit provider).
-
-```yaml
-header: "Google Model"
-question: "Default Google image generation model?"
-options:
-  - label: "gemini-3-pro-image (Recommended)"
-    description: "Highest quality, best for production use"
-  - label: "gemini-3.1-flash-image"
-    description: "Fast generation, good quality, lower cost"
-  - label: "gemini-3.1-flash-lite-image"
-    description: "Cheapest and fastest; 1K output only"
-  - label: "gemini-3-flash-preview"
-    description: "Fast generation, balanced quality and speed"
-```
-
-### Question 2b: Default OpenRouter Model
-
-Only show if user selected OpenRouter.
-
-```yaml
-header: "OpenRouter Model"
-question: "Default OpenRouter image generation model?"
-options:
-  - label: "google/gemini-3.1-flash-image (Recommended)"
-    description: "Best general-purpose OpenRouter image model with reference-image workflows"
-  - label: "google/gemini-2.5-flash-image-preview"
-    description: "Fast Gemini preview model on OpenRouter"
-  - label: "black-forest-labs/flux.2-pro"
-    description: "Strong text-to-image quality through OpenRouter"
-```
-
-### Question 2c: Default Azure Deployment
-
-Only show if user selected Azure OpenAI.
-
-```yaml
-header: "Azure Deploy"
-question: "Default Azure image deployment name?"
-options:
-  - label: "gpt-image-2.5-flare (Recommended)"
-    description: "Use if your Azure deployment uses the GPT Image 2.5 Flare model name"
-  - label: "gpt-image-2.5-sunburst"
-    description: "Use if your Azure deployment uses the GPT Image 2.5 Sunburst model name"
-  - label: "gpt-image-2"
-    description: "Use if your Azure deployment uses the GPT Image 2 model name"
-  - label: "gpt-image-1.5"
-    description: "Previous GPT Image deployment name"
-  - label: "gpt-image-1"
-    description: "Earlier GPT Image deployment name"
-```
-
-### Question 2d: Default MiniMax Model
-
-Only show if user selected MiniMax.
-
-```yaml
-header: "MiniMax Model"
-question: "Default MiniMax image generation model?"
-options:
-  - label: "image-01 (Recommended)"
-    description: "Best default, supports aspect ratios and custom width/height"
-  - label: "image-01-live"
-    description: "Faster variant, use aspect ratio instead of custom size"
-```
-
-### Question 2e: Default Z.AI Model
-
-Only show if user selected Z.AI.
-
-```yaml
-header: "Z.AI Model"
-question: "Default Z.AI image generation model?"
-options:
-  - label: "glm-image (Recommended)"
-    description: "Best default for posters, diagrams, and text-heavy images"
-  - label: "cogview-4-250304"
-    description: "Legacy Z.AI image model on the same endpoint"
-```
-
-### Question 3: Default Quality
+3. **Quality**:
 
 ```yaml
 header: "Quality"
@@ -157,7 +55,7 @@ options:
     description: "1024px - quick previews, drafts"
 ```
 
-### Question 4: Save Location
+4. **Save location**:
 
 ```yaml
 header: "Save"
@@ -169,14 +67,12 @@ options:
     description: "~/.baoyu-skills/ (all projects)"
 ```
 
-### Save Locations
-
 | Choice | Path | Scope |
 |--------|------|-------|
 | Project | `.baoyu-skills/baoyu-image-gen/EXTEND.md` | Current project |
 | User | `$HOME/.baoyu-skills/baoyu-image-gen/EXTEND.md` | All projects |
 
-### EXTEND.md Template
+EXTEND.md template:
 
 ```yaml
 ---
@@ -199,17 +95,40 @@ default_model:
 ---
 ```
 
-If the user selects `OpenAI` but says their endpoint is only OpenAI-compatible and fronts another image model family, save `default_image_api_dialect: ratio-metadata` when they explicitly confirm the gateway expects aspect-ratio `size` plus metadata-based resolution. Otherwise leave it `null` / `openai-native`.
+If the user picks `OpenAI` but says the endpoint is only OpenAI-compatible and fronts another image model family, save `default_image_api_dialect: ratio-metadata` only when they confirm the gateway expects aspect-ratio `size` plus metadata-based resolution. Otherwise leave it `null` / `openai-native`.
 
-## Flow 2: EXTEND.md Exists, Model Null
+## Flow 2: Model Only
 
-When EXTEND.md exists but `default_model.[current_provider]` is null, ask ONLY the model question for the current provider.
+Ask ONLY the model question for the current provider (below). Then:
 
-### Google Model Selection
+1. Read existing EXTEND.md
+2. If `default_model:` exists → update the provider-specific key
+3. If `default_model:` is missing → add the full section:
+
+```yaml
+default_model:
+  google: [value or null]
+  openai: [value or null]
+  azure: [value or null]
+  openrouter: [value or null]
+  dashscope: [value or null]
+  zai: [value or null]
+  minimax: [value or null]
+  replicate: [value or null]
+  agnes: [value or null]
+```
+
+Only set the selected provider's model; leave others as their current value or null.
+
+## Model Questions
+
+Model details and limits: `references/providers/*.md`.
+
+### Google
 
 ```yaml
 header: "Google Model"
-question: "Choose a default Google image generation model?"
+question: "Default Google image generation model?"
 options:
   - label: "gemini-3-pro-image (Recommended)"
     description: "Highest quality, best for production use"
@@ -221,11 +140,11 @@ options:
     description: "Fast generation, balanced quality and speed"
 ```
 
-### OpenAI Model Selection
+### OpenAI
 
 ```yaml
 header: "OpenAI Model"
-question: "Choose a default OpenAI image generation model?"
+question: "Default OpenAI image generation model?"
 options:
   - label: "gpt-image-2.5-flare (Recommended)"
     description: "Latest GPT Image model, fastest; flexible sizes up to 4K, high-fidelity image inputs"
@@ -239,11 +158,11 @@ options:
     description: "Earlier GPT Image model"
 ```
 
-### Azure Deployment Selection
+### Azure
 
 ```yaml
 header: "Azure Deploy"
-question: "Choose a default Azure image deployment name?"
+question: "Default Azure image deployment name?"
 options:
   - label: "gpt-image-2.5-flare (Recommended)"
     description: "Use when your Azure deployment name matches the GPT Image 2.5 Flare model"
@@ -257,16 +176,13 @@ options:
     description: "Use when your Azure deployment name matches GPT-image-1"
 ```
 
-Notes for Azure setup:
+Azure `--model` / `default_model.azure` is the deployment name, not the model family. If the deployment name is custom, save that exact name.
 
-- In `baoyu-image-gen`, Azure `--model` / `default_model.azure` should be the Azure deployment name, not just the underlying model family.
-- If the deployment name is custom, save that exact deployment name in `default_model.azure`.
-
-### OpenRouter Model Selection
+### OpenRouter
 
 ```yaml
 header: "OpenRouter Model"
-question: "Choose a default OpenRouter image generation model?"
+question: "Default OpenRouter image generation model?"
 options:
   - label: "google/gemini-3.1-flash-image (Recommended)"
     description: "Recommended for image output and reference-image edits"
@@ -276,11 +192,11 @@ options:
     description: "High-quality text-to-image through OpenRouter"
 ```
 
-### DashScope Model Selection
+### DashScope
 
 ```yaml
 header: "DashScope Model"
-question: "Choose a default DashScope image generation model?"
+question: "Default DashScope image generation model?"
 options:
   - label: "qwen-image-2.0-pro (Recommended)"
     description: "Best-verified DashScope model for text rendering and custom sizes"
@@ -302,18 +218,11 @@ options:
     description: "Legacy DashScope model, higher quality but slower"
 ```
 
-Notes for DashScope setup:
-
-- Prefer `qwen-image-2.0-pro` (or the newer `qwen-image-3.0-pro`) when the user needs custom `--size`, uncommon ratios like `21:9`, or strong Chinese/English text rendering.
-- `qwen-image-max` / `qwen-image-plus` / `qwen-image` only support five fixed sizes: `1664*928`, `1472*1104`, `1328*1328`, `1104*1472`, `928*1664`.
-- `wan2.7-image-pro` and `wan2.7-image` are the only DashScope models that accept `--ref`. Pick one of these when the user wants reference-image editing or multi-image fusion via DashScope.
-- In `baoyu-image-gen`, `quality` is a compatibility preset. It is not a native DashScope parameter.
-
-### Z.AI Model Selection
+### Z.AI
 
 ```yaml
 header: "Z.AI Model"
-question: "Choose a default Z.AI image generation model?"
+question: "Default Z.AI image generation model?"
 options:
   - label: "glm-image (Recommended)"
     description: "Current flagship image model with better text rendering and poster layouts"
@@ -321,17 +230,11 @@ options:
     description: "Legacy model on the sync image endpoint"
 ```
 
-Notes for Z.AI setup:
-
-- Prefer `glm-image` for posters, diagrams, and Chinese/English text-heavy layouts.
-- In `baoyu-image-gen`, Z.AI currently exposes text-to-image only; reference images are not wired for this provider.
-- The sync Z.AI image API returns a downloadable image URL, which the runtime saves locally after download.
-
-### Replicate Model Selection
+### Replicate
 
 ```yaml
 header: "Replicate Model"
-question: "Choose a default Replicate image generation model?"
+question: "Default Replicate image generation model?"
 options:
   - label: "google/nano-banana-2 (Recommended)"
     description: "Current default for general Replicate image generation in baoyu-image-gen"
@@ -343,46 +246,17 @@ options:
     description: "Replicate Wan 2.7 Image Pro with 4K text-to-image support"
 ```
 
-### MiniMax Model Selection
+### MiniMax
 
 ```yaml
 header: "MiniMax Model"
-question: "Choose a default MiniMax image generation model?"
+question: "Default MiniMax image generation model?"
 options:
   - label: "image-01 (Recommended)"
     description: "Best general-purpose MiniMax image model with custom width/height support"
   - label: "image-01-live"
     description: "Lower-latency MiniMax image model using aspect ratios"
 ```
-
-Notes for MiniMax setup:
-
-- `image-01` is the safest default. It supports official `aspect_ratio` values and documented custom `width` / `height` output sizes.
-- `image-01-live` is useful when the user prefers faster generation and can work with aspect-ratio-based sizing.
-- MiniMax subject reference currently uses `subject_reference[].type = character`; docs recommend front-facing portrait references in JPG/JPEG/PNG under 10MB.
-
-### Update EXTEND.md
-
-After user selects a model:
-
-1. Read existing EXTEND.md
-2. If `default_model:` section exists → update the provider-specific key
-3. If `default_model:` section missing → add the full section:
-
-```yaml
-default_model:
-  google: [value or null]
-  openai: [value or null]
-  azure: [value or null]
-  openrouter: [value or null]
-  dashscope: [value or null]
-  zai: [value or null]
-  minimax: [value or null]
-  replicate: [value or null]
-  agnes: [value or null]
-```
-
-Only set the selected provider's model; leave others as their current value or null.
 
 ## After Setup
 

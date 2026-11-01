@@ -1,13 +1,10 @@
 # DashScope (阿里通义万象)
 
-Read when the user picks `--provider dashscope`, sets `default_model.dashscope`, or asks for Qwen-Image behavior. The SKILL.md only names the default — this file covers model families, sizing rules, and limits.
-
 ## Model Families
 
 **`qwen-image-3.0*` / `qwen-image-2.0*`** — recommended modern family (identical sizing envelope). Members: `qwen-image-3.0-pro`, `qwen-image-2.0-pro`, `qwen-image-2.0-pro-2026-04-22`, `qwen-image-2.0-pro-2026-03-03`, `qwen-image-2.0`, `qwen-image-2.0-2026-03-03`.
 
 - `qwen-image-3.0-pro` is the newest flagship; `qwen-image-2.0-pro` remains the built-in default until the 3.0 request shape is verified end to end
-
 - Free-form `size` in `宽*高` format
 - Total pixels must be between `512*512` and `2048*2048`
 - Default ≈ `1024*1024`
@@ -25,10 +22,9 @@ Read when the user picks `--provider dashscope`, sets `default_model.dashscope`,
 - `wan2.7-image-pro` text-to-image (no `--ref`): total pixels in `[768*768, 4096*4096]`, ratio in `[1:8, 8:1]`
 - `wan2.7-image-pro` with reference images and `wan2.7-image` (all scenarios): total pixels in `[768*768, 2048*2048]`, ratio in `[1:8, 8:1]`
 - Default: `1024*1024` (`--quality normal`) or `2048*2048` (`--quality 2k`); 4K requires explicit `--size`
-- Supports up to 9 reference images in `--ref` (image editing / multi-image fusion)
-- Reference images are sent inline as base64 (or passed through if the path is an `http(s)://` URL)
+- `--ref` for image editing / multi-image fusion (see Reference Images)
 - API does NOT use `prompt_extend`; the skill omits it for this family
-- The Wan 2.7 API defaults `n` to **4** in non-collage mode and bills per generated image. baoyu-image-gen forces `n: 1` and rejects `--n > 1` to avoid silently paying for and discarding extra images.
+- The Wan 2.7 API defaults `n` to **4** in non-collage mode and bills per image; baoyu-image-gen forces `n: 1` and rejects `--n > 1` to avoid paying for discarded images.
 
 **Legacy** — `z-image-turbo`, `z-image-ultra`, `wanx-v1`. Only use when the user explicitly asks for legacy behavior.
 
@@ -55,13 +51,13 @@ Read when the user picks `--provider dashscope`, sets `default_model.dashscope`,
 
 ## Reference Images
 
-- Only `wan2.7-image-pro` and `wan2.7-image` accept `--ref`. Other DashScope models (qwen-image-3.0*, qwen-image-2.0*, qwen-image-max/plus/image, legacy) reject `--ref` and the user is steered to a different provider/model.
+- Only `wan2.7-image-pro` and `wan2.7-image` accept `--ref`; all other DashScope models reject it — steer the user to another provider/model.
 - Up to 9 reference images per request. Local files are inlined as base64 data URLs; `http(s)://` URLs are forwarded as-is.
-- Supplying any `--ref` automatically clamps the wan2.7-image-pro pixel ceiling from 4K to 2K (the API only supports 4K for pure text-to-image with no image input).
+- Any `--ref` clamps the wan2.7-image-pro ceiling from 4K to 2K (4K is text-to-image only).
 
 ## Not Exposed
 
-DashScope APIs also support `negative_prompt`, `prompt_extend`, `watermark`, `thinking_mode`, `seed`, `bbox_list`, `enable_sequential`, and `color_palette`. `baoyu-image-gen` does not expose them as CLI flags today; the wan2.7 family relies on the API defaults (e.g. `thinking_mode=true`). The skill always sends `n=1` for wan2.7 — if you want grid/collage mode you currently need to call the API directly.
+`negative_prompt`, `prompt_extend`, `watermark`, `thinking_mode`, `seed`, `bbox_list`, `enable_sequential`, `color_palette` are not CLI flags; wan2.7 uses API defaults (e.g. `thinking_mode=true`). Always `n=1` for wan2.7 — grid/collage mode requires calling the API directly.
 
 ## Official References
 

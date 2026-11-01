@@ -1,6 +1,6 @@
 # Codex CLI (`--provider codex-cli`)
 
-Read when the user picks `--provider codex-cli`, sets `default_provider: codex-cli`, or asks for "Codex image generation without an OpenAI API key". This provider is a thin baoyu-image-gen wrapper around the bundled `scripts/codex-imagegen/main.ts` (synced from `packages/baoyu-codex-imagegen`), which spawns `codex exec --json --sandbox danger-full-access` and routes the request to Codex CLI's built-in `image_gen` tool. The Codex CLI uses the **user's Codex / ChatGPT subscription** — no `OPENAI_API_KEY` is read or sent.
+Thin wrapper around the bundled `scripts/codex-imagegen/main.ts` (synced from `packages/baoyu-codex-imagegen`), which spawns `codex exec --json --sandbox danger-full-access` and routes the request to Codex CLI's built-in `image_gen` tool. Uses the **user's Codex / ChatGPT subscription** — no `OPENAI_API_KEY` is read or sent.
 
 ## Prerequisites
 
@@ -10,15 +10,13 @@ codex login            # signs in with the user's OpenAI / Codex account
 codex --version        # confirm >= 0.130
 ```
 
-`bun` is required for running the underlying wrapper (`scripts/codex-imagegen/main.ts`, carrying `#!/usr/bin/env bun`). If `bun` is missing from the runtime, `npx -y bun` works as a fallback.
+The wrapper (`#!/usr/bin/env bun`) needs `bun`; `npx -y bun` works as a fallback.
 
 ## Selection
 
-- **Never auto-selected.** `detectProvider` only picks `codex-cli` when it is pinned explicitly: pass `--provider codex-cli` or set `default_provider: codex-cli` in EXTEND.md.
-- Choose this provider when:
-  - The user has a Codex subscription and explicitly does **not** want to manage an OpenAI API key.
-  - You need Codex's specific `image_gen` behavior or quality.
-- Avoid this provider when latency matters — Codex CLI is typically 5–10× slower than direct OpenAI / Google API calls (except on cache hits).
+- **Never auto-selected.** Pin it with `--provider codex-cli` or `default_provider: codex-cli` in EXTEND.md.
+- Use when the user has a Codex subscription and doesn't want an OpenAI API key, or needs Codex's specific `image_gen` behavior/quality.
+- Avoid when latency matters — typically 5–10× slower than direct OpenAI / Google API calls (except cache hits).
 
 ## Supported flags
 
@@ -38,11 +36,11 @@ codex --version        # confirm >= 0.130
 | Variable | Effect |
 |----------|--------|
 | `BAOYU_CODEX_IMAGEGEN_BIN` | Override the wrapper path. Default: bundled `scripts/codex-imagegen/main.ts` resolved relative to this skill's installed location. Accepts a `.ts` file (spawned with `bun`) or a legacy `.sh`/binary (spawned directly). |
-| `BAOYU_CODEX_IMAGEGEN_CACHE_DIR` | Enable the wrapper's idempotency cache. Disabled by default; set to e.g. `~/.cache/baoyu-codex-imagegen` for high-value reuse. |
+| `BAOYU_CODEX_IMAGEGEN_CACHE_DIR` | Enable the wrapper's idempotency cache (off by default), e.g. `~/.cache/baoyu-codex-imagegen`. |
 | `BAOYU_CODEX_IMAGEGEN_TIMEOUT_MS` | Per-attempt `codex exec` timeout in ms. Default: `300000` (5 min). Raise for slow networks or large prompts. |
 | `BAOYU_CODEX_IMAGEGEN_RETRIES` | Wrapper-side retry attempts on retryable errors. Default: `2` (3 total attempts). |
-| `BAOYU_CODEX_IMAGEGEN_LOG_FILE` | Append a structured JSONL diagnostic log. Useful when triaging timeouts or `agent_refused` errors. |
-| `BAOYU_IMAGE_GEN_CODEX_CLI_CONCURRENCY` | Batch-mode concurrency for the `codex-cli` provider. Default: `1` — Codex exec is a heavy single-process workflow; raising this rarely helps. |
+| `BAOYU_CODEX_IMAGEGEN_LOG_FILE` | Append a structured JSONL diagnostic log (for triaging timeouts or `agent_refused`). |
+| `BAOYU_IMAGE_GEN_CODEX_CLI_CONCURRENCY` | Batch-mode concurrency. Default: `1` (codex exec is heavy; raising rarely helps). |
 | `BAOYU_IMAGE_GEN_CODEX_CLI_START_INTERVAL_MS` | Batch-mode minimum start-gap. Default: `2000` ms. |
 
 ## Error model
@@ -53,9 +51,7 @@ The wrapper emits a single JSON line on stdout. On failure:
 {"status":"error","path":"...","bytes":0,"error":"...","error_kind":"..."}
 ```
 
-The provider re-throws each wrapper error as `Invalid codex-cli result (<error_kind>): <message>`. The `"Invalid "` prefix triggers `isRetryableGenerationError` to mark it **non-retryable** in baoyu-image-gen's outer retry loop — the wrapper has already retried internally per `BAOYU_CODEX_IMAGEGEN_RETRIES`, so re-spawning Codex from main.ts would only multiply latency without changing the outcome.
-
-`error_kind` values to expect:
+The provider re-throws it as `Invalid codex-cli result (<error_kind>): <message>`. The `"Invalid "` prefix makes `isRetryableGenerationError` treat it as **non-retryable** in the outer retry loop — the wrapper already retried per `BAOYU_CODEX_IMAGEGEN_RETRIES`.
 
 | Kind | Cause | Action |
 |------|-------|--------|
@@ -69,11 +65,10 @@ The provider re-throws each wrapper error as `Invalid codex-cli result (<error_k
 | `agent_refused` | Codex agent refused (policy or content) | Adjust the prompt; surface the refusal to the user. |
 | `lock_busy` | Another `codex-imagegen` invocation holds the file lock | Wait or set a distinct `--cache-dir` per concurrent caller. |
 
-## Trade-offs
+## Notes
 
-- Slow: 5–10× direct OpenAI API latency (except cache hits).
-- Subject to the same TOS as interactive `codex exec` use — programmatic invocation from baoyu-image-gen is the same usage class.
-- Stateful: requires `codex login` to be live; an expired session manifests as `codex_not_installed` or `agent_refused`.
+- Same TOS as interactive `codex exec` use — programmatic invocation is the same usage class.
+- Requires a live `codex login`; an expired session shows up as `codex_not_installed` or `agent_refused`.
 
 ## See also
 
