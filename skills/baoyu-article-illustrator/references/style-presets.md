@@ -2,9 +2,7 @@
 
 `--preset X` expands to a type + style + optional palette combination. Users can override any dimension.
 
-## Default Preset
-
-When content analysis surfaces no strong signal (generic knowledge article, mixed-topic post, no clear data/comparison/narrative cue), recommend **`hand-drawn-edu`** as the primary option in Step 3 Q1. It is the warm, friendly educational-infographic default — safe for most articles and universally readable.
+**Default**: when content analysis surfaces no strong signal, recommend **`hand-drawn-edu`** as the primary option in Step 3 Q1.
 
 ## By Category
 
@@ -61,8 +59,6 @@ When content analysis surfaces no strong signal (generic knowledge article, mixe
 
 ## Content Type → Preset Recommendations
 
-Use this table during Step 3 to recommend presets based on Step 2 content analysis:
-
 | Content Type (Step 2) | Primary Preset | Alternatives |
 |------------------------|----------------|--------------|
 | **General / No strong signal** | `hand-drawn-edu` | `edu-visual`, `knowledge-base` |
@@ -79,9 +75,4 @@ Use this table during Step 3 to recommend presets based on Step 2 content analys
 | Historical / Timeline | `history` | `evolution` |
 | Academic / Research | `science-paper` | `tech-explainer`, `data-report` |
 
-## Override Examples
-
-- `--preset tech-explainer --style notion` = infographic type with notion style
-- `--preset storytelling --type timeline` = timeline type with warm style
-
-Explicit `--type`/`--style` flags always override preset values.
+Explicit `--type`/`--style` flags always override preset values (e.g., `--preset tech-explainer --style notion` = infographic + notion).

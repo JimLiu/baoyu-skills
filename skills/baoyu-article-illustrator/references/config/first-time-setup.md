@@ -5,43 +5,13 @@ description: First-time setup flow for baoyu-article-illustrator preferences
 
 # First-Time Setup
 
-## Overview
+When no EXTEND.md is found, run this setup.
 
-When no EXTEND.md is found, guide user through preference setup.
-
-**⛔ BLOCKING OPERATION**: This setup MUST complete before ANY other workflow steps. Do NOT:
-- Ask about reference images
-- Ask about content/article
-- Ask about type or style preferences
-- Proceed to content analysis
-
-ONLY ask the questions in this setup flow, save EXTEND.md, then continue.
-
-## Setup Flow
-
-```
-No EXTEND.md found
-        │
-        ▼
-┌─────────────────────┐
-│ AskUserQuestion     │
-│ (all questions)     │
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ Create EXTEND.md    │
-└─────────────────────┘
-        │
-        ▼
-    Continue to Step 1
-```
+**⛔ BLOCKING**: complete it before ANY other workflow step — do not ask about reference images, content, or type/style, and do not start content analysis. Ask only these questions, save EXTEND.md, then continue.
 
 ## Questions
 
-**Language**: Use user's input language or preferred language for all questions. Do not always use English.
-
-Use single AskUserQuestion with multiple questions (AskUserQuestion auto-adds "Other" option):
+Ask in the user's input or preferred language (not always English), in a single AskUserQuestion with all questions (it auto-adds "Other"):
 
 ### Question 1: Watermark
 
@@ -134,10 +104,6 @@ custom_styles: []
 ---
 ```
 
-`preferred_image_backend: auto` is the baked-in default — first-time setup does not ask about it. The `## Image Generation Tools` rule in SKILL.md then picks the runtime-native tool (Codex `imagegen`, Hermes `image_generate`, etc.) when available, and falls back to installed backends.
+`preferred_image_backend: auto` and `generation_batch_size: 4` are baked-in defaults — setup does not ask about them. The current request may override the batch size for one run.
 
-`generation_batch_size: 4` is the baked-in default for batch rendering. The current user request may override it for one run.
-
-## Modifying Preferences Later
-
-See the `## Changing Preferences` section in `SKILL.md` for the canonical list of common edits (pin backend, change defaults, retrigger setup). Full schema: `preferences-schema.md`.
+Later changes: `## Changing Preferences` in `SKILL.md`; full schema: `preferences-schema.md`.

@@ -4,50 +4,29 @@
 
 ### 1.0 Detect & Save Reference Images ⚠️ REQUIRED if images provided
 
-Check if user provided reference images. Handle based on input type:
-
 | Input Type | Action |
 |------------|--------|
 | Image file path provided | Copy to `references/` subdirectory → can use `--ref` |
 | Image in conversation (no path) | **ASK user for file path** with AskUserQuestion |
 | User can't provide path | Extract style/palette verbally → append to prompts (NO frontmatter references) |
 
-**CRITICAL**: Only add `references` to prompt frontmatter if files are ACTUALLY SAVED to `references/` directory.
-
 **If user provides file path**:
 1. Copy to `references/NN-ref-{slug}.png`
-2. Create description: `references/NN-ref-{slug}.md`
-3. Verify files exist before proceeding
+2. Create description `references/NN-ref-{slug}.md`:
+   ```yaml
+   ---
+   ref_id: NN
+   filename: NN-ref-{slug}.png
+   ---
+   [User's description or auto-generated description]
+   ```
+3. Verify files exist, then report: `Reference Images Saved: 01-ref-{slug}.png ✓ (can use --ref)`
 
-**If user can't provide path** (extracted verbally):
-1. Analyze image visually, extract: colors, style, composition
-2. Create `references/extracted-style.md` with extracted info
-3. DO NOT add `references` to prompt frontmatter
-4. Instead, append extracted style/colors directly to prompt text
-
-**Description File Format** (only when file saved):
-```yaml
----
-ref_id: NN
-filename: NN-ref-{slug}.png
----
-[User's description or auto-generated description]
-```
-
-**Verification** (only for saved files):
-```
-Reference Images Saved:
-- 01-ref-{slug}.png ✓ (can use --ref)
-- 02-ref-{slug}.png ✓ (can use --ref)
-```
-
-**Or for extracted style**:
-```
-Reference Style Extracted (no file):
-- Colors: #E8756D coral, #7ECFC0 mint...
-- Style: minimal flat vector, clean lines...
-→ Will append to prompt text (not --ref)
-```
+**If user can't provide path**:
+1. Analyze image visually; extract colors, style, composition
+2. Create `references/extracted-style.md` with the extracted info
+3. Do NOT add `references` to prompt frontmatter — append extracted style/colors to the prompt text instead
+4. Report: `Reference Style Extracted (no file): Colors: #E8756D coral, ... Style: ... → Will append to prompt text (not --ref)`
 
 ---
 
@@ -62,9 +41,7 @@ Reference Style Extracted (no file):
 
 ### 1.2-1.4 Configuration (file path input only)
 
-Check preferences and existing state, then ask ALL needed questions in ONE AskUserQuestion call (max 4 questions).
-
-**Questions to include** (skip if preference exists or not applicable):
+Ask ALL needed questions in ONE AskUserQuestion call (max 4). Skip any whose preference exists or doesn't apply:
 
 | Question | When to Ask | Options |
 |----------|-------------|---------|
@@ -72,18 +49,11 @@ Check preferences and existing state, then ask ALL needed questions in ONE AskUs
 | Existing images | Target dir has `.png/.jpg/.webp` files | `supplement`, `overwrite`, `regenerate` |
 | Article update | Always (file path input) | `update`, `copy` |
 
-**Preference Values** (if configured, skip asking):
-
-| `default_output_dir` | Path |
-|----------------------|------|
-| `same-dir` | `{article-dir}/` |
-| `imgs-subdir` | `{article-dir}/imgs/` |
-| `illustrations-subdir` | `{article-dir}/illustrations/` |
-| `independent` | `illustrations/{topic-slug}/` |
+`default_output_dir` values → paths: see Output Directory in SKILL.md.
 
 ### 1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING
 
-**CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to reference images, do NOT ask about content, do NOT ask about type/style — ONLY complete the preferences setup first.
+If EXTEND.md is not found, complete first-time setup before ANY other question or step (no reference images, content, or type/style questions first).
 
 ```bash
 # macOS, Linux, WSL, Git Bash
@@ -103,7 +73,7 @@ if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user
 | Result | Action |
 |--------|--------|
 | Found | Read, parse, display summary → Continue |
-| Not found | ⛔ **BLOCKING**: Run first-time setup ONLY ([config/first-time-setup.md](config/first-time-setup.md)) → Complete and save EXTEND.md → Then continue |
+| Not found | ⛔ Run first-time setup ONLY ([config/first-time-setup.md](config/first-time-setup.md)) → save EXTEND.md → continue |
 
 **Supports**: Watermark | Preferred type/style | Custom styles | Language | Output directory
 
@@ -117,44 +87,21 @@ if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user
 |----------|-------------|
 | Content type | Technical / Tutorial / Methodology / Narrative |
 | Illustration purpose | information / visualization / imagination |
-| Core arguments | 2-5 main points to visualize |
+| Core arguments | 2-5 main points to visualize (main thesis, key concepts, comparisons, proposed framework) |
 | Visual opportunities | Positions where illustrations add value |
 | Recommended type | Based on content signals and purpose |
 | Recommended density | Based on length and complexity |
 
-### 2.2 Extract Core Arguments
-
-- Main thesis
-- Key concepts reader needs
-- Comparisons/contrasts
-- Framework/model proposed
-
-**CRITICAL**: If article uses metaphors (e.g., "电锯切西瓜"), do NOT illustrate literally. Visualize the **underlying concept**.
+If the article uses metaphors (e.g., "电锯切西瓜"), do NOT illustrate literally — visualize the **underlying concept**.
 
 ### 2.3 Identify Positions
 
-**Illustrate**:
-- Core arguments (REQUIRED)
-- Abstract concepts
-- Data comparisons
-- Processes, workflows
-
-**Do NOT Illustrate**:
-- Metaphors literally
-- Decorative scenes
-- Generic illustrations
+**Illustrate**: core arguments (REQUIRED), abstract concepts, data comparisons, processes/workflows.
+**Do NOT illustrate**: metaphors literally, decorative scenes, generic illustrations.
 
 ### 2.4 Analyze Reference Images (if provided in Step 1.0)
 
-For each reference image:
-
-| Analysis | Description |
-|----------|-------------|
-| Visual characteristics | Style, colors, composition |
-| Content/subject | What the reference depicts |
-| Suitable positions | Which sections match this reference |
-| Style match | Which illustration types/styles align |
-| Usage recommendation | `direct` / `style` / `palette` |
+For each reference: visual characteristics (style, colors, composition), subject, suitable sections, matching types/styles, and a usage recommendation:
 
 | Usage | When to Use |
 |-------|-------------|
@@ -166,22 +113,21 @@ For each reference image:
 
 ## Step 3: Confirm Settings ⚠️
 
-**Do NOT skip.** Use ONE AskUserQuestion call with max 4 questions. **Q1, Q2, Q3 are ALL REQUIRED.**
+**Do NOT skip.** ONE AskUserQuestion call, max 4 questions. **Q1, Q2, Q3 are ALL REQUIRED** (Q3 skipped only when a preset is chosen).
 
 ### Q1: Preset or Type ⚠️ REQUIRED
 
-Based on Step 2 content analysis, recommend a preset first (sets both type & style). Look up [style-presets.md](style-presets.md) "Content Type → Preset Recommendations" table.
+Recommend a preset from [style-presets.md](style-presets.md) "Content Type → Preset Recommendations":
 
 - [Recommended preset] — [brief: type + style + why] (Recommended)
 - [Alternative preset] — [brief]
 - Or choose type manually: infographic / scene / flowchart / comparison / framework / timeline / mixed
 
-**Default**: if Step 2 found no strong content signal, the recommended preset MUST be `hand-drawn-edu` (infographic + sketch-notes + macaron — warm cream paper, black hand-drawn lines, soft pastel blocks). This is the universal fallback.
+**Default**: if Step 2 found no strong content signal, the recommended preset MUST be `hand-drawn-edu` (infographic + sketch-notes + macaron). If the user then picks a type manually without a `preferred_style`, recommend `sketch-notes` first in Q3.
 
-**If user picks a preset → skip Q3** (type & style both resolved).
-**If user picks a type → Q3 is REQUIRED.**
+Preset picked → skip Q3. Type picked → Q3 REQUIRED.
 
-### Q2: Density ⚠️ REQUIRED - DO NOT SKIP
+### Q2: Density ⚠️ REQUIRED
 - minimal (1-2) - Core concepts only
 - balanced (3-5) - Major sections
 - per-section - At least 1 per section/chapter (Recommended)
@@ -189,61 +135,34 @@ Based on Step 2 content analysis, recommend a preset first (sets both type & sty
 
 ### Q3: Style ⚠️ REQUIRED (skip if preset chosen in Q1)
 
-If EXTEND.md has `preferred_style`:
-- [Custom style name + brief description] (Recommended)
-- [Top compatible core style 1]
-- [Top compatible core style 2]
-- Other (see full Style Gallery)
+- If EXTEND.md has `preferred_style`: [custom style + brief] (Recommended), top 2 compatible core styles, Other (full Style Gallery)
+- Otherwise: best compatible core style (Recommended), 2 other compatible core styles, Other (full Style Gallery)
 
-If no `preferred_style` (present Core Styles first):
-- [Best compatible core style] (Recommended)
-- [Other compatible core style 1]
-- [Other compatible core style 2]
-- Other (see full Style Gallery)
-
-**Core Styles** (simplified selection):
-
-| Core Style | Maps To | Best For |
-|------------|---------|----------|
-| `hand-drawn` | sketch-notes | **Default.** Warm cream paper, black hand-drawn lines, pastel blocks — educational infographics, concept explainers, onboarding, general knowledge articles |
-| `minimal-flat` | notion | General, knowledge sharing, SaaS |
-| `sci-fi` | blueprint | AI, frontier tech, system design |
-| `editorial` | editorial | Processes, data, journalism |
-| `scene` | warm/watercolor | Narratives, emotional, lifestyle |
-| `poster` | screen-print | Opinion, editorial, cultural, cinematic |
-
-**Default recommendation**: when Step 2 surfaces no strong content signal, recommend **`hand-drawn-edu`** preset (→ infographic + sketch-notes + macaron) as the primary option in Q1. When the user picks a type manually without a preferred_style, recommend `sketch-notes` first in Q3.
-
-Style selection based on Type × Style compatibility matrix (styles.md).
-**In Step 5.1**, read `styles/<style>.md` for visual elements and rendering rules.
+Core Styles, gallery, and the Type × Style compatibility matrix: [styles.md](styles.md). In Step 5.1, read `styles/<style>.md` for visual elements and rendering rules.
 
 ### Q4: Palette (optional)
 
-If preset did not specify a palette, and the user may benefit from a palette override, offer available palettes:
+Offer when the preset didn't set one and an override may help:
 
 - Default (use style's built-in colors) (Recommended)
 - `macaron` — soft pastel blocks on warm cream
 - `warm` — warm earth tones, no cool colors
 - `neon` — vibrant neon on dark backgrounds
 
-**Skip if**: preset already resolved palette, or `preferred_palette` set in EXTEND.md.
-
-See Palette Gallery in [styles.md](styles.md#palette-gallery) and full specs in `palettes/<palette>.md`.
+**Skip if**: preset already resolved palette, or `preferred_palette` set in EXTEND.md. See [styles.md](styles.md#palette-gallery) and `palettes/<palette>.md`.
 
 ### Q5: Image Text Language ⚠️ REQUIRED when article language ≠ EXTEND.md `language`
 
-Detect article language from content. If different from EXTEND.md `language` setting, MUST ask:
-- Article language (match article content) (Recommended)
+- Article language (Recommended)
 - EXTEND.md language (user's general preference)
 
-**Skip only if**: Article language matches EXTEND.md `language`, or EXTEND.md has no `language` setting.
+**Skip only if**: article language matches EXTEND.md `language`, or EXTEND.md has no `language`.
 
 ### Display Reference Usage (if references detected in Step 1.0)
 
-When presenting outline preview to user, show reference assignments:
+In the outline preview, show assignments:
 
 ```
-Reference Images:
 | Ref | Filename | Recommended Usage |
 |-----|----------|-------------------|
 | 01 | 01-ref-diagram.png | direct → Illustration 1, 3 |
@@ -254,7 +173,7 @@ Reference Images:
 
 ## Step 4: Generate Outline
 
-Save as `{output-dir}/outline.md` (all paths below are relative to the output directory determined in Step 1.1/1.2):
+Save as `{output-dir}/outline.md` (paths relative to the output directory from Step 1.1/1.2):
 
 ```yaml
 ---
@@ -266,9 +185,6 @@ references:                    # Only if references provided
   - ref_id: 01
     filename: 01-ref-diagram.png
     description: "Technical diagram showing system architecture"
-  - ref_id: 02
-    filename: 02-ref-chart.png
-    description: "Color chart with brand palette"
 ---
 
 ## Illustration 1
@@ -285,12 +201,7 @@ references:                    # Only if references provided
 ...
 ```
 
-**Requirements**:
-- Each position justified by content needs
-- Type applied consistently
-- Style reflected in descriptions
-- Count matches density
-- References assigned based on Step 2.4 analysis
+Each position justified by content; type applied consistently; style reflected in descriptions; count matches density; references assigned per Step 2.4.
 
 ---
 
@@ -298,12 +209,9 @@ references:                    # Only if references provided
 
 ### 5.1 Create Prompts ⛔ BLOCKING
 
-**Every illustration MUST have a saved prompt file before generation begins. DO NOT skip this step.**
+Every illustration MUST have a saved prompt file before generation begins. For each illustration in the outline:
 
-For each illustration in the outline:
-
-1. **Create prompt file**: `{output-dir}/prompts/NN-{type}-{slug}.md`
-2. **Include YAML frontmatter**:
+1. **Create** `{output-dir}/prompts/NN-{type}-{slug}.md` with YAML frontmatter:
    ```yaml
    ---
    illustration_id: 01
@@ -311,65 +219,35 @@ For each illustration in the outline:
    style: custom-flat-vector
    ---
    ```
-3. **Load style specs**: Read `styles/<style>.md` for visual elements, style rules, and rendering instructions
-4. **Load palette specs** (if palette specified): Read `palettes/<palette>.md` for colors and background. Palette colors **replace** the style's default Color Palette. If no palette specified, use the style's built-in colors.
-5. **Follow type-specific template** from [prompt-construction.md](prompt-construction.md), using rendering from style + colors from palette (or style default)
-6. **Prompt quality requirements** (all REQUIRED):
-   - `Layout`: Describe overall composition (grid / radial / hierarchical / left-right / top-down)
-   - `ZONES`: Describe each visual area with specific content, not vague descriptions
-   - `LABELS`: Use **actual numbers, terms, metrics, quotes from the article** — NOT generic placeholders
-   - `COLORS`: Specify hex codes from palette (or style default) with semantic meaning
-   - `STYLE`: Describe line treatment, texture, mood, character rendering per style rules
-   - `ASPECT`: Specify ratio (e.g., `16:9`)
-7. **Apply defaults**: composition requirements, character rendering, text guidelines, watermark
-8. **Backup rule**: If prompt file exists, rename to `prompts/NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.md`
+2. **Load style specs** from `styles/<style>.md` (visual elements, style rules, rendering).
+3. **Load palette specs** (if specified) from `palettes/<palette>.md`; palette colors **replace** the style's default Color Palette. No palette → style's built-in colors.
+4. **Follow the type-specific template** in [prompt-construction.md](prompt-construction.md).
+5. **Required prompt sections**:
+   - `Layout`: overall composition (grid / radial / hierarchical / left-right / top-down)
+   - `ZONES`: each visual area with specific content, not vague descriptions
+   - `LABELS`: **actual numbers, terms, metrics, quotes from the article** — not placeholders
+   - `COLORS`: hex codes with semantic meaning
+   - `STYLE`: line treatment, texture, mood, character rendering
+   - `ASPECT`: ratio (e.g., `16:9`)
+6. **Apply defaults**: composition requirements, character rendering, text guidelines, watermark.
+7. **Backup rule**: if the prompt file exists, rename to `prompts/NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.md`.
 
-**Verification** ⛔: Before proceeding to 5.2, confirm ALL prompt files exist:
-```
-Prompt Files:
-- prompts/01-infographic-overview.md ✓
-- prompts/02-infographic-distillation.md ✓
-...
-```
+**References in frontmatter**: add `references` only if the files ACTUALLY EXIST in `references/` (verify with `test -f references/NN-ref-{slug}.png`). Verbally extracted style/palette goes in the prompt BODY.
 
-**DO NOT** pass ad-hoc inline text to `--prompt` without first saving prompt files. The generation command should either use `--promptfiles prompts/NN-{type}-{slug}.md` or read the saved file content for `--prompt`.
+**Verification** ⛔: before 5.2, confirm ALL prompt files exist (list them with ✓).
 
-**Execution choice**:
-- If multiple illustrations already have saved prompt files and the task is now plain generation, use batch generation by default.
-- Prefer the chosen backend's native batch / multi-task interface when available.
-- If the backend has no native batch interface but the runtime can issue parallel tool calls, dispatch up to `generation_batch_size` tasks at a time. Default: `4`. The current user request overrides EXTEND.md.
-- Generate sequentially only when neither backend batch nor runtime parallel calls are available.
-- Use subagents only when each illustration still needs separate prompt rewriting, style exploration, or other per-image reasoning before generation. Do not use subagents just to parallelize rendering.
-
-**CRITICAL - References in Frontmatter**:
-- Only add `references` field if files ACTUALLY EXIST in `references/` directory
-- If style/palette was extracted verbally (no file), append info to prompt BODY instead
-- Before writing frontmatter, verify: `test -f references/NN-ref-{slug}.png`
+Never pass ad-hoc inline text to `--prompt` without first saving prompt files: use `--promptfiles prompts/NN-{type}-{slug}.md` or read the saved file content for `--prompt`. Rendering then follows the Batch Generation Policy in SKILL.md.
 
 ### 5.2 Select Generation Skill
 
-Follow the `## Image Generation Tools` rule at the top of `SKILL.md`. Concretely:
-
-- If `imagegen` is in your available-skills list (Codex), use it — invoke via the `Skill` tool with `skill: "imagegen"`.
-- Else if the EXTEND.md pin is available, use it.
-- Else if exactly one non-native backend is installed, use it.
-- Else, ask the user.
-
-**Do not generate SVG, HTML, or any code-based vector as a substitute for the raster image.** If no raster backend can be resolved, ask the user how to proceed.
+Follow the `## Image Generation Tools` rule in `SKILL.md`. Never substitute SVG, HTML, or code-based vector for the raster image; if no raster backend resolves, ask the user.
 
 ### 5.3 Process References ⚠️ REQUIRED if references saved in Step 1.0
 
-**DO NOT SKIP if user provided reference images.** For each illustration with references:
+For each illustration with references:
 
-1. **VERIFY files exist first**:
-   ```bash
-   test -f references/NN-ref-{slug}.png && echo "exists" || echo "MISSING"
-   ```
-   - If file MISSING but in frontmatter → ERROR, fix frontmatter or remove references field
-   - If file exists → proceed with processing
-
-2. Read prompt frontmatter for reference info
-3. Process based on usage type:
+1. **Verify files exist**: `test -f references/NN-ref-{slug}.png && echo "exists" || echo "MISSING"`. Missing but in frontmatter → ERROR: fix frontmatter or remove the references field.
+2. Process by usage type from prompt frontmatter:
 
 | Usage | Action | Example |
 |-------|--------|---------|
@@ -377,19 +255,9 @@ Follow the `## Image Generation Tools` rule at the top of `SKILL.md`. Concretely
 | `style` | Analyze reference, append style traits to prompt | "Style: clean lines, gradient backgrounds..." |
 | `palette` | Extract colors from reference, append to prompt | "Colors: #E8756D coral, #7ECFC0 mint..." |
 
-4. Check image generation skill capability:
+3. If the backend doesn't support `--ref` (baoyu-image-gen with Google does), convert refs to text descriptions appended to the prompt.
 
-| Skill Supports `--ref` | Action |
-|------------------------|--------|
-| Yes (e.g., baoyu-image-gen with Google) | Pass reference images via `--ref` |
-| No | Convert to text description, append to prompt |
-
-**Verification**: Before generating, confirm reference processing:
-```
-Reference Processing:
-- Illustration 1: using 01-ref-brand.png (direct) ✓
-- Illustration 2: extracted palette from 02-ref-style.png ✓
-```
+Before generating, report processing per illustration (e.g., `Illustration 1: using 01-ref-brand.png (direct) ✓`).
 
 ### 5.4 Apply Watermark (if enabled)
 
@@ -397,18 +265,15 @@ Add: `Include a subtle watermark "[content]" at [position].`
 
 ### 5.5 Generate
 
-1. Build a generation task list from saved prompt files:
+1. Build a task list from saved prompt files:
    - `prompt_file`: `{output-dir}/prompts/NN-{type}-{slug}.md`
    - `output_file`: `{output-dir}/NN-{type}-{slug}.png`
-   - `aspect_ratio`: from prompt frontmatter or prompt body
+   - `aspect_ratio`: from prompt frontmatter or body
    - `refs`: only verified `direct` references from prompt frontmatter
-2. **Backup rule**: Before dispatching a task, if its output image already exists, rename it to `NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.{ext}`.
-3. Dispatch tasks in batches:
-   - Native batch backend: send all eligible tasks, or chunks of `generation_batch_size` if the backend has a practical limit.
-   - Runtime parallel calls: issue up to `generation_batch_size` image calls concurrently, then continue with the next chunk.
-   - Sequential fallback: process one task at a time.
-4. After each completed task, record: "Generated X/N: filename".
-5. On failure: retry the failed task once from the same saved prompt file. Keep successful outputs and continue.
+2. **Backup rule**: if an output image already exists, rename it to `NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.{ext}` before dispatching.
+3. Dispatch per the Batch Generation Policy (native batch: all tasks, or chunks of `generation_batch_size` if the backend has a practical limit; parallel calls: up to `generation_batch_size` at a time; else sequential).
+4. After each task, record "Generated X/N: filename".
+5. On failure: retry once from the same saved prompt file; keep successful outputs and continue.
 
 ---
 
@@ -416,16 +281,7 @@ Add: `Include a subtle watermark "[content]" at [position].`
 
 ### 6.1 Update Article
 
-Insert after corresponding paragraph, using path relative to article file:
-
-| `default_output_dir` | Insert Path |
-|----------------------|-------------|
-| `imgs-subdir` | `![description](imgs/NN-{type}-{slug}.png)` |
-| `same-dir` | `![description](NN-{type}-{slug}.png)` |
-| `illustrations-subdir` | `![description](illustrations/NN-{type}-{slug}.png)` |
-| `independent` | `![description](illustrations/{topic-slug}/NN-{type}-{slug}.png)` (relative to cwd) |
-
-Alt text: concise description in article's language.
+Insert after the corresponding paragraph using the Markdown Insert Path from SKILL.md's Output Directory table. Alt text: concise description in the article's language.
 
 ### 6.2 Output Summary
 
@@ -433,7 +289,7 @@ Alt text: concise description in article's language.
 Article Illustration Complete!
 
 Article: [path]
-Type: [type] | Density: [level] | Style: [style]
+Type: [type] | Density: [level] | Style: [style] | Palette: [palette or default]
 Location: [directory]
 Images: X/N generated
 

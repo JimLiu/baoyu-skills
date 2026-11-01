@@ -9,8 +9,6 @@ metadata:
 
 # Article Illustrator
 
-Analyze articles, identify illustration positions, generate images with Type × Style × Palette consistency.
-
 ## User Input Tools
 
 When this skill prompts the user, follow this tool-selection rule (priority order):
@@ -48,61 +46,37 @@ Concrete tool names (`imagegen`, `GenerateImage`, `image_generate`, `baoyu-image
 
 ## Batch Generation Policy
 
-After every prompt file for the run has been saved and verified, generate images in batches by default.
+After every prompt file for the run has been saved and verified, generate images in batches by default:
 
-Priority order:
+1. Use the chosen backend's native batch / multi-task interface if it exists. Each task keeps its own prompt file, output path, aspect ratio, and direct reference images.
+2. Otherwise, if the runtime can issue parallel tool calls, dispatch up to `generation_batch_size` images at a time (default `4`). An explicit request in the current message (`--batch-size 4`, "并行4张一起生成") overrides EXTEND.md.
+3. Otherwise generate sequentially.
 
-1. Use the chosen backend's native batch / multi-task interface if it exists. Each task must keep its own prompt file, output path, aspect ratio, and direct reference images.
-2. If no native batch interface exists but the runtime can issue parallel tool calls, dispatch up to `generation_batch_size` images at a time. Default: `4`. An explicit user request in the current message, such as `--batch-size 4` or "并行4张一起生成", overrides EXTEND.md.
-3. If neither native batch nor parallel tool calls are available, generate sequentially.
-
-Rules:
-
-- Never start the first batch until all prompt files for that batch exist on disk.
-- Retry failed items once without regenerating successful items.
-- Do not use subagents merely to parallelize image rendering. Use subagents only for separate prompt iteration or creative exploration.
+- Never start a batch until all its prompt files exist on disk.
+- Retry failed items once without regenerating successful ones.
+- Don't use subagents just to parallelize rendering; only for separate per-image prompt iteration or creative exploration.
 
 ## Confirmation Policy
 
-Default behavior: **confirm before generation**.
+Default: **confirm before generation**.
 
-- Treat explicit skill invocation, a file path, matched signals/presets, and `EXTEND.md` defaults as **recommendation inputs only**. None of them authorizes skipping confirmation.
-- Do **not** start Step 4 or later until the user completes Step 3.
-- Skip confirmation only when the current request explicitly says to do so, for example: "直接生成", "不用确认", "跳过确认", "按默认出图", or equivalent wording.
-- If confirmation is skipped explicitly, state the assumed type / density / style / palette / language / backend in the next user-facing update before generating.
+- Explicit skill invocation, a file path, matched signals/presets, and `EXTEND.md` defaults are recommendation inputs only — none authorizes skipping confirmation.
+- Do not start Step 4 or later until the user completes Step 3.
+- Skip confirmation only when the current request explicitly says so ("直接生成", "不用确认", "跳过确认", "按默认出图", or equivalent). Then state the assumed type / density / style / palette / language / backend in the next user-facing update before generating.
 
 ## Reference Images
 
-Users may supply reference images via `--ref <files...>` or by providing file paths / pasting images in conversation. Refs guide style, palette, composition, or subject for specific illustrations.
-
-Full detection, storage, and processing rules are in [references/workflow.md](references/workflow.md) (Step 1.0 saves to `references/NN-ref-{slug}.{ext}`; Step 5.3 processes per-illustration usage `direct | style | palette`). When the chosen backend supports batch input, `direct`-usage entries in each prompt file's `references:` frontmatter should be propagated into its batch payload so backends can pass them through (e.g. `baoyu-image-gen` accepts `ref` per task).
+Users may supply refs via `--ref <files...>`, file paths, or pasted images; they guide style, palette, composition, or subject. Step 1.0 in [references/workflow.md](references/workflow.md) saves them to `references/NN-ref-{slug}.{ext}`; Step 5.3 processes per-illustration usage `direct | style | palette`. When the backend supports batch input, propagate `direct` entries from each prompt file's `references:` frontmatter into its batch task (e.g. `baoyu-image-gen` accepts `ref` per task).
 
 ## Three Dimensions
 
-| Dimension | Controls | Examples |
-|-----------|----------|----------|
-| **Type** | Information structure | infographic, scene, flowchart, comparison, framework, timeline |
-| **Style** | Rendering approach | notion, warm, minimal, blueprint, watercolor, elegant |
+| Dimension | Controls | Values |
+|-----------|----------|--------|
+| **Type** | Information structure | `infographic` (data, metrics, technical), `scene` (narrative, emotional), `flowchart` (processes), `comparison` (side-by-side), `framework` (models, architecture), `timeline` (history, evolution) |
+| **Style** | Rendering approach | See [references/styles.md](references/styles.md) (Core Styles, gallery, Type × Style compatibility) |
 | **Palette** | Color scheme (optional) | macaron, warm, neon — overrides style's default colors |
 
-Combine freely: `--type infographic --style vector-illustration --palette macaron`
-
-Or use presets: `--preset edu-visual` → type + style + palette in one flag. See [Style Presets](references/style-presets.md).
-
-## Types
-
-| Type | Best For |
-|------|----------|
-| `infographic` | Data, metrics, technical |
-| `scene` | Narratives, emotional |
-| `flowchart` | Processes, workflows |
-| `comparison` | Side-by-side, options |
-| `framework` | Models, architecture |
-| `timeline` | History, evolution |
-
-## Styles
-
-See [references/styles.md](references/styles.md) for Core Styles, full gallery, and Type × Style compatibility.
+Combine freely (`--type infographic --style vector-illustration --palette macaron`) or use `--preset edu-visual` for type + style + palette in one flag ([references/style-presets.md](references/style-presets.md)). Command syntax and options: [references/usage.md](references/usage.md).
 
 ## Workflow
 
@@ -115,11 +89,11 @@ See [references/styles.md](references/styles.md) for Core Styles, full gallery, 
 - [ ] Step 6: Finalize
 ```
 
+Detailed procedures for every step: [references/workflow.md](references/workflow.md).
+
 ### Step 1: Pre-check
 
-**1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING**
-
-Check EXTEND.md in priority order — the first one found wins:
+**1.5 Load Preferences (EXTEND.md) ⛔ BLOCKING** — first match wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -127,31 +101,17 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-article-illustrator/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md` | User home |
 
-| Result | Action |
-|--------|--------|
-| Found | Read, parse, display summary |
-| Not found | ⛔ Run [first-time-setup](references/config/first-time-setup.md) |
+Found → read, parse, display summary. Not found → ⛔ run [first-time-setup](references/config/first-time-setup.md) before anything else.
 
-Full procedures: [references/workflow.md](references/workflow.md#step-1-pre-check)
+Also: save reference images (1.0), determine input type and output dir (1.1–1.4). See [workflow.md](references/workflow.md#step-1-pre-check).
 
 ### Step 2: Analyze
 
-| Analysis | Output |
-|----------|--------|
-| Content type | Technical / Tutorial / Methodology / Narrative |
-| Purpose | information / visualization / imagination |
-| Core arguments | 2-5 main points |
-| Positions | Where illustrations add value |
-
-**CRITICAL**: Metaphors → visualize underlying concept, NOT literal image.
-
-Full procedures: [references/workflow.md](references/workflow.md#step-2-setup--analyze)
+Determine content type (Technical / Tutorial / Methodology / Narrative), purpose (information / visualization / imagination), 2-5 core arguments, and positions where illustrations add value. Metaphors → visualize the underlying concept, never the literal image. See [workflow.md](references/workflow.md#step-2-setup--analyze).
 
 ### Step 3: Confirm Settings ⚠️
 
-**Hard gate**: this step is mandatory per the [Confirmation Policy](#confirmation-policy) — Steps 4+ cannot start until the user confirms here (or explicitly opts out with "直接生成" / equivalent wording in the current request).
-
-**ONE AskUserQuestion, max 4 Qs. Q1-Q2 REQUIRED. Q3 required unless preset chosen.**
+**Hard gate** per the [Confirmation Policy](#confirmation-policy). ONE AskUserQuestion, max 4 Qs. Q1-Q2 required; Q3 required unless a preset was chosen.
 
 | Q | Options |
 |---|---------|
@@ -161,53 +121,30 @@ Full procedures: [references/workflow.md](references/workflow.md#step-2-setup--a
 | Q4: Palette | Default (style colors), macaron, warm, neon — **skip if preset includes palette or preferred_palette set** |
 | Q5: Language | When article language ≠ EXTEND.md setting |
 
-Full procedures: [references/workflow.md](references/workflow.md#step-3-confirm-settings-)
+See [workflow.md](references/workflow.md#step-3-confirm-settings-).
 
 ### Step 4: Generate Outline
 
-Save `outline.md` with frontmatter (type, density, style, palette, image_count) and entries:
-
-```yaml
-## Illustration 1
-**Position**: [section/paragraph]
-**Purpose**: [why]
-**Visual Content**: [what]
-**Filename**: 01-infographic-concept-name.png
-```
-
-Full template: [references/workflow.md](references/workflow.md#step-4-generate-outline)
+Save `outline.md` with frontmatter (type, density, style, palette, image_count) and one entry per illustration (Position, Purpose, Visual Content, Filename `01-infographic-concept-name.png`). Template: [workflow.md](references/workflow.md#step-4-generate-outline).
 
 ### Step 5: Generate Images
 
-⛔ **BLOCKING: Prompt files MUST be saved before ANY image generation.** This is a hard requirement regardless of which backend is chosen — the prompt file is the reproducibility record.
+⛔ **Prompt files MUST be saved before ANY image generation**, whatever the backend.
 
-1. For each illustration, create a prompt file per [references/prompt-construction.md](references/prompt-construction.md)
-2. Save to `prompts/NN-{type}-{slug}.md` with YAML frontmatter
-3. Prompts **MUST** use type-specific templates with structured sections (ZONES / LABELS / COLORS / STYLE / ASPECT)
-4. LABELS **MUST** include article-specific data: actual numbers, terms, metrics, quotes
-5. **DO NOT** pass ad-hoc inline prompts to `--prompt` without saving prompt files first
-6. Select the backend via the `## Image Generation Tools` rule at the top: use whatever is available; if multiple, ask the user once. Do this once per session before any generation.
-   - **`codex-imagegen` invocation**: when the rule resolves to `codex-imagegen`, see [references/codex-imagegen.md](references/codex-imagegen.md) for the invocation contract (preferred `baoyu-image-gen --provider codex-cli` path, runtime wrapper discovery, parameter notes, stdout schema, batch semantics).
-7. **Execution strategy**: Generate in batches per the `## Batch Generation Policy`: backend native batch first, runtime parallel tool calls second, sequential only as fallback. Default batch size is 4 unless EXTEND.md or the current request overrides it.
-8. Process references (`direct`/`style`/`palette`) per prompt frontmatter
-9. Apply watermark if EXTEND.md enabled
-10. Generate from saved prompt files; retry once on failure
+1. Per illustration, write `prompts/NN-{type}-{slug}.md` (YAML frontmatter) per [references/prompt-construction.md](references/prompt-construction.md): type-specific template with ZONES / LABELS / COLORS / STYLE / ASPECT; LABELS use article-specific data (actual numbers, terms, metrics, quotes). Never pass ad-hoc inline prompts to `--prompt` without saving prompt files first.
+2. Select the backend once per session via `## Image Generation Tools`. For `codex-imagegen`, see [references/codex-imagegen.md](references/codex-imagegen.md).
+3. Process references (`direct`/`style`/`palette`) per prompt frontmatter; apply watermark if EXTEND.md enables it.
+4. Generate from saved prompt files per `## Batch Generation Policy`; retry once on failure.
 
-Full procedures: [references/workflow.md](references/workflow.md#step-5-generate-images)
+See [workflow.md](references/workflow.md#step-5-generate-images).
 
 ### Step 6: Finalize
 
-Insert `![description]({relative-path}/NN-{type}-{slug}.png)` after paragraphs. Path computed relative to article file based on output directory setting.
-
-```
-Article Illustration Complete!
-Article: [path] | Type: [type] | Density: [level] | Style: [style] | Palette: [palette or default]
-Images: X/N generated
-```
+Insert `![description]({relative-path}/NN-{type}-{slug}.png)` after the corresponding paragraph (path relative to the article file, per Output Directory), then print the completion summary ([workflow.md](references/workflow.md#step-6-finalize)).
 
 ## Output Directory
 
-Output directory is determined by `default_output_dir` in EXTEND.md (set during first-time setup):
+Set by `default_output_dir` in EXTEND.md:
 
 | `default_output_dir` | Output Path | Markdown Insert Path |
 |----------------------|-------------|----------------------|
@@ -215,8 +152,6 @@ Output directory is determined by `default_output_dir` in EXTEND.md (set during 
 | `same-dir` | `{article-dir}/` | `NN-{type}-{slug}.png` |
 | `illustrations-subdir` | `{article-dir}/illustrations/` | `illustrations/NN-{type}-{slug}.png` |
 | `independent` | `illustrations/{topic-slug}/` | `illustrations/{topic-slug}/NN-{type}-{slug}.png` (relative to cwd) |
-
-All auxiliary files (outline, prompts) are saved inside the output directory:
 
 ```
 {output-dir}/
@@ -226,9 +161,7 @@ All auxiliary files (outline, prompts) are saved inside the output directory:
 └── NN-{type}-{slug}.png
 ```
 
-When input is **pasted content** (no file path), always uses `illustrations/{topic-slug}/` with `source-{slug}.{ext}` saved alongside.
-
-**Slug**: 2-4 words, kebab-case. **Conflict**: append `-YYYYMMDD-HHMMSS`.
+Pasted content (no file path) always uses `illustrations/{topic-slug}/` with `source-{slug}.{ext}` saved alongside. **Slug**: 2-4 words, kebab-case. **Conflict**: append `-YYYYMMDD-HHMMSS`.
 
 ## Modification
 
@@ -238,34 +171,13 @@ When input is **pasted content** (no file path), always uses `illustrations/{top
 | Add | Position → Prompt → Generate → Update outline → Insert |
 | Delete | Delete files → Remove reference → Update outline |
 
-Text correction policy:
-
-- If any rendered text (labels, captions, etc.) is misspelled, garbled, hard to read, or visually weak, do not patch the bitmap with code.
-- For text-correction regenerations, write a new prompt file and a new output path so the flawed candidate is preserved for comparison.
-- Post-processing is limited to crop, resize, compression, or format conversion that does not alter text or the main composition.
-
-## References
-
-| File | Content |
-|------|---------|
-| [references/workflow.md](references/workflow.md) | Detailed procedures |
-| [references/usage.md](references/usage.md) | Command syntax |
-| [references/styles.md](references/styles.md) | Style gallery + Palette gallery |
-| [references/style-presets.md](references/style-presets.md) | Preset shortcuts (type + style + palette) |
-| [references/prompt-construction.md](references/prompt-construction.md) | Prompt templates |
-| [references/config/first-time-setup.md](references/config/first-time-setup.md) | First-time setup |
+Text correction: never patch misspelled, garbled, or weak rendered text in the bitmap with code. Write a new prompt file and a new output path so the flawed candidate is kept for comparison. Post-processing is limited to crop, resize, compression, or format conversion that doesn't alter text or composition.
 
 ## Changing Preferences
 
-EXTEND.md lives at the first matching path listed in Step 1.5. Three ways to change it:
+EXTEND.md lives at the first matching path in Step 1.5. Edit it directly (schema: [references/config/preferences-schema.md](references/config/preferences-schema.md)), or delete it / ask "reconfigure baoyu-article-illustrator preferences" / "重新配置" to re-run first-time setup. Common edits:
 
-- **Edit directly** — open EXTEND.md and change fields. Full schema: `references/config/preferences-schema.md`.
-- **Reconfigure interactively** — delete EXTEND.md (or ask "reconfigure baoyu-article-illustrator preferences" / "重新配置"). The next run re-triggers first-time setup.
-- **Common one-line edits**:
-  - `preferred_image_backend: auto` — default; runtime-native tool wins, falls back to the only installed backend, asks only if multiple non-native are present.
-  - `preferred_image_backend: codex-imagegen` — pin to Codex's built-in.
-  - `preferred_image_backend: baoyu-image-gen` — pin to the baoyu-image-gen skill.
-  - `preferred_image_backend: ask` — confirm backend every run.
-  - `generation_batch_size: 4` — default number of images to render concurrently when the runtime supports parallel generation calls.
-  - `preferred_type: infographic`, `preferred_style: notion`, `preferred_palette: macaron`, `language: zh`.
-  - `default_output_dir: imgs-subdir` — where to write generated images relative to the article.
+- `preferred_image_backend`: `auto` (default; runtime-native wins, else the only installed backend, ask if multiple non-native) | `codex-imagegen` | `baoyu-image-gen` | `ask` (confirm every run)
+- `generation_batch_size: 4` — concurrent renders when parallel calls are supported
+- `preferred_type: infographic`, `preferred_style: notion`, `preferred_palette: macaron`, `language: zh`
+- `default_output_dir: imgs-subdir`
