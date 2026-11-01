@@ -1,12 +1,12 @@
 # Multi-Account Support
 
-Details for managing multiple WeChat Official Accounts through one EXTEND.md. SKILL.md only covers single-account flow and the selection prompt — read this file when the user has an `accounts:` block, asks to publish to a specific account, or needs per-account credentials.
+Read when EXTEND.md has an `accounts:` block, the user names a specific account, or per-account credentials are needed.
 
 ## Compatibility
 
 | Condition | Mode | Behavior |
 |-----------|------|----------|
-| No `accounts` block | Single-account | Original behavior, no changes |
+| No `accounts` block | Single-account | Original behavior |
 | `accounts` with 1 entry | Single-account | Auto-select, no prompt |
 | `accounts` with 2+ entries | Multi-account | Prompt to select before publishing |
 | `accounts` with `default: true` | Multi-account | Pre-select default; user can switch |
@@ -43,7 +43,7 @@ accounts:
 
 ## Account Selection (Step 0.5)
 
-Insert between Step 0 (Load EXTEND.md) and Step 1 (Determine input type):
+Between Step 0 and Step 1:
 
 ```
 if no accounts block:
@@ -82,7 +82,7 @@ WECHAT_AI_TOOLS_APP_SECRET=your_ai_tools_wechat_app_secret
 
 ## Chrome Profile (Browser Method)
 
-Each account uses an isolated Chrome profile so logins don't collide.
+Each account gets an isolated Chrome profile:
 
 | Source | Path |
 |--------|------|
@@ -102,7 +102,7 @@ ${BUN_X} {baseDir}/scripts/wechat-browser.ts --markdown <file> --images ./photos
 
 ## Remote API Publishing
 
-`wechat-api.ts` supports a `remote-api` mode that tunnels WeChat API calls through an SSH SOCKS5 dynamic port forward to a server whose IP is on WeChat's allowlist. Markdown rendering, image processing, draft assembly, and HTML rewriting still happen locally; only outbound HTTPS calls to `api.weixin.qq.com` traverse the tunnel. No files are written to the remote host and `AppSecret` never leaves the local process. The remote host needs only `sshd` and outbound network access.
+How `remote-api` works: SKILL.md Step 2.
 
 ### Per-Account Configuration
 
@@ -116,9 +116,7 @@ accounts:
     alias: baoyu
     default: true
     default_publish_method: api
-    default_author: 宝玉
-    app_id: your_wechat_app_id
-    app_secret: your_wechat_app_secret
+    # ...
   - name: AI工具集
     alias: ai-tools
     default_publish_method: remote-api

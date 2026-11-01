@@ -13,7 +13,7 @@ metadata:
 
 # Markdown to HTML Converter
 
-Converts Markdown files to beautifully styled HTML with inline CSS, optimized for WeChat Official Account and other platforms.
+Output is HTML with inline CSS, optimized for WeChat Official Account.
 
 ## User Input Tools
 
@@ -27,7 +27,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-**Agent Execution**: Determine this SKILL.md directory as `{baseDir}`. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
+`{baseDir}` = this SKILL.md's directory. Resolve `${BUN_X}`: `bun` if installed → else `npx -y bun` → else suggest installing bun.
 
 | Script | Purpose |
 |--------|---------|
@@ -35,7 +35,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -43,56 +43,29 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | User home |
 
-If none found, use defaults.
+None found → use defaults.
 
-**EXTEND.md supports**: default theme, custom CSS variables, code block style, mermaid defaults (`mermaid_theme`, `mermaid_scale`, `mermaid_background`).
+**Supported**: default theme, custom CSS variables, code block style, mermaid defaults (`mermaid_theme`, `mermaid_scale`, `mermaid_background`).
 
 ## Workflow
 
-### Step 0: Pre-check (Chinese Content)
+### Step 0: Pre-check (CJK Content)
 
-**Condition**: Only execute if input file contains Chinese text.
-
-**Detection**:
-1. Read input markdown file
-2. Check if content contains CJK characters (Chinese/Japanese/Korean)
-3. If no CJK content → skip to Step 1
-
-**Format Suggestion**:
-
-If CJK content detected AND `baoyu-format-markdown` skill is available:
-
-Use `AskUserQuestion` to ask whether to format first. Formatting can fix:
-- Bold markers with punctuation inside causing `**` parse failures
-- CJK/English spacing issues
-
-**If user agrees**: Invoke `baoyu-format-markdown` skill to format the file, then use formatted file as input.
-
-**If user declines**: Continue with original file.
+Only if the input contains CJK characters AND the `baoyu-format-markdown` skill is available: ask (`AskUserQuestion`) whether to format first — it fixes `**` bold markers broken by inner punctuation and CJK/English spacing. Agree → run `baoyu-format-markdown`, use the formatted file. Decline → use the original. No CJK → skip to Step 1.
 
 ### Step 1: Determine Theme
 
-**Theme resolution order** (first match wins):
-1. User explicitly specified theme (CLI `--theme` or conversation)
-2. EXTEND.md `default_theme` (this skill's own EXTEND.md, checked in Step 0)
-3. `baoyu-post-to-wechat` EXTEND.md `default_theme` (cross-skill fallback)
-4. If none found → use AskUserQuestion to confirm
+First match wins:
+1. User-specified (CLI `--theme` or conversation)
+2. This skill's EXTEND.md `default_theme`
+3. Cross-skill fallback (only if step 2 has none): `default_theme:` line in `$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md`, if it exists
+4. None → ask (`AskUserQuestion`) with the [Themes](#themes) table
 
-**Cross-skill EXTEND.md check** (only if this skill's EXTEND.md has no `default_theme`):
-
-Read `$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md` if it exists and look for a `default_theme:` line. Use the value if present; otherwise fall through.
-
-**If theme is resolved from EXTEND.md**: Use it directly, do NOT ask the user.
-
-**If no default found**: use `AskUserQuestion` to confirm a theme from the [Themes](#themes) table below.
+Theme from EXTEND.md → use it directly, do NOT ask.
 
 ### Step 1.5: Determine Citation Mode
 
-**Default**: Off. Do not ask by default.
-
-**Enable only if the user explicitly asks** for "微信外链转底部引用", "底部引用", "文末引用", or passes `--cite`.
-
-**Behavior when enabled**:
+Default off; don't ask. Enable (`--cite`) only if the user explicitly asks for "微信外链转底部引用", "底部引用", "文末引用", or passes `--cite`. When enabled:
 - Ordinary external links are rendered with numbered superscripts and collected under a final `引用链接` section.
 - `https://mp.weixin.qq.com/...` links stay as direct links and are not moved to the bottom.
 - Bare links where link text equals URL stay inline.
@@ -105,15 +78,9 @@ ${BUN_X} {baseDir}/scripts/main.ts <markdown_file> --theme <theme> [--cite]
 
 ### Step 3: Report Result
 
-Display the output path from JSON result. If backup was created, mention it.
+Show `htmlPath` from the JSON result; mention `backupPath` if a backup was created.
 
-## Usage
-
-```bash
-${BUN_X} {baseDir}/scripts/main.ts <markdown_file> [options]
-```
-
-**Options:**
+## Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -152,35 +119,16 @@ ${BUN_X} {baseDir}/scripts/main.ts <markdown_file> [options]
 **Examples:**
 
 ```bash
-# Basic conversion (uses default theme, removes first heading)
-${BUN_X} {baseDir}/scripts/main.ts article.md
-
-# With specific theme
-${BUN_X} {baseDir}/scripts/main.ts article.md --theme grace
-
-# Theme with custom color
+${BUN_X} {baseDir}/scripts/main.ts article.md                                  # default theme, first heading removed
 ${BUN_X} {baseDir}/scripts/main.ts article.md --theme modern --color red
-
-# Enable bottom citations for ordinary external links
-${BUN_X} {baseDir}/scripts/main.ts article.md --cite
-
-# Keep the first heading in content
-${BUN_X} {baseDir}/scripts/main.ts article.md --keep-title
-
-# Override title
-${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
+${BUN_X} {baseDir}/scripts/main.ts article.md --cite --keep-title --title "My Article"
 ```
 
 ## Output
 
-**File location**: Same directory as input markdown file.
-- Input: `/path/to/article.md`
-- Output: `/path/to/article.html`
+`/path/to/article.md` → `/path/to/article.html` (same directory). An existing HTML file is first backed up to `/path/to/article.html.bak-YYYYMMDDHHMMSS`.
 
-**Conflict handling**: If HTML file already exists, it will be backed up first:
-- Backup: `/path/to/article.html.bak-YYYYMMDDHHMMSS`
-
-**JSON output to stdout:**
+**JSON to stdout:**
 
 ```json
 {
@@ -206,7 +154,7 @@ ${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
 }
 ```
 
-**Mermaid rendering**: Code blocks fenced as ` ```mermaid ` are rendered to PNGs via headless Chrome (CDP) and cached at `imgs/.mermaid-cache/mermaid-<hash>.png`. The cache key includes the code, theme, scale, target width, background, and mermaid version. Add `imgs/.mermaid-cache/` to `.gitignore` if you do not want generated diagrams checked in. Requires Chrome/Chromium/Edge on the system; otherwise the block falls back to `<pre class="mermaid">…</pre>` and conversion still succeeds.
+**Mermaid**: ` ```mermaid ` blocks are rendered to PNG via headless Chrome (CDP), cached at `imgs/.mermaid-cache/mermaid-<hash>.png` (key: code, theme, scale, target width, background, mermaid version; suggest adding the dir to `.gitignore`). Needs Chrome/Chromium/Edge; if unavailable or rendering fails, falls back to `<pre class="mermaid">…</pre>` and conversion still succeeds.
 
 ## Themes
 
@@ -219,37 +167,22 @@ ${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
 
 ## Supported Markdown Features
 
+Standard GFM (headings, emphasis, lists, tables, images, links, blockquotes, inline code) plus:
+
 | Feature | Syntax |
 |---------|--------|
-| Headings | `# H1` to `###### H6` |
-| Bold/Italic | `**bold**`, `*italic*` |
 | Code blocks | ` ```lang ` with syntax highlighting |
-| Inline code | `` `code` `` |
-| Tables | GitHub-flavored markdown tables |
-| Images | `![alt](src)` |
 | Links | `[text](url)`; add `--cite` to move ordinary external links into bottom references |
-| Blockquotes | `> quote` |
-| Lists | `-` unordered, `1.` ordered |
 | Alerts | `> [!NOTE]`, `> [!WARNING]`, etc. |
 | Footnotes | `[^1]` references |
 | Ruby text | `{base|annotation}` |
-| Mermaid | ` ```mermaid ` blocks rendered to local PNG via headless Chrome (cached under `imgs/.mermaid-cache/`); falls back to `<pre class="mermaid">` if Chrome is unavailable or rendering fails |
+| Mermaid | ` ```mermaid ` (see Output) |
 | PlantUML | ` ```plantuml ` diagrams |
 
 ## Frontmatter
 
-Supports YAML frontmatter for metadata:
-
-```yaml
----
-title: Article Title
-author: Author Name
-description: Article summary
----
-```
-
-If no title is found, extracts from first H1/H2 heading or uses filename.
+`title`, `author`, `description` (summary). No title → first H1/H2, else filename.
 
 ## Extension Support
 
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.
+Custom configuration via EXTEND.md — see Preferences.
