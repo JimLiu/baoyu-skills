@@ -42,7 +42,7 @@ Row spacing: 120-140px between row starts.
 - Prefer straight horizontal or vertical lines
 - For connections that would cross components, use two-segment (L-shaped) paths:
   ```svg
-  <path d="M x1,y1 L midX,y1 L midX,y2" fill="none" stroke="#64748b" marker-end="url(#arrow)"/>
+  <path d="M x1,y1 L midX,y1 L midX,y2" fill="none" stroke="var(--arrow)" marker-end="url(#arrow)"/>
   ```
 - For busy diagrams, use `stroke-opacity="0.6"` on less important connections
 - Label important connections with a text element near the midpoint

@@ -1,12 +1,25 @@
 ---
 name: baoyu-diagram
-description: Create professional diagrams with configurable dark/light theme via CSS custom properties. Use this skill whenever the user asks for any kind of technical or conceptual diagram, visualization of a system, process flow, data flow, component relationship, network topology, decision tree, org chart, state machine, or any visual representation of structure/logic/process. Also trigger when the user says "画个图" "画一个架构图" "diagram" "flowchart" "sequence diagram" "draw me a ..." or uploads content and asks to visualize it. Output is always a standalone .svg file. After generating the SVG, run the theme-switch script to produce both dark and light theme versions.
+description: Create professional diagrams with configurable dark/light theme via CSS custom properties. Use this skill whenever the user asks for any kind of technical or conceptual diagram, visualization of a system, process flow, data flow, component relationship, network topology, decision tree, org chart, state machine, or any visual representation of structure/logic/process. Also trigger when the user says "画个图" "画一个架构图" "diagram" "flowchart" "sequence diagram" "draw me a ..." or uploads content and asks to visualize it. Outputs a dark-theme SVG, a light-theme SVG, and a @2x PNG of each.
 version: 1.118.0
 ---
 
 # Diagram Generator
 
-Create professional SVG diagrams across multiple diagram types. All output is a single self-contained `.svg` file with embedded styles and CSS custom properties for theme switching.
+Create professional SVG diagrams across multiple diagram types. Each SVG embeds its own styles and uses CSS custom properties for theme switching; it loads nothing over the network.
+
+## Output Files
+
+For a diagram saved as `<name>.svg`, the skill produces exactly these files:
+
+| File | What it is | Made by |
+|------|-----------|---------|
+| `<name>.svg` | Source SVG, CSS variables with dark theme values | You (the LLM) |
+| `<name>.light.svg` | Same markup with light theme values | `theme-switch.ts --theme=light` |
+| `<name>@2x.png` | Dark PNG at 2x scale | `main.ts` |
+| `<name>.light@2x.png` | Light PNG at 2x scale | `main.ts --theme light` |
+
+If the user asks for only one theme, or only SVG, produce just those files.
 
 ## Theme System (CSS Custom Properties)
 
@@ -39,7 +52,7 @@ Theme color values live in `{baseDir}/themes/<name>.json` — one flat JSON obje
 }
 ```
 
-Then apply it with `--theme=my-brand` (both `theme-switch.ts` and `flatten-vars.ts` support this). Any variable omitted from a custom theme simply won't be replaced by that theme. When generating SVGs for a custom theme, use its variable values in the `:root` block.
+Then apply it with `--theme=my-brand` (`theme-switch.ts`, `main.ts` and `flatten-vars.ts` all support this). Any variable omitted from a custom theme simply won't be replaced by that theme. When generating SVGs for a custom theme, use its variable values in the `:root` block.
 
 ### CSS Custom Properties Reference
 
@@ -88,12 +101,11 @@ These variables are defined in the `:root` block. **Never hardcode color values*
 
 ### Typography
 
-Use embedded SVG `@font-face` or system monospace fallback:
+Use a locally installed monospace font stack. Do not `@import` web fonts or reference any remote resource: the SVG must render the same offline, and the PNG converter cannot fetch fonts anyway.
 
 ```svg
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap');
-  text { font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace; }
+  text { font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Noto Sans Mono', 'DejaVu Sans Mono', monospace; }
 </style>
 ```
 
@@ -264,7 +276,7 @@ Rounded-rect states with double-border for composite states. Filled circle for i
 
 ## Output Rules
 
-1. Output a **single `.svg` file** — no external dependencies except the Google Fonts import
+1. Each SVG is a **single file with no external resources** — no `@import`, web fonts, remote images or scripts
 2. Set `viewBox` to fit all content with 30px padding; do NOT set fixed `width`/`height` attributes (let the SVG scale responsively)
 3. Include `xmlns="http://www.w3.org/2000/svg"` on the root `<svg>` element
 4. Put all `<style>`, `<defs>`, markers, and patterns at the top of the SVG
@@ -293,51 +305,46 @@ ${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=my-brand
 
 The script reads the SVG, finds the `:root { ... }` CSS custom property definitions in the `<style>` block, and replaces them with the target theme's color values. All `var(--variable)` references in the SVG markup remain unchanged — only the definitions are swapped.
 
-**Workflow:**
-1. Generate the SVG with CSS variable references (as specified above)
-2. Run `theme-switch.ts` with `--theme=dark` to produce the dark version (default)
-3. Run `theme-switch.ts` with `--theme=light` to produce the light version
-4. Both versions share the same markup — only the color definitions differ
+Without `--output`, the result is written next to the input as `<name>.<theme>.svg`. The source SVG already carries the dark values, so there is no need to run `--theme=dark` on it.
 
-## Script
+## Scripts
 
-Determine this SKILL.md file's directory path as `{baseDir}`. Script path: `{baseDir}/scripts/theme-switch.ts`.
+Determine this SKILL.md file's directory path as `{baseDir}`. Scripts live in `{baseDir}/scripts/`:
+
+- `theme-switch.ts` — write the SVG with another theme's variable values
+- `main.ts` — convert an SVG to a @2x PNG
+- `flatten-vars.ts` — inline CSS variables into literal colors (only needed for other non-browser tools; `main.ts` does this itself)
 
 Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun.
 
-### SVG → @2x PNG
+### Dependencies
 
-After saving the SVG, convert it to a @2x PNG:
+`main.ts` needs `sharp`, pinned in `{baseDir}/scripts/package.json` with a lockfile. Install it once:
+
+```bash
+cd {baseDir}/scripts && ${BUN_X} install
+```
+
+If `sharp` is missing, `main.ts` stops with an error that gives this command. It never installs anything by itself. In that case, deliver the SVG files and tell the user how to enable PNG output. `theme-switch.ts` and `flatten-vars.ts` have no dependencies.
+
+### SVG → @2x PNG
 
 ```bash
 ${BUN_X} {baseDir}/scripts/main.ts <svg-path> [options]
 ```
 
 Options:
+- `-t, --theme <name>` — Theme used to resolve CSS variables (default: `dark`; any `{baseDir}/themes/<name>.json` works)
 - `-s, --scale <n>` — Scale factor (default: 2)
 - `-o, --output <path>` — Custom output path (default: `<input>@2x.png`)
 - `--json` — JSON output
 
-**Important — flatten CSS variables before PNG conversion:**
+`sharp` (librsvg) does not understand CSS `var()`, so `main.ts` first replaces every `var(--xxx)` with the chosen theme's literal value and drops the `:root` block. It fails if the SVG references a variable that neither the theme nor the SVG defines. SVGs with hardcoded colors (legacy diagrams) are converted as-is.
 
-The PNG converter uses `sharp` (librsvg), which does **not** resolve CSS `var()` references — a variable-based SVG renders as a solid dark image (or black) in the output PNG. Before running `main.ts` on any SVG that contains `var(...)` references, flatten the variables to literal values first:
+To flatten without converting (e.g. for another renderer):
 
 ```bash
 ${BUN_X} {baseDir}/scripts/flatten-vars.ts <svg-path> <output-path> [--theme=<name>]
-```
-
-- Replaces every `var(--xxx)` reference with the matching theme's literal value (default theme: `light`) and strips the `:root` block
-- `--theme=<name>` loads `{baseDir}/themes/<name>.json` — custom themes work here too (e.g. flatten with `--theme=my-brand` for a custom-theme PNG)
-- Then run `main.ts` on the flattened file to produce the PNG
-- Browser rendering of the variable-based SVG is unaffected — flattening is only needed for non-browser renderers (sharp/librsvg, some thumbnailers)
-- If the SVG already uses hardcoded colors (legacy diagrams), flattening is unnecessary
-
-Typical PNG workflow:
-
-```bash
-${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light --output=<light-path>
-${BUN_X} {baseDir}/scripts/flatten-vars.mjs <light-path> <flattened-path>
-${BUN_X} {baseDir}/scripts/main.ts <flattened-path>
 ```
 
 ## Process
@@ -348,7 +355,8 @@ ${BUN_X} {baseDir}/scripts/main.ts <flattened-path>
 4. Write the SVG following the layering order above, using **CSS variable references** for all color values (never hardcode colors)
 5. Include the `:root { ... }` CSS custom property definitions in the `<style>` block (use the dark theme defaults from the CSS Custom Properties table)
 6. Verify spacing rules — no overlaps, legends outside boundaries, viewBox large enough
-7. Save the SVG file
-8. Run `${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=dark` to produce the dark theme version
-9. Run `${BUN_X} {baseDir}/scripts/theme-switch.ts <svg-path> --theme=light` to produce the light theme version
-10. Present both files to the user
+7. Save the SVG file as `<name>.svg` (this is the dark version)
+8. Run `${BUN_X} {baseDir}/scripts/theme-switch.ts <name>.svg --theme=light` → `<name>.light.svg`
+9. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg` → `<name>@2x.png`
+10. Run `${BUN_X} {baseDir}/scripts/main.ts <name>.svg --theme light -o <name>.light@2x.png` → `<name>.light@2x.png`
+11. Present the files listed in Output Files to the user

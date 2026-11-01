@@ -36,12 +36,12 @@ Place "Yes" / "No" (or "True" / "False", "是" / "否") labels directly on the e
 ```svg
 <!-- Decision diamond at center (400, 200) -->
 <!-- Yes: downward -->
-<line x1="400" y1="235" x2="400" y2="300" stroke="#64748b" marker-end="url(#arrow)"/>
-<text x="412" y="260" fill="#34d399" font-size="8">Yes</text>
+<line x1="400" y1="235" x2="400" y2="300" stroke="var(--arrow)" marker-end="url(#arrow)"/>
+<text x="412" y="260" fill="var(--color-secondary-stroke)" font-size="8">Yes</text>
 
 <!-- No: rightward -->
-<line x1="450" y1="200" x2="550" y2="200" stroke="#64748b" marker-end="url(#arrow)"/>
-<text x="480" y="193" fill="#fb7185" font-size="8">No</text>
+<line x1="450" y1="200" x2="550" y2="200" stroke="var(--arrow)" marker-end="url(#arrow)"/>
+<text x="480" y="193" fill="var(--color-alert-stroke)" font-size="8">No</text>
 ```
 
 ## Coloring Strategy

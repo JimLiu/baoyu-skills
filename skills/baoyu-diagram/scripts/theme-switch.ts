@@ -20,53 +20,18 @@
  *   bun theme-switch.ts diagram.svg --theme=my-brand
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { DEFAULT_THEME, listThemes, loadTheme as loadThemeFile } from './themes.ts';
 import { resolve, dirname } from 'path';
 
 // ─── Theme Loading ──────────────────────────────────────────────────────
-// Theme color maps live in {skillDir}/themes/<name>.json — one flat JSON
-// object mapping CSS custom property names (keys starting with `--`) to
-// color values. Extra metadata keys (not starting with `--`) are ignored.
-
-const THEMES_DIR = resolve(dirname(process.argv[1]), '..', 'themes');
-
-function listThemes(): string[] {
-  try {
-    return readdirSync(THEMES_DIR)
-      .filter(f => f.endsWith('.json'))
-      .map(f => f.replace(/\.json$/, ''))
-      .sort();
-  } catch {
-    return [];
-  }
-}
+// Shared with flatten-vars.ts and main.ts — see themes.ts.
 
 function loadTheme(name: string): Record<string, string> {
-  const themePath = resolve(THEMES_DIR, `${name}.json`);
-  if (!existsSync(themePath)) {
-    console.error(`Error: Theme not found: ${name}`);
-    console.error(`Available themes: ${listThemes().join(', ') || '(none)'}`);
-    console.error(`To add a custom theme, create: ${themePath}`);
-    process.exit(1);
-  }
   try {
-    const raw = JSON.parse(readFileSync(themePath, 'utf-8')) as Record<string, unknown>;
-    const vars: Record<string, string> = {};
-    for (const [key, value] of Object.entries(raw)) {
-      if (!key.startsWith('--')) continue; // metadata, ignored
-      if (typeof value !== 'string') {
-        console.error(`Error: Theme "${name}" variable ${key} must be a string value`);
-        process.exit(1);
-      }
-      vars[key] = value;
-    }
-    if (Object.keys(vars).length === 0) {
-      console.error(`Error: Theme "${name}" contains no CSS custom properties (keys starting with "--")`);
-      process.exit(1);
-    }
-    return vars;
+    return loadThemeFile(name);
   } catch (e) {
-    console.error(`Error: Failed to parse theme file: ${themePath}\n${e}`);
+    console.error(`Error: ${e instanceof Error ? e.message : e}`);
     process.exit(1);
   }
 }
@@ -186,7 +151,7 @@ function main(): void {
     process.exit(1);
   }
 
-  const theme: string = args.theme || 'dark';
+  const theme: string = args.theme || DEFAULT_THEME;
   const themeVars = loadTheme(theme);
   const svgPath = resolve(args.svgPath);
 
