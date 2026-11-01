@@ -111,7 +111,7 @@ async function stopProcess(child: ChildProcess | null): Promise<void> {
   await new Promise((resolve) => child.once("exit", resolve));
 }
 
-async function startPortHoldingProcess(port: number): Promise<ChildProcess> {
+async function startPortHoldingProcess(port: number, exitDelayMs = 0): Promise<ChildProcess> {
   const child = spawn(
     process.execPath,
     [
@@ -119,11 +119,19 @@ async function startPortHoldingProcess(port: number): Promise<ChildProcess> {
       `
         const http = require("node:http");
         const port = Number(process.argv[1]);
+        const exitDelayMs = Number(process.argv[2]);
         const server = http.createServer((_req, res) => res.end("ok"));
         server.listen(port, "127.0.0.1", () => process.stdout.write("ready\\n"));
         setInterval(() => {}, 1000);
+        if (exitDelayMs > 0) {
+          process.on("SIGTERM", () => {
+            server.close();
+            setTimeout(() => process.exit(0), exitDelayMs);
+          });
+        }
       `,
       String(port),
+      String(exitDelayMs),
     ],
     {
       stdio: ["ignore", "pipe", "ignore"],
@@ -343,6 +351,16 @@ test("waitForChromeDebugPort retries until the debug endpoint becomes available"
   await serverPromise;
 
   assert.equal(websocketUrl, `ws://127.0.0.1:${port}/devtools/browser/demo`);
+});
+
+test("gracefulKillChrome keeps waiting for exit after the port closes", async (t) => {
+  const port = await getFreePort();
+  const child = await startPortHoldingProcess(port, 300);
+  t.after(async () => { await stopProcess(child); });
+
+  await gracefulKillChrome(child, port, 4_000);
+
+  assert.ok(child.exitCode !== null || child.signalCode !== null);
 });
 
 test("gracefulKillChrome waits for the Chrome process to exit and release its port", async (t) => {

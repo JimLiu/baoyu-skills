@@ -502,7 +502,12 @@ export async function gracefulKillChrome(
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (chrome.exitCode !== null || chrome.signalCode !== null) return;
-    if (port !== undefined && !await isPortListening(port, 250)) return;
+    if (port !== undefined && !await isPortListening(port, 250)) {
+      while (Date.now() - start < timeoutMs && chrome.exitCode === null && chrome.signalCode === null) {
+        await Promise.race([exitPromise, sleep(50)]);
+      }
+      return;
+    }
 
     const exited = await Promise.race([
       exitPromise.then(() => true),
