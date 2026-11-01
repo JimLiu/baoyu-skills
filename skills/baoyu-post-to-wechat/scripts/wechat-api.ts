@@ -297,6 +297,7 @@ async function uploadImagesInHtml(
       }
     } catch (err) {
       console.error(`[wechat-api] Failed to upload ${imagePath}:`, err);
+      if (err instanceof Error && err.message.includes("Cannot convert .svg image")) throw err;
     }
   }
 
@@ -331,6 +332,7 @@ async function uploadImagesInHtml(
       }
     } catch (err) {
       console.error(`[wechat-api] Failed to upload placeholder ${image.placeholder}:`, err);
+      if (err instanceof Error && err.message.includes("Cannot convert .svg image")) throw err;
     }
   }
 
