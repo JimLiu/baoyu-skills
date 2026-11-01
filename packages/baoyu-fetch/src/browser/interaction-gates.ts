@@ -40,8 +40,7 @@ export function detectInteractionGateFromSnapshot(snapshot: GateSnapshot): WaitF
   if (
     snapshot.hasRecaptcha ||
     snapshot.hasRecaptchaIframe ||
-    text.includes("i'm not a robot") ||
-    text.includes("recaptcha")
+    text.includes("i'm not a robot")
   ) {
     return {
       type: "wait_for_interaction",
@@ -89,14 +88,24 @@ export async function detectInteractionGate(browser: BrowserSession): Promise<Wa
             '#challenge-running, #cf-challenge-running, .challenge-platform, [data-ray], [data-translate="checking_browser"]'
           )
         ),
-        hasRecaptcha: Boolean(
-          document.querySelector(
-            '.g-recaptcha, textarea[name="g-recaptcha-response"], iframe[title*="reCAPTCHA"]'
-          )
-        ),
-        hasRecaptchaIframe: Boolean(
-          document.querySelector('iframe[src*="google.com/recaptcha"], iframe[src*="recaptcha/api2"]')
-        ),
+        hasRecaptcha: Array.from(
+          document.querySelectorAll('.g-recaptcha, iframe[title*="reCAPTCHA"]')
+        ).some((el) => {
+          if (el.closest(".grecaptcha-badge")) return false;
+          if (el.getAttribute("data-size") === "invisible") return false;
+          const src = el.getAttribute("src") ?? "";
+          if (src.includes("size=invisible")) return false;
+          if (src.includes("/bframe")) return false;
+          return true;
+        }),
+        hasRecaptchaIframe: Array.from(
+          document.querySelectorAll('iframe[src*="recaptcha/api2/bframe"], iframe[src*="recaptcha/enterprise/bframe"]')
+        ).some((el) => {
+          const style = window.getComputedStyle(el);
+          if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
+          const rect = el.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0;
+        }),
         hasHcaptcha: Boolean(
           document.querySelector(
             '.h-captcha, textarea[name="h-captcha-response"], iframe[title*="hCaptcha"]'
