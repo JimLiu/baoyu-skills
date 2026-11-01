@@ -1,6 +1,6 @@
 # MiniMax
 
-Read when the user picks `--provider minimax` or sets `default_model.minimax`. Default model is `image-01`.
+Default model: `image-01`.
 
 ## Models
 
@@ -19,7 +19,7 @@ Read when the user picks `--provider minimax` or sets `default_model.minimax`. D
 
 - `--ref` files are sent as MiniMax `subject_reference`
 - `subject_reference[].type` is currently `character`
-- Official docs say `image_file` supports public URLs or Base64 Data URLs; baoyu-image-gen sends local refs as Data URLs
+- `image_file` accepts public URLs or Base64 Data URLs; local refs are sent as Data URLs
 - Recommended refs: front-facing portraits, JPG/JPEG/PNG, under 10MB
 
 ## Official References

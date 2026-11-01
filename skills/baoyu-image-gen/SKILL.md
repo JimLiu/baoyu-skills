@@ -13,8 +13,6 @@ metadata:
 
 # Image Generation (AI SDK)
 
-Official API-based image generation. Supports OpenAI GPT Image 2.5, Azure OpenAI, Google, OpenRouter, DashScope (阿里通义万象), Z.AI GLM-Image, MiniMax, Jimeng (即梦), Seedream (豆包), Replicate and Agnes.
-
 ## User Input Tools
 
 When this skill prompts the user, follow this tool-selection rule (priority order):
@@ -27,13 +25,11 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Script Directory
 
-`{baseDir}` = this SKILL.md's directory. All `scripts/...` paths below are relative to `{baseDir}`. Main script: `{baseDir}/scripts/main.ts`. Batch payload helper: `{baseDir}/scripts/build-batch.ts`. Resolve `${BUN_X}`: prefer `bun`; else `npx -y bun`; else suggest `brew install oven-sh/bun/bun`.
+`{baseDir}` = this SKILL.md's directory; `scripts/...` paths are relative to it. Main script: `{baseDir}/scripts/main.ts`. Batch payload helper: `{baseDir}/scripts/build-batch.ts`. Resolve `${BUN_X}`: prefer `bun`; else `npx -y bun`; else suggest `brew install oven-sh/bun/bun`.
 
-## Step 0: Load Preferences ⛔ BLOCKING
+## Step 0: Load Preferences (blocking)
 
-This step MUST complete before any image generation — generation is blocked until EXTEND.md exists.
-
-Check these paths in order; first hit wins:
+No image generation until EXTEND.md exists. Check in order; first hit wins:
 
 | Path | Scope |
 |------|-------|
@@ -41,66 +37,40 @@ Check these paths in order; first hit wins:
 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-image-gen/EXTEND.md` | XDG |
 | `$HOME/.baoyu-skills/baoyu-image-gen/EXTEND.md` | User home |
 
-- **Found** → load, parse, apply. If `default_model.[provider]` is null → ask model only.
-- **Not found** → run first-time setup (`references/config/first-time-setup.md`) using AskUserQuestion to collect provider + model + quality + save location. Save EXTEND.md, then continue. Do not generate images before this completes.
+- **Found** → load and apply. If `default_model.[provider]` is null → ask model only.
+- **Not found** → run first-time setup (`references/config/first-time-setup.md`) via AskUserQuestion to collect provider + model + quality + save location. Save EXTEND.md, then continue.
 
-Legacy compatibility: if `.baoyu-skills/baoyu-imagine/EXTEND.md` exists and the new path doesn't, the runtime renames it to `baoyu-image-gen`. If both exist, the runtime leaves them alone and uses the new path.
+Legacy: if `.baoyu-skills/baoyu-imagine/EXTEND.md` exists and the new path doesn't, the runtime renames it to `baoyu-image-gen`. If both exist, the runtime leaves them alone and uses the new path.
 
-**EXTEND.md keys**: default provider, default quality, default aspect ratio, default image size, OpenAI image API dialect, default models, batch worker cap, provider-specific batch limits. Schema: `references/config/preferences-schema.md`.
+**EXTEND.md keys**: default provider, quality, aspect ratio, image size, OpenAI image API dialect, default models, batch worker cap, provider-specific batch limits. Schema: `references/config/preferences-schema.md`.
 
 ## Usage
 
-Minimum working examples — see `references/usage-examples.md` for the full set including per-provider invocations and batch mode.
-
-### Identity-preserving reference prompts
-
-When the user wants a real person/character/object preserved from reference images, do **not** replace the reference with a long generic description. Prefer short, hard identity-preservation language:
-
-- "Use the person/object in the reference image(s) as the same identity. Do not redesign it or create a similar-looking new subject."
-- "Only change scene, clothing, pose, lighting, rendering style, and composition. Keep the face/proportions/hair/key accessories/overall identity from the references."
-- If using multiple references, state that they are the same subject and should jointly define identity.
-
-Pitfall: long descriptions like "young East Asian woman, oval face, clear eyes..." can cause the model to synthesize a new person matching the description instead of preserving the referenced person.
+More examples (per provider, batch file format): `references/usage-examples.md`.
 
 ```bash
-# Basic
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image cat.png
-
-# With aspect ratio and high quality
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A landscape" --image out.png --ar 16:9 --quality 2k
-
-# Prompt from files
 ${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
-
-# With reference image
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref source.png
-
-# Specific provider
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider dashscope --model qwen-image-2.0-pro
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider codex-cli --ar 16:9   # Codex login, no OPENAI_API_KEY; needs `codex` on PATH
 
-# OpenAI GPT Image 2
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai --model gpt-image-2.5-flare
-
-# Codex CLI (uses logged-in Codex subscription — no OPENAI_API_KEY required; requires `codex` on PATH)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider codex-cli --ar 16:9
-
-# Batch mode
-${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4
-
-# Build a batch file from outline.md + prompts/ (e.g. baoyu-article-illustrator output)
+# Batch; build the payload from outline.md + prompts/ (e.g. baoyu-article-illustrator output)
 ${BUN_X} {baseDir}/scripts/build-batch.ts --outline outline.md --prompts prompts --output batch.json --images-dir attachments
 ${BUN_X} {baseDir}/scripts/main.ts --batchfile batch.json --jobs 4
 ```
 
 ## Reference-Image Identity Preservation
 
-When the user wants a person/object preserved from reference images:
+When a real person/character/object must be preserved from reference images:
 
-- Prefer a small curated set of existing source references (usually 2–4) over many images; large multi-megabyte refs can destabilize streaming providers.
-- Make the prompt say the references are the same subject and the output must use that identity. Avoid long generic facial-feature descriptions that can cause the model to synthesize a new similar-looking person.
-- Do not use newly generated outputs as references unless the user explicitly asks; generated refs compound drift.
-- If results become too polished or influencer-like, reduce stylized refs and add explicit anti-beautification constraints (no face slimming, eye enlargement, heavy makeup, commercial travel shoot, over-smoothing).
-- If the subject should look younger/older, preserve the face and express age through clothing, posture, scene, and styling; do not ask the model to change facial identity.
+- Use short, hard identity language instead of a long generic description: "Use the person/object in the reference image(s) as the same identity. Do not redesign it or create a similar-looking new subject. Only change scene, clothing, pose, lighting, rendering style, and composition. Keep the face/proportions/hair/key accessories/overall identity from the references." With multiple refs, say they are the same subject and jointly define identity.
+- Long feature descriptions ("young East Asian woman, oval face, clear eyes...") make the model synthesize a new matching person instead.
+- Prefer 2–4 curated existing source refs; many or multi-megabyte refs can destabilize streaming providers.
+- Don't use newly generated outputs as refs unless the user asks (drift compounds).
+- Too polished/influencer-like → reduce stylized refs, add anti-beautification constraints (no face slimming, eye enlargement, heavy makeup, commercial travel shoot, over-smoothing).
+- Younger/older look → keep the face; express age via clothing, posture, scene, styling. Never ask to change facial identity.
 
 ## Options
 
@@ -154,54 +124,42 @@ When the user wants a person/object preserved from reference images:
 
 **Load priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
 
-### Codex/ChatGPT OAuth is not an OpenAI API key
+## Codex/ChatGPT OAuth Is Not an OpenAI API Key
 
-`--provider openai --model gpt-image-2.5-flare` uses the standard OpenAI Images API (`/v1/images/generations` or `/v1/images/edits`) and requires `OPENAI_API_KEY`. A Codex or ChatGPT desktop login is a different entitlement and is not a drop-in replacement for `OPENAI_API_KEY`; do not paste a Codex OAuth token into `OPENAI_API_KEY` or only set `OPENAI_BASE_URL` to a Codex backend.
+`--provider openai` calls the standard OpenAI Images API (`/v1/images/generations`, `/v1/images/edits`) and requires `OPENAI_API_KEY`. A Codex/ChatGPT login is a different entitlement: never paste a Codex OAuth token into `OPENAI_API_KEY` or just point `OPENAI_BASE_URL` at a Codex backend. Do not modify the `openai` provider to silently consume Codex OAuth.
 
-If the user wants to use their Codex subscription / GPT Image 2 entitlement without an OpenAI API key, route through a Codex-native backend instead of this skill's `openai` provider:
+To use a Codex subscription without an API key:
 
-- In Codex runtime: use the native `imagegen` skill/tool.
-- In non-Codex runtimes with `codex` CLI installed and logged in: use `baoyu-image-gen --provider codex-cli` (preferred — it gives you the same retry / cache / batch flow as every other provider). The provider spawns the bundled `scripts/codex-imagegen/main.ts`; the same code lives upstream at `packages/baoyu-codex-imagegen/src/main.ts` for standalone callers.
-- In Hermes runtimes with a native `image_generate` tool: use that tool as a fallback, and state whether reference images were passed directly or reconstructed from extracted traits.
+- Codex runtime: native `imagegen` skill/tool.
+- Non-Codex runtime with `codex` CLI installed and logged in: `--provider codex-cli` (preferred; same retry/cache/batch flow). It spawns the bundled `scripts/codex-imagegen/main.ts` (upstream: `packages/baoyu-codex-imagegen/src/main.ts`).
+- Hermes runtime with native `image_generate`: use as fallback; state whether refs were passed directly or reconstructed from extracted traits.
 
-Do not modify the existing `openai` provider to silently consume Codex OAuth. The first-class Codex-CLI path is the dedicated `codex-cli` provider, which has its own auth (Codex login), route (`codex exec`), request shape, and tests. See `references/codex-oauth-vs-openai-api-key.md`.
+**Fallback**: if `--provider openai` fails only because `OPENAI_API_KEY` is missing and one of the backends above is available, use it rather than leaving the user waiting, and say whether it was true reference-image generation or a text reconstruction from visual traits. Details: `references/codex-oauth-vs-openai-api-key.md`, `references/codex-image2-fallback.md`.
 
 ## Model Resolution
 
-Priority (highest → lowest) applies to every provider:
+Priority for every provider: CLI `--model <id>` > EXTEND.md `default_model.[provider]` > env `<PROVIDER>_IMAGE_MODEL` > built-in default.
 
-1. CLI flag `--model <id>`
-2. EXTEND.md `default_model.[provider]`
-3. Env var `<PROVIDER>_IMAGE_MODEL`
-4. Built-in default
+- **OpenAI**: default `gpt-image-2.5-flare` (fastest). `gpt-image-2.5-sunburst` is most capable for complex scenes and precise edits; `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1` and dated snapshots (e.g. `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2-2026-04-21`) stay selectable.
+- **Google**: default `gemini-3-pro-image`. `gemini-3.1-flash-image` is faster/cheaper; `gemini-3.1-flash-lite-image` is cheapest and 1K-only (`--quality 2k` / `--imageSize 2K|4K` clamp to 1K with a warning).
+- **DashScope**: default `qwen-image-2.0-pro`; `qwen-image-3.0-pro` is the newest flagship with the same sizing rules.
+- **Azure**: `--model` / `default_model.azure` is the deployment name (`AZURE_OPENAI_DEPLOYMENT`, alias `AZURE_OPENAI_IMAGE_MODEL`). Use `gpt-image-2.5-flare` if the deployment is named after the model, else the exact custom name.
 
-For OpenAI, the built-in default is `gpt-image-2.5-flare` (fast, lowest latency). `gpt-image-2.5-sunburst` is the most capable variant for complex scenes and precise edits; `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1`, and dated GPT Image snapshots (e.g. `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2-2026-04-21`) remain selectable with `--model` or `OPENAI_IMAGE_MODEL`.
-
-For Google, the built-in default is `gemini-3-pro-image`. `gemini-3.1-flash-image` is the faster low-cost option, and `gemini-3.1-flash-lite-image` is the cheapest — it only produces 1K output, so `--quality 2k` / `--imageSize 2K|4K` is clamped to 1K with a warning.
-
-For DashScope, the built-in default is `qwen-image-2.0-pro`; `qwen-image-3.0-pro` is the newest flagship and uses the same sizing rules.
-
-For Azure, `--model` / `default_model.azure` is the Azure deployment name. `AZURE_OPENAI_DEPLOYMENT` is the preferred env var; `AZURE_OPENAI_IMAGE_MODEL` is kept as a backward-compatible alias. If your Azure deployment is named after the underlying model, use `gpt-image-2.5-flare`; otherwise use the exact custom deployment name.
-
-EXTEND.md overrides env vars: if EXTEND.md sets `default_model.google: "gemini-3-pro-image"` and the env var sets `GOOGLE_IMAGE_MODEL=gemini-3.1-flash-image`, EXTEND.md wins.
-
-**Display model info before each generation**:
+Before each generation, display:
 
 - `Using [provider] / [model]`
 - `Switch model: --model <id> | EXTEND.md default_model.[provider] | env <PROVIDER>_IMAGE_MODEL`
 
 ## OpenAI-Compatible Gateway Dialects
 
-`provider=openai` means the auth and routing entrypoint is OpenAI-compatible. It does **not** guarantee the upstream image API uses OpenAI native semantics. When a gateway expects a different wire format, set `default_image_api_dialect` in EXTEND.md, `OPENAI_IMAGE_API_DIALECT`, or `--imageApiDialect`:
+`provider=openai` only means OpenAI-compatible auth/routing, not native image semantics. Set `default_image_api_dialect` (EXTEND.md), `OPENAI_IMAGE_API_DIALECT`, or `--imageApiDialect`:
 
-- `openai-native`: pixel `size` (`1536x1024`) and native OpenAI quality fields
-- `ratio-metadata`: aspect-ratio `size` (`16:9`) plus `metadata.resolution` (`1K|2K|4K`) and `metadata.orientation`
-
-Use `openai-native` for the OpenAI native API or strict clones; try `ratio-metadata` for compatibility gateways in front of Gemini or similar models. Current limitation: `ratio-metadata` applies only to text-to-image; reference-image edits still need `openai-native` or a provider with first-class edit support.
+- `openai-native`: pixel `size` (`1536x1024`) and native quality fields — OpenAI and strict clones
+- `ratio-metadata`: aspect-ratio `size` (`16:9`) + `metadata.resolution` (`1K|2K|4K`) + `metadata.orientation` — gateways fronting Gemini or similar. Text-to-image only; reference edits need `openai-native` or a provider with first-class edit support.
 
 ## Provider-Specific Guides
 
-Each provider has its own quirks (model families, size rules, ref support, limits). Read these when the user picks that provider or asks for non-default behavior:
+Read when the user picks that provider or asks for non-default behavior:
 
 | Provider | Reference |
 |----------|-----------|
@@ -215,11 +173,11 @@ Each provider has its own quirks (model families, size rules, ref support, limit
 
 ## Provider Selection
 
-1. `--ref` provided + no `--provider` → auto-select Google → OpenAI → Azure → OpenRouter → Replicate → Seedream → MiniMax → Agnes (MiniMax's subject reference is more specialized toward character/portrait consistency)
-2. `--provider` specified → use it (if `--ref`, must be google/openai/azure/openrouter/replicate/seedream/minimax/codex-cli/agnes)
-3. Only one API key present → use that provider
-4. Multiple keys → default priority: Google → OpenAI → Azure → OpenRouter → DashScope → Z.AI → MiniMax → Replicate → Jimeng → Seedream → Agnes
-5. `codex-cli` is **never auto-selected** — set `default_provider: codex-cli` in EXTEND.md or pass `--provider codex-cli`. It spawns `codex exec` via the bundled `scripts/codex-imagegen/main.ts` TS entrypoint (run with `bun`) and uses the user's Codex subscription (no `OPENAI_API_KEY`). Requires `codex` on `PATH` with an active `codex login`.
+1. `--ref` provided + no `--provider` → auto-select Google → OpenAI → Azure → OpenRouter → Replicate → Seedream → MiniMax → Agnes (MiniMax subject reference is specialized for character/portrait consistency)
+2. `--provider` specified → use it (with `--ref`, must be google/openai/azure/openrouter/replicate/seedream/minimax/codex-cli/agnes)
+3. Only one API key present → that provider
+4. Multiple keys → Google → OpenAI → Azure → OpenRouter → DashScope → Z.AI → MiniMax → Replicate → Jimeng → Seedream → Agnes
+5. `codex-cli` is **never auto-selected** — pin via `default_provider: codex-cli` or `--provider codex-cli`. Runs `codex exec` through the bundled `scripts/codex-imagegen/main.ts` (with `bun`) on the user's Codex subscription; requires `codex` on `PATH` with an active `codex login`.
 
 ## Quality Presets
 
@@ -230,65 +188,39 @@ Each provider has its own quirks (model families, size rules, ref support, limit
 
 Google/OpenRouter `imageSize` can be overridden with `--imageSize 1K|2K|4K`.
 
-For OpenAI native `gpt-image-2.5-*` and `gpt-image-2`, `normal` maps to `quality=medium` and a low-latency valid size near the requested aspect ratio; `2k` maps to `quality=high` and 2048px-class sizes such as `2048x2048`, `2048x1152`, or `1152x2048`. Use explicit `--size` for valid custom or 4K outputs, e.g. `3840x2160`.
+OpenAI native `gpt-image-2.5-*` / `gpt-image-2`: `normal` → `quality=medium` + low-latency valid size near the ratio; `2k` → `quality=high` + 2048px-class sizes (`2048x2048`, `2048x1152`, `1152x2048`). Use explicit `--size` for custom or 4K (e.g. `3840x2160`).
 
 ## Aspect Ratios
 
 Supported: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `2.35:1`.
 
 - Google multimodal: `imageConfig.aspectRatio`
-- OpenAI: `gpt-image-2.5-*` and `gpt-image-2` use the closest valid custom size for the requested ratio; older GPT Image and DALL·E models use their closest supported fixed size
-- OpenRouter: `imageGenerationOptions.aspect_ratio`; if only `--size <WxH>` is given, the ratio is inferred
-- Replicate: behavior is model-specific — `google/nano-banana*` uses `aspect_ratio`, `bytedance/seedream-*` uses documented Replicate ratios, Wan 2.7 maps `--ar` to a concrete `size`
-- MiniMax: official `aspect_ratio` values; if `--size <WxH>` is given without `--ar`, sends `width`/`height` for `image-01`
+- OpenAI: `gpt-image-2.5-*` / `gpt-image-2` use the closest valid custom size; older GPT Image and DALL·E use the closest fixed size
+- OpenRouter: `imageGenerationOptions.aspect_ratio`; with only `--size <WxH>`, the ratio is inferred
+- Replicate: model-specific — `google/nano-banana*` uses `aspect_ratio`, `bytedance/seedream-*` uses documented Replicate ratios, Wan 2.7 maps `--ar` to a concrete `size`
+- MiniMax: official `aspect_ratio` values; `--size <WxH>` without `--ar` sends `width`/`height` for `image-01`
 
 ## Generation Mode
 
-**Default**: sequential. **Batch parallel**: enabled automatically when `--batchfile` contains 2+ pending tasks.
+**Default**: sequential. **Batch parallel**: automatic when `--batchfile` has 2+ pending tasks.
 
-| Situation | Prefer | Why |
-|-----------|--------|-----|
-| One image, or 1-2 simple images | Sequential | Lower coordination overhead, easier debugging |
-| Multiple images with saved prompt files | Batch (`--batchfile`) | Reuses finalized prompts, applies shared throttling/retries, predictable throughput |
-| Each image still needs its own reasoning / prompt writing / style exploration | Subagents | Work is still exploratory, each needs independent analysis |
-| Input is `outline.md` + `prompts/` (e.g. from `baoyu-article-illustrator`) | Batch — use `{baseDir}/scripts/build-batch.ts` to assemble the payload | The outline + prompt files already contain everything needed |
+| Situation | Prefer |
+|-----------|--------|
+| One image, or 1-2 simple images | Sequential |
+| Multiple images with saved prompt files | Batch (`--batchfile`) — shared throttling/retries |
+| Each image still needs its own reasoning / prompt writing / style exploration | Subagents |
+| Input is `outline.md` + `prompts/` (e.g. from `baoyu-article-illustrator`) | Batch, payload built with `{baseDir}/scripts/build-batch.ts` |
 
-Rule of thumb: once prompt files are saved and the task is "generate all of these", prefer batch over subagents. Use subagents only when generation is coupled with per-image thinking or divergent creative exploration.
+Once prompt files are saved and the task is "generate all of these", prefer batch over subagents.
 
-**Parallel behavior**:
-
-- Default worker count is automatic, capped by config, built-in default 10
-- Provider-specific throttling applies only in batch mode; defaults are tuned for throughput while avoiding RPM bursts
-- Override with `--jobs <count>`
-- Each image retries up to 3 attempts
-- Final output includes success count, failure count, and per-image failure reasons
+**Parallel behavior**: worker count auto, capped by config (built-in default 10), override with `--jobs <count>`; provider-specific throttling applies only in batch mode; each image retries up to 3 attempts; final output reports success count, failure count, and per-image failure reasons.
 
 ## Error Handling
 
-- Missing API key → error with setup instructions
+- Missing API key → error with setup instructions (for OpenAI see the Codex fallback above)
 - Generation failure → auto-retry up to 3 attempts per image
 - Invalid aspect ratio → warning, proceed with default
 - Reference images with unsupported provider/model → error with fix hint
-
-### Codex image2 fallback
-
-If `--provider openai --model gpt-image-2.5-flare` fails because `OPENAI_API_KEY` is missing but the current runtime has a native image-generation backend or the repo-level `codex-imagegen` wrapper is available, use that path rather than leaving the user waiting. Be explicit about whether the fallback is true reference-image generation or only a text-prompt reconstruction from extracted visual traits. See `references/codex-image2-fallback.md`.
-
-## References
-
-| File | Content |
-|------|---------|
-| `references/usage-examples.md` | Extended CLI examples across providers and batch mode |
-| `references/codex-oauth-vs-openai-api-key.md` | Why Codex/ChatGPT OAuth image2 entitlement is not usable through baoyu-image-gen's standard OpenAI API-key provider |
-| `references/codex-image2-fallback.md` | Practical fallback behavior when OpenAI API credentials are absent but Codex/native image generation is available |
-| `references/providers/dashscope.md` | DashScope families, sizes, limits |
-| `references/providers/zai.md` | Z.AI GLM-image / cogview-4 |
-| `references/providers/minimax.md` | MiniMax image-01 + subject reference |
-| `references/providers/openrouter.md` | OpenRouter multimodal flow |
-| `references/providers/replicate.md` | Replicate supported families + guardrails |
-| `references/providers/agnes.md` | Agnes (agnes-image-2.5-flash) sizing, refs, and limits |
-| `references/config/preferences-schema.md` | EXTEND.md schema |
-| `references/config/first-time-setup.md` | First-time setup flow |
 
 ## Extension Support
 

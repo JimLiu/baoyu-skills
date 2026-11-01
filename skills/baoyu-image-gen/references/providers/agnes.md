@@ -1,17 +1,14 @@
 # Sapiens AI Agnes Image
 
-Read when the user picks `--provider agnes` or sets `default_model.agnes`. Default model is `agnes-image-2.5-flash`.
+Default model: `agnes-image-2.5-flash` (only model).
 
 ## Models
-
-**`agnes-image-2.5-flash`** (only model)
 
 - Text-to-image and image-to-image (with `--ref`) in a single `/images/generations` endpoint
 - Supports reference images as public URLs or Data URI (base64)
 - Optimized for high information density, complex layouts, and rich details
 - Size rules: both dimensions divisible by 32 (720px exception), long edge ≤ 2048, total pixels ≤ ~4M
 - Default size: `1024x1024`; custom `--size` supports arbitrary WxH within the above rules
-- `--ar` supported: computed as 2048-based size (long edge ≤ 2048, short edge proportional, both snapped to 32px); `1:1` special-cased to `1024x1024`
 
 ## Response Format
 
@@ -21,7 +18,7 @@ Read when the user picks `--provider agnes` or sets `default_model.agnes`. Defau
 
 ## `--n` Behavior
 
-The Agnes API returns a single image per request regardless of the `n` parameter. Passing `--n > 1` triggers a local error from `validateArgs` before any API call is made.
+The API returns one image per request regardless of `n`; `--n > 1` fails locally in `validateArgs` before any API call.
 
 ## Behavior Notes
 

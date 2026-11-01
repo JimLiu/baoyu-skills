@@ -1,6 +1,6 @@
 # Replicate
 
-Read when the user picks `--provider replicate`. Replicate support is intentionally scoped to model families baoyu-image-gen can validate locally and save without dropping outputs.
+Support is scoped to model families baoyu-image-gen can validate locally and save without dropping outputs.
 
 ## Supported Families
 
@@ -38,13 +38,3 @@ Read when the user picks `--provider replicate`. Replicate support is intentiona
 
 - Replicate currently supports only single-output save semantics in this tool — keep `--n 1`
 - If a model is outside the compatibility list above, baoyu-image-gen treats it as prompt-only and rejects advanced local options instead of guessing a nano-banana-style schema
-
-## Examples
-
-```bash
-# Default model
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate
-
-# Explicit model
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate --model google/nano-banana
-```
