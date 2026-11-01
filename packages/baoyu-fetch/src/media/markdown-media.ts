@@ -15,7 +15,8 @@ import type { MediaAsset, MediaReplacement } from "./types";
 const MARKDOWN_LINK_RE =
   /(!?\[[^\]\n]*\])\((<)?((?:https?:\/\/[^)\s>]+)|(?:data:[^)>\s]+))(>)?\)/g;
 const FRONTMATTER_COVER_RE = /^(coverImage:\s*")((?:https?:\/\/[^"]+)|(?:data:[^"]+))(")/m;
-const RAW_URL_RE = /(?:https?:\/\/[^\s<>"')\]]+|data:[^\s<>"')\]]+)/g;
+const RAW_URL_RE = /(?:https?:\/\/[^\s<>"')\]\\]+|data:[^\s<>"')\]\\]+)/g;
+const FRONTMATTER_BLOCK_RE = /^---\r?\n[\s\S]*?\r?\n---(?=\r?\n|$)/;
 
 interface MarkdownAstNode {
   type: string;
@@ -252,7 +253,25 @@ function normalizeLinkedImageMarkdown(markdown: string): string {
   return applyReplacements(markdown, replacements);
 }
 
+function normalizeFrontmatterMediaLinks(frontmatter: string): string {
+  return frontmatter.replace(FRONTMATTER_COVER_RE, (full, prefix, rawUrl, suffix) => {
+    const normalizedUrl = normalizeMediaUrl(rawUrl);
+    if (normalizedUrl === rawUrl) {
+      return full;
+    }
+    return `${prefix}${normalizedUrl}${suffix}`;
+  });
+}
+
 export function normalizeMarkdownMediaLinks(markdown: string): string {
+  const frontmatter = markdown.match(FRONTMATTER_BLOCK_RE)?.[0] ?? "";
+  if (!frontmatter) {
+    return normalizeBodyMediaLinks(markdown);
+  }
+  return normalizeFrontmatterMediaLinks(frontmatter) + normalizeBodyMediaLinks(markdown.slice(frontmatter.length));
+}
+
+function normalizeBodyMediaLinks(markdown: string): string {
   MARKDOWN_LINK_RE.lastIndex = 0;
   let result = markdown.replace(MARKDOWN_LINK_RE, (full, label, openAngle, rawUrl, closeAngle) => {
     const normalizedUrl = normalizeMediaUrl(rawUrl);
@@ -260,14 +279,6 @@ export function normalizeMarkdownMediaLinks(markdown: string): string {
       return full;
     }
     return `${label}(${openAngle ?? ""}${normalizedUrl}${closeAngle ?? ""})`;
-  });
-
-  result = result.replace(FRONTMATTER_COVER_RE, (full, prefix, rawUrl, suffix) => {
-    const normalizedUrl = normalizeMediaUrl(rawUrl);
-    if (normalizedUrl === rawUrl) {
-      return full;
-    }
-    return `${prefix}${normalizedUrl}${suffix}`;
   });
 
   RAW_URL_RE.lastIndex = 0;
