@@ -1,15 +1,5 @@
 # Comic Content Analysis Framework
 
-Deep analysis framework for transforming source content into effective visual storytelling.
-
-## Purpose
-
-Before creating a comic, thoroughly analyze the source material to:
-- Identify the target audience and their needs
-- Determine what value the comic will deliver
-- Extract narrative potential for visual storytelling
-- Plan character arcs and key moments
-
 ## Analysis Dimensions
 
 ### 1. Core Content (Understanding "What")
@@ -129,7 +119,7 @@ Before creating a comic, thoroughly analyze the source material to:
 
 ## Output Format
 
-Analysis results should be saved to `analysis.md` with:
+Save to `analysis.md` with:
 
 1. **YAML Front Matter**: Metadata (title, topic, time_span, source_language, user_language, aspect_ratio, recommended_page_count, recommended_art, recommended_tone, recommended_layout)
 2. **Target Audience**: Primary, secondary, tertiary audiences with their needs

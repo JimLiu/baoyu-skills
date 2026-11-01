@@ -96,7 +96,7 @@ character_presets:
 | `roles.challenge` | No | Character representing obstacles/antagonist |
 | `roles.support` | No | Character providing support/comic relief |
 
-## Example: Minimal Preferences
+## Example
 
 ```yaml
 ---
@@ -109,48 +109,9 @@ preferred_tone: neutral
 ---
 ```
 
-## Example: Full Preferences
-
-```yaml
----
-version: 2
-watermark:
-  enabled: true
-  content: "@comicstudio"
-  position: bottom-right
-
-preferred_art: manga
-preferred_tone: neutral
-
-preferred_layout: webtoon
-
-preferred_aspect: "3:4"
-
-language: zh
-
-preferred_image_backend: codex-imagegen
-
-generation_batch_size: 4
-
-character_presets:
-  - name: tech-tutorial
-    roles:
-      learner: "小明"
-      mentor: "教授"
-      challenge: "难题怪"
-      support: "小助手"
-  - name: doraemon
-    roles:
-      learner: "大雄"
-      mentor: "哆啦A梦"
-      challenge: "胖虎"
-      support: "静香"
----
-```
-
 ## Migration from v1
 
-If you have a v1 preferences file with `preferred_style`, migrate as follows:
+v1 files with `preferred_style` migrate as:
 
 | Old `preferred_style.name` | New `preferred_art` | New `preferred_tone` |
 |---------------------------|---------------------|---------------------|
