@@ -1,7 +1,5 @@
 # Presentation Analysis Framework
 
-Deep content analysis for effective slide deck creation.
-
 ## 1. Message Hierarchy
 
 Identify the core message structure before designing slides.

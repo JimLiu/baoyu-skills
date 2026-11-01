@@ -1,7 +1,5 @@
 # EXTEND.md Schema
 
-Structure for user preferences in `.baoyu-skills/baoyu-slide-deck/EXTEND.md`.
-
 ## Full Schema
 
 ```yaml

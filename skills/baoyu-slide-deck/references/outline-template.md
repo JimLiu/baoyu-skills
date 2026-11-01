@@ -1,7 +1,5 @@
 # Outline Template
 
-Standard structure for slide deck outlines with style instructions.
-
 ## Outline Format
 
 ```markdown
@@ -55,7 +53,7 @@ Style Rules:
 
 ## Building STYLE_INSTRUCTIONS from Dimensions
 
-When using custom dimensions or presets, build STYLE_INSTRUCTIONS by combining:
+For custom dimensions or presets, combine:
 
 ### 1. Design Aesthetic
 
@@ -210,33 +208,11 @@ Layout: [optional: layout name from gallery]
 
 ## STYLE_INSTRUCTIONS Block
 
-The `<STYLE_INSTRUCTIONS>` block is the SINGLE SOURCE OF TRUTH for style information in this outline.
+The `<STYLE_INSTRUCTIONS>` block is the SINGLE SOURCE OF TRUTH for style in this outline.
 
-| Section | Content | Source |
-|---------|---------|--------|
-| Design Aesthetic | Overall visual direction | Combined from all dimensions |
-| Background | Base color and texture details | texture + mood dimensions |
-| Typography | Font descriptions (visual, not names) | typography dimension |
-| Color Palette | Named colors with hex codes and usage | mood dimension |
-| Visual Elements | Graphic elements with rendering instructions | texture + mood dimensions |
-| Density Guidelines | Content limits and whitespace | density dimension |
-| Style Rules | Do/Don't guidelines | Combined from dimensions |
-
-**Important**:
 - Typography descriptions must describe visual appearance (e.g., "rounded sans-serif", "bold geometric") since image generators cannot use font names
-- Prompts should extract STYLE_INSTRUCTIONS from this outline, NOT re-read style files
-
-## Preset → Dimensions Reference
-
-When using a preset, look up dimensions in `references/dimensions/presets.md`:
-
-| Preset | Dimensions |
-|--------|------------|
-| blueprint | grid + cool + technical + balanced |
-| sketch-notes | organic + warm + handwritten + balanced |
-| corporate | clean + professional + geometric + balanced |
-| minimal | clean + neutral + geometric + minimal |
-| ... | See presets.md for full mapping |
+- Prompts extract STYLE_INSTRUCTIONS from this outline, NOT re-read style files
+- Preset → dimensions: `references/dimensions/presets.md`
 
 ## Section Dividers
 

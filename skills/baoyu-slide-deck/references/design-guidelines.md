@@ -1,10 +1,8 @@
 # Design Guidelines
 
-Detailed design principles for slide decks.
-
 ## Audience Guidelines
 
-Design decisions adapt to target audience. Use `--audience` to set.
+Set via `--audience`.
 
 | Audience | Content Density | Visual Style | Terminology | Slides |
 |----------|-----------------|--------------|-------------|--------|
