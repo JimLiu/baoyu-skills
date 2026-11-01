@@ -84,4 +84,22 @@ describe("runCodexExec", () => {
     }).catch((e) => e);
     expect(err.kind).toBe("spawn_failed");
   });
+
+  test("kills a child that ignores SIGTERM before returning", async () => {
+    if (process.platform === "win32") return;
+    let pid: number | undefined;
+    const run = await runCodexExec({
+      instruction: "",
+      timeoutMs: 20_000,
+      command: node,
+      commandArgs: script(`process.on("SIGTERM", () => {}); console.log(${JSON.stringify(started)}); console.log(${JSON.stringify(completed)}); setInterval(() => {}, 1000);`),
+      completionGraceMs: 200,
+      onStart: (info) => {
+        pid = info.pid;
+      },
+    });
+    expect(run.threadId).toBe("t-1");
+    expect(() => process.kill(pid!, 0)).toThrow();
+  });
 });
+

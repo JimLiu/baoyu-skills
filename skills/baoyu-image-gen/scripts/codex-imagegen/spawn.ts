@@ -57,6 +57,25 @@ function killTree(child: ChildProcess): void {
   }, 2000).unref();
 }
 
+function waitForExit(child: ChildProcess, ms: number): Promise<boolean> {
+  if (!isRunning(child)) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(!isRunning(child)), ms);
+    child.once("exit", () => {
+      clearTimeout(timer);
+      resolve(true);
+    });
+  });
+}
+
+async function stopChild(child: ChildProcess): Promise<void> {
+  if (!isRunning(child)) return;
+  killTree(child);
+  if (await waitForExit(child, 2000)) return;
+  if (process.platform !== "win32") child.kill("SIGKILL");
+  await waitForExit(child, 1000);
+}
+
 export async function runCodexExec(input: SpawnInput): Promise<CodexRunResult> {
   const start = Date.now();
   const logDir = await mkdtemp(path.join(tmpdir(), "codex-imggen-"));
@@ -164,7 +183,7 @@ export async function runCodexExec(input: SpawnInput): Promise<CodexRunResult> {
 
   const exit = await finished;
   for (const t of timers) clearTimeout(t);
-  if (isRunning(child)) killTree(child);
+  await stopChild(child);
   child.stdout.destroy();
   child.stderr.destroy();
   child.unref();
