@@ -67,7 +67,7 @@ export function flattenVars(svg: string, theme: Record<string, string>): { svg: 
 
   // Scan for var( ... ) with balanced parentheses, so fallbacks like
   // rgb(255,255,255) or a nested var() stay intact.
-  const resolve = (text: string): string => {
+  const resolve = (text: string, seen: Set<string> = new Set()): string => {
     let result = "";
     let i = 0;
     while (i < text.length) {
@@ -92,7 +92,13 @@ export function flattenVars(svg: string, theme: Record<string, string>): { svg: 
       const comma = inner.indexOf(",");
       const name = (comma === -1 ? inner : inner.slice(0, comma)).trim();
       const fallback = comma === -1 ? undefined : inner.slice(comma + 1).trim();
-      const value = vars[name] ?? (fallback ? resolve(fallback) : undefined);
+      let value: string | undefined;
+      if (name.startsWith("--") && vars[name] !== undefined && !seen.has(name)) {
+        // A value may itself reference other variables (aliases); resolve those too.
+        value = resolve(vars[name], new Set(seen).add(name));
+      } else if (fallback) {
+        value = resolve(fallback, seen);
+      }
       if (value === undefined || !name.startsWith("--")) {
         missing.add(name);
         result += text.slice(start, j);

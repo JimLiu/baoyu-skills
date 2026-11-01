@@ -40,6 +40,14 @@ test("flattenVars keeps functional and nested fallbacks intact", () => {
   assert.equal(out, '<rect fill="#f8fafc"/><rect fill="rgba(1,2,3,0.5)"/><rect fill="#0f172a"/>');
 });
 
+test("flattenVars resolves aliases and stops on cycles", () => {
+  const svg = '<style>:root { --label: var(--text); --a: var(--b); --b: var(--a); }</style><text fill="var(--label)"/><rect fill="var(--a)"/>';
+  const { svg: out, missing } = flattenVars(svg, loadTheme("light"));
+  assert.match(out, /<text fill="#0f172a"\/>/);
+  assert.doesNotMatch(out, /<text fill="var/);
+  assert.ok(missing.length > 0);
+});
+
 test("flattenVars reports variables it cannot resolve", () => {
   const { missing } = flattenVars('<rect fill="var(--typo)"/>', loadTheme("dark"));
   assert.deepEqual(missing, ["--typo"]);
