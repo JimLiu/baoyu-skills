@@ -1,7 +1,5 @@
 # Workflow Mechanics
 
-Details for source materialization, output directory creation, and conflict resolution.
-
 ## Materialize Source
 
 | Input Type | Action |
@@ -14,12 +12,8 @@ Details for source materialization, output directory creation, and conflict reso
 
 ## Create Output Directory
 
-Create a subdirectory next to the source file: `{source-dir}/{source-basename}-{target-lang}/`
-
-Examples:
-- `posts/article.md` → `posts/article-zh/`
-- `translate/ai-future.md` → `translate/ai-future-zh/`
+Subdirectory next to the source: `{source-dir}/{source-basename}-{target-lang}/` (e.g., `posts/article.md` → `posts/article-zh/`)
 
 ## Conflict Resolution
 
-If the output directory already exists, rename the existing one to `{name}.backup-YYYYMMDD-HHMMSS/` before creating the new one. Never overwrite existing results.
+If the output directory exists, rename it to `{name}.backup-YYYYMMDD-HHMMSS/` before creating the new one. Never overwrite existing results.
