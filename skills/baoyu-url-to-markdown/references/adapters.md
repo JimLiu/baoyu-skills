@@ -1,7 +1,5 @@
 # Adapters & Media
 
-Read when choosing an adapter, handling media, or answering adapter-specific questions.
-
 ## Built-in Adapters
 
 | Adapter | URLs | Key Features |
@@ -11,30 +9,26 @@ Read when choosing an adapter, handling media, or answering adapter-specific que
 | `hn` | news.ycombinator.com | Threaded comments, story metadata, nested replies |
 | `generic` | Any URL (fallback) | Defuddle extraction, Readability fallback, auto-scroll, network idle detection |
 
-Adapter is auto-selected based on URL. Override with `--adapter <name>`.
+Auto-selected by URL; override with `--adapter <name>`.
 
 ### YouTube
 
-- Extracts transcripts/captions when available
 - Transcript format: `[MM:SS] Text segment` with chapter headings
-- Availability depends on YouTube exposing a caption track; videos with captions disabled or restricted playback may produce description-only output
-- Use `--wait-for force` if the page needs time to finish loading player metadata
+- Needs an exposed caption track; captions disabled or restricted playback may yield description-only output
+- `--wait-for force` if the player metadata needs time to load
 
 ### X/Twitter
 
-- Extracts single tweets, threads, and X Articles
-- Auto-detects login state; if logged out and content requires auth, JSON output shows `"status": "needs_interaction"`
-- Use `--wait-for interaction` for login-protected content
+- Single tweets, threads, X Articles
+- Logged out on auth-only content → JSON `"status": "needs_interaction"`; use `--wait-for interaction`
 
 ### Hacker News
 
-- Parses threaded comments with proper nesting and reply hierarchy
-- Includes story metadata (title, URL, author, score, comment count)
-- Shows comment deletion/dead status
+- Nested comment threads; story metadata (title, URL, author, score, comment count); deleted/dead status
 
 ## Media Download Workflow
 
-Driven by `download_media` in EXTEND.md:
+By EXTEND.md `download_media`:
 
 | Setting | Behavior |
 |---------|----------|
@@ -44,28 +38,18 @@ Driven by `download_media` in EXTEND.md:
 
 ### Ask-Each-Time Flow
 
-1. Run the CLI **without** `--download-media` with `--output <path>` → markdown saved
-2. Check the saved markdown for remote media URLs (`https://` in image/video links)
-3. **If no remote media found** → done, no prompt needed
-4. **If remote media found** → ask via `AskUserQuestion`:
-   - header: "Media", question: "Download N images/videos to local files?"
-   - "Yes" — Download to local directories
-   - "No" — Keep remote URLs
-5. If the user confirms → run the CLI **again** with `--download-media --output <same-path>` (overwrites markdown with localized links)
+1. Run with `--output <path>`, **without** `--download-media`
+2. Check the saved markdown for remote media (`https://` image/video links); none → done, no prompt
+3. Otherwise ask (header "Media", question "Download N images/videos to local files?"): "Yes" — download to local directories / "No" — keep remote URLs
+4. Yes → rerun with `--download-media --output <same-path>` (overwrites markdown with localized links)
 
 ### Media Layout
 
-When `--download-media` is enabled:
-
-- Images → `imgs/` next to the output file (or `--media-dir`)
-- Videos → `videos/` next to the output file (or `--media-dir`)
-- Markdown media links are rewritten to local relative paths
+With `--download-media`: images → `imgs/`, videos → `videos/`, next to the output file (or under `--media-dir`); markdown links rewritten to local relative paths.
 
 ## Output Format
 
-Markdown to stdout (or file with `--output`).
-
-JSON output (`--format json`) returns structured data:
+Markdown to stdout (or `--output` file). `--format json` fields:
 
 - `adapter` — which adapter handled the URL
 - `status` — `"ok"` or `"needs_interaction"`

@@ -12,8 +12,6 @@ metadata:
 
 # URL to Markdown
 
-Fetches any URL via `baoyu-fetch` CLI (Chrome CDP + site-specific adapters) and converts it to clean markdown.
-
 ## User Input Tools
 
 When this skill prompts the user, follow this tool-selection rule (priority order):
@@ -26,18 +24,16 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## CLI Setup
 
-**Important**: The CLI source is vendored in `{baseDir}/scripts/lib`. `scripts/package.json` installs only third-party runtime dependencies.
+The CLI source is vendored in `{baseDir}/scripts/lib`; `scripts/package.json` installs only third-party runtime dependencies.
 
-**Agent Execution Instructions**:
-1. Determine this SKILL.md file's directory path as `{baseDir}`
-2. Resolve `${BUN}` runtime: if `bun` installed → `bun`; else suggest installing Bun
-3. If `{baseDir}/scripts/node_modules` does not exist, run `${BUN} install --cwd {baseDir}/scripts`
-4. `${READER}` = `{baseDir}/scripts/baoyu-fetch`
-5. Replace all `${READER}` in this document with the resolved value
+1. `{baseDir}` = this SKILL.md's directory
+2. `${BUN}` = `bun` if installed; otherwise suggest installing Bun
+3. If `{baseDir}/scripts/node_modules` is missing: `${BUN} install --cwd {baseDir}/scripts`
+4. `${READER}` = `{baseDir}/scripts/baoyu-fetch` (substitute everywhere below)
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+First one found wins:
 
 | Priority | Path | Scope |
 |----------|------|-------|
@@ -45,70 +41,23 @@ Check EXTEND.md in priority order — the first one found wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-url-to-markdown/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-url-to-markdown/EXTEND.md` | User home |
 
-| Result | Action |
-|--------|--------|
-| Found | Read, parse, apply settings |
-| Not found | **MUST** run first-time setup (see below) — do NOT silently create defaults |
+Found → read and apply. Not found → **BLOCKING** first-time setup: ask the questions in [references/config/first-time-setup.md](references/config/first-time-setup.md) (Media, Output, Save — all in one call) before any conversion, write EXTEND.md, confirm "Preferences saved to [path]", then continue. Never create EXTEND.md with silent defaults.
 
-**EXTEND.md supports**: download media by default, default output directory.
-
-### First-Time Setup ⛔ BLOCKING
-
-When EXTEND.md is not found, you **MUST** use `AskUserQuestion` to gather preferences before creating EXTEND.md. **NEVER** create EXTEND.md with silent defaults. Generation is BLOCKED until setup completes. Batch all three questions into a single call:
-
-- **Q1 — Media** (header "Media"): "How to handle images and videos in pages?"
-  - "Ask each time (Recommended)" — Prompt after each save
-  - "Always download" — Download to local `imgs/` and `videos/`
-  - "Never download" — Keep remote URLs
-- **Q2 — Output** (header "Output"): "Default output directory?"
-  - "url-to-markdown (Recommended)" — Save to `./url-to-markdown/{domain}/{slug}.md`
-  - User may pick "Other" and type a custom path
-- **Q3 — Save** (header "Save"): "Where to save preferences?"
-  - "User (Recommended)" — `~/.baoyu-skills/` (all projects)
-  - "Project" — `.baoyu-skills/` (this project only)
-
-After answers, write EXTEND.md, confirm "Preferences saved to [path]", then continue.
-
-Full template: [references/config/first-time-setup.md](references/config/first-time-setup.md).
-
-### Supported Keys
-
-| Key | Default | Values | Description |
+| Key | Default | Values | CLI mapping |
 |-----|---------|--------|-------------|
-| `download_media` | `ask` | `ask` / `1` / `0` | `ask` = prompt each time, `1` = always, `0` = never |
-| `default_output_dir` | empty | path or empty | Default output directory (empty = `./url-to-markdown/`) |
+| `download_media` | `ask` | `ask` (prompt each time) / `1` (always) / `0` (never) | `1` → `--download-media` (requires `--output`) |
+| `default_output_dir` | empty (= `./url-to-markdown/`) | path or empty | Agent builds `--output <dir>/{domain}/{slug}.md`; not a direct flag |
 
-**EXTEND.md → CLI mapping**:
-
-| EXTEND.md key | CLI argument | Notes |
-|---------------|-------------|-------|
-| `download_media: 1` | `--download-media` | Requires `--output` to be set |
-| `default_output_dir: ./posts/` | Agent constructs `--output ./posts/{domain}/{slug}.md` | Agent generates path, not a direct flag |
-
-**Value priority**: CLI arguments → EXTEND.md → skill defaults.
+Value priority: CLI arguments → EXTEND.md → skill defaults.
 
 ## Usage
 
 ```bash
-# Default: headless capture, markdown to stdout
-${READER} <url>
-
-# Save to file
-${READER} <url> --output article.md
-
-# Save with media download
-${READER} <url> --output article.md --download-media
-
-# Wait for interaction (login/CAPTCHA) — auto-detect and continue
-${READER} <url> --wait-for interaction --output article.md
-
-# Wait for interaction — manual control (Enter to continue)
-${READER} <url> --wait-for force --output article.md
-
-# JSON output
-${READER} <url> --format json --output article.json
-
-# Force specific adapter
+${READER} <url>                                          # headless, markdown to stdout
+${READER} <url> --output article.md --download-media     # save with local media
+${READER} <url> --wait-for interaction --output a.md     # login/CAPTCHA: auto-detect and continue
+${READER} <url> --wait-for force --output a.md           # manual: Enter to continue
+${READER} <url> --format json --output a.json
 ${READER} <url> --adapter youtube --output transcript.md
 ```
 
@@ -118,54 +67,51 @@ ${READER} <url> --adapter youtube --output transcript.md
 |--------|-------------|
 | `<url>` | URL to fetch |
 | `--output <path>` | Output file path (default: stdout) |
-| `--format <type>` | Output format: `markdown` (default) or `json` |
+| `--format <type>` | `markdown` (default) or `json` |
 | `--json` | Shorthand for `--format json` |
 | `--adapter <name>` | Force adapter: `x`, `youtube`, `hn`, or `generic` (default: auto-detect) |
-| `--headless` | Force headless Chrome (no visible window) |
-| `--wait-for <mode>` | Interaction wait mode: `none` (default), `interaction`, or `force` |
+| `--headless` | Force headless Chrome |
+| `--wait-for <mode>` | `none` (default), `interaction`, or `force` |
 | `--wait-for-interaction` | Alias for `--wait-for interaction` |
 | `--wait-for-login` | Alias for `--wait-for interaction` |
 | `--timeout <ms>` | Page load timeout (default: 30000) |
 | `--interaction-timeout <ms>` | Login/CAPTCHA wait timeout (default: 600000 = 10 min) |
-| `--interaction-poll-interval <ms>` | Poll interval for interaction checks (default: 1500) |
-| `--download-media` | Download images/videos to local `imgs/` and `videos/`, rewrite markdown links. Requires `--output` |
-| `--media-dir <dir>` | Base directory for downloaded media (default: same as `--output` directory) |
+| `--interaction-poll-interval <ms>` | Interaction poll interval (default: 1500) |
+| `--download-media` | Download images/videos to local `imgs/` and `videos/`, rewrite links. Requires `--output` |
+| `--media-dir <dir>` | Base directory for downloaded media (default: `--output` directory) |
 | `--cdp-url <url>` | Reuse existing Chrome DevTools Protocol endpoint |
 | `--browser-path <path>` | Custom Chrome/Chromium binary path |
 | `--chrome-profile-dir <path>` | Chrome user data directory (default: `BAOYU_CHROME_PROFILE_DIR` env or `./baoyu-skills/chrome-profile`) |
 | `--debug-dir <dir>` | Write debug artifacts (document.json, markdown.md, page.html, network.json) |
 
-## Agent Quality Gate
+## Quality Gate
 
-**CRITICAL**: treat default headless capture as provisional. Some sites render differently in headless mode and can silently return low-quality content without failing the CLI.
+Headless capture is provisional: some sites silently return low-quality content with exit code `0`. Inspect the saved markdown after every headless run, using [references/quality-gate.md](references/quality-gate.md) for the checklist, recovery steps, and capture modes.
 
-After every headless run, inspect the saved markdown. See [references/quality-gate.md](references/quality-gate.md) for the full checklist, recovery workflow, and capture-mode table. Read it whenever a run looks suspicious or the user asks about login/CAPTCHA handling.
+## Output Path
 
-## Output Path Generation
+`baoyu-fetch` does not generate paths; the agent builds one and passes it to `--output`:
 
-The agent must construct the output file path — `baoyu-fetch` does not auto-generate paths.
+1. Base dir: EXTEND.md `default_output_dir` or `./url-to-markdown/`
+2. Domain from URL (e.g., `example.com`)
+3. Slug from URL path or page title (kebab-case, 2-6 words)
+4. Path: `{base_dir}/{domain}/{slug}/{slug}.md` — one directory per URL so media stays isolated
+5. On conflict: `{slug}-YYYYMMDD-HHMMSS/{slug}-YYYYMMDD-HHMMSS.md`
 
-**Algorithm**:
-1. Determine base directory from EXTEND.md `default_output_dir` or default `./url-to-markdown/`
-2. Extract domain from URL (e.g., `example.com`)
-3. Generate slug from URL path or page title (kebab-case, 2-6 words)
-4. Construct: `{base_dir}/{domain}/{slug}/{slug}.md` — each URL gets its own directory so media files stay isolated
-5. Conflict resolution: append timestamp `{slug}-YYYYMMDD-HHMMSS/{slug}-YYYYMMDD-HHMMSS.md`
-
-Pass the constructed path to `--output`. Media files (`--download-media`) are saved into subdirectories next to the markdown file, keeping each URL's assets self-contained.
+Downloaded media goes into subdirectories next to the markdown file.
 
 ## Adapters & Media
 
-See [references/adapters.md](references/adapters.md) for the adapter catalog (X, YouTube, Hacker News, generic), per-adapter notes, the media download flow (`ask` / always / never), and the JSON output schema. Read it before answering adapter-specific questions or handling media prompts.
+[references/adapters.md](references/adapters.md): adapter catalog (X, YouTube, Hacker News, generic), media download flow (`ask` / always / never), JSON output schema. Read it for adapter-specific questions or media prompts.
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `BAOYU_CHROME_PROFILE_DIR` | Chrome user data directory (can also use `--chrome-profile-dir`) |
+| `BAOYU_CHROME_PROFILE_DIR` | Chrome user data directory (or `--chrome-profile-dir`) |
 
-**Troubleshooting**: Chrome not found → use `--browser-path`. Timeout → increase `--timeout`. Login/CAPTCHA → `--wait-for interaction`. Debug → `--debug-dir` to inspect captured HTML and network logs.
+**Troubleshooting**: Chrome not found → `--browser-path`. Timeout → raise `--timeout`. Login/CAPTCHA → `--wait-for interaction`. Debug → `--debug-dir` to inspect captured HTML and network logs.
 
 ## Extension Support
 
-Custom configurations via EXTEND.md. See **Preferences** section above for paths and supported keys.
+Custom configurations via EXTEND.md — see **Preferences** above.

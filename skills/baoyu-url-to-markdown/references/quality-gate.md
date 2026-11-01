@@ -1,34 +1,34 @@
 # Quality Gate & Recovery
 
-Headless Chrome can silently return low-quality content — layout shells, login walls, or framework payloads — without the CLI returning a non-zero exit code. Read this after every headless run so you can catch and recover from those cases.
+Headless Chrome can return layout shells, login walls, or framework payloads with exit code `0`.
 
-## Checks the Agent Must Run
+## Checks (after every headless run)
 
-1. Confirm the markdown title matches the target page, not a generic site shell
-2. Confirm the body contains the expected article/page content, not just navigation, footer, or a generic error
-3. Watch for obvious failure signs:
+1. Title matches the target page, not a generic site shell
+2. Body has the expected content, not just navigation, footer, or a generic error
+3. Failure signs:
    - `Application error`
    - `This page could not be found`
    - Login, signup, subscribe, or verification shells
    - Extremely short markdown for a page that should be long-form
    - Raw framework payloads or mostly boilerplate content
-4. Do NOT accept a run as successful just because the CLI exited `0`
+4. Exit `0` alone is not success
 
-**Tip**: run with `--format json` to get structured signals including `status`, `login.state`, and `interaction`. `"status": "needs_interaction"` means the page requires manual interaction.
+`--format json` exposes `status`, `login.state`, `interaction`; `"status": "needs_interaction"` means manual interaction is required.
 
 ## Recovery Workflow
 
-1. Start headless (default) unless there is already a clear reason to use interaction mode
-2. Review markdown quality immediately after the run
-3. If the content is low quality or indicates login/CAPTCHA:
+1. Start headless (default) unless there's a clear reason for interaction mode
+2. Review quality right after the run
+3. Low quality or login/CAPTCHA:
    - `--wait-for interaction` for auto-detected gates (login, CAPTCHA, Cloudflare)
    - `--wait-for force` when the page needs manual browsing, scroll loading, or complex interaction
-4. If `--wait-for` is used, tell the user exactly what to do:
+4. With `--wait-for`, tell the user exactly what to do:
    - Login required → sign in in the browser
    - CAPTCHA visible → solve it
    - Slow loading → wait until content is visible
    - `--wait-for force` → press Enter when ready
-5. If JSON output shows `"status": "needs_interaction"`, switch to `--wait-for interaction` automatically
+5. JSON `"status": "needs_interaction"` → switch to `--wait-for interaction` automatically
 
 ## Capture Modes
 
