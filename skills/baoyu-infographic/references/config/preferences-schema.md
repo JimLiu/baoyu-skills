@@ -38,41 +38,7 @@ custom_styles:            # extra style definitions merged with the 21 built-ins
 | `preferred_image_backend` | string | `auto` | Image backend selection. `auto` = prefer runtime-native tool, fall back to the only installed backend, ask if multiple non-native are present. `ask` = always confirm on every run. `<backend-id>` (e.g., `codex-imagegen`, `baoyu-image-gen`, `image_generate`) = pin this backend when available; fall back to `auto` when it isn't. Absent = `auto`. |
 | `custom_styles` | array | [] | Additional styles available alongside the 21 built-ins |
 
-Backend resolution logic is documented in the `## Image Generation Tools` section of `SKILL.md`. This doc only defines the field.
-
-All fields in this schema are defaults only — they shape Step-3 recommendations and Step-4 defaults but never bypass Step 4 confirmation (see the `## Confirmation Policy` section in SKILL.md).
-
-Example backend ids:
-
-| Value | Meaning |
-|-------|---------|
-| `codex-imagegen` | Codex built-in `imagegen` tool |
-| `baoyu-image-gen` | `baoyu-image-gen` skill / script backend |
-| `image_generate` | Generic runtime image tool such as Hermes |
-
-## Layout Options
-
-See the **Layout Gallery (21)** table in `SKILL.md` for the canonical list. Common picks:
-
-| Value | Best For |
-|-------|----------|
-| `bento-grid` | General default — overview, multiple topics |
-| `linear-progression` | Timelines, processes, tutorials |
-| `dense-modules` | High-density modules, data-rich guides |
-| `hub-spoke` | Central concept with related items |
-| `dashboard` | Metrics, KPIs |
-
-## Style Options
-
-See the **Style Gallery (21)** table in `SKILL.md` for the canonical list. Common picks:
-
-| Value | Description |
-|-------|-------------|
-| `craft-handmade` | Hand-drawn, paper craft (default) |
-| `corporate-memphis` | Flat vector, vibrant |
-| `morandi-journal` | Hand-drawn doodle, warm Morandi tones |
-| `pop-laboratory` | Blueprint grid, lab precision |
-| `retro-pop-grid` | 1970s retro pop art, Swiss grid |
+Backend resolution: `SKILL.md` `## Image Generation Tools`. All fields are defaults only — they shape Step-3 recommendations and Step-4 defaults but never bypass Step 4 confirmation. Layout and style values: the Layout / Style Gallery tables in `SKILL.md`.
 
 ## Aspect Options
 
