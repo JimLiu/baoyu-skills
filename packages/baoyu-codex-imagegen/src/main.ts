@@ -163,6 +163,7 @@ async function attemptGenerate(
     instruction,
     timeoutMs: opts.timeoutMs,
     refImages: opts.refImages,
+    onStart: ({ pid, rawLogPath }) => log.info("codex.spawned", { attempt, pid, raw_log: rawLogPath }),
   });
 
   await log.info("codex.completed", {

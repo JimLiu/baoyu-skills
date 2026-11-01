@@ -135,4 +135,26 @@ After`;
 
 After`);
   });
+
+  test("keeps escaped quotes after urls in frontmatter strings", () => {
+    const markdown = [
+      "---",
+      'title: "Andrew Ng on X: \\"New: https://t.co/VVkn1Dqp1N\\""',
+      'coverImage: "https://cdn.example.com/cover image.jpg"',
+      "---",
+      "",
+      "See https://t.co/VVkn1Dqp1N\\",
+    ].join("\n");
+
+    const normalized = normalizeMarkdownMediaLinks(markdown);
+    const frontmatter = normalized.split("\n---")[0]!.replace(/^---\n/, "");
+
+    expect(normalized).toContain('title: "Andrew Ng on X: \\"New: https://t.co/VVkn1Dqp1N\\""');
+    expect(normalized).toContain('coverImage: "https://cdn.example.com/cover%20image.jpg"');
+    expect(normalized).toContain("See https://t.co/VVkn1Dqp1N\\");
+    expect(Bun.YAML.parse(frontmatter)).toEqual({
+      title: 'Andrew Ng on X: "New: https://t.co/VVkn1Dqp1N"',
+      coverImage: "https://cdn.example.com/cover%20image.jpg",
+    });
+  });
 });

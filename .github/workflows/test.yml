@@ -23,6 +23,9 @@ jobs:
       - name: Verify skill release commits
         run: npm run verify:skill-release-commits
 
+      - name: Verify vendored baoyu-fetch runtime
+        run: bash scripts/sync-baoyu-fetch.sh --check
+
       - name: Install dependencies
         run: npm ci
 
