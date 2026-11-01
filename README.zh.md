@@ -210,14 +210,14 @@ npx skills add JimLiu/baoyu-design
 
 #### baoyu-infographic
 
-专业信息图生成器，支持 21 种布局和 21 种视觉风格。分析内容后推荐布局×风格组合，生成可发布的信息图。
+专业信息图生成器，支持 21 种布局和 22 种视觉风格。分析内容后推荐布局×风格组合，生成可发布的信息图。
 
 ```bash
 # 根据内容自动推荐组合
 /baoyu-infographic path/to/content.md
 
 # 指定布局
-/baoyu-infographic path/to/content.md --layout pyramid
+/baoyu-infographic path/to/content.md --layout hub-spoke
 
 # 指定风格（默认：craft-handmade）
 /baoyu-infographic path/to/content.md --style technical-schematic
@@ -233,37 +233,44 @@ npx skills add JimLiu/baoyu-design
 **选项**：
 | 选项 | 说明 |
 |------|------|
-| `--layout <name>` | 信息布局（20 种选项） |
-| `--style <name>` | 视觉风格（17 种选项，默认：craft-handmade） |
+| `--layout <name>` | 信息布局（21 种选项，默认：bento-grid） |
+| `--style <name>` | 视觉风格（22 种选项，默认：craft-handmade） |
 | `--aspect <ratio>` | 预设：landscape (16:9)、portrait (9:16)、square (1:1)。自定义：任意 W:H 比例（如 3:4、4:3、2.35:1） |
 | `--lang <code>` | 输出语言（en、zh、ja 等） |
+| `--no-confirm` | 跳过组合确认步骤，直接生成 |
+| `--ref <files...>` | 用于指导风格、配色、构图或主体的参考图片 |
 
 **布局**（信息结构）：
 
 | 布局 | 适用场景 |
 |------|----------|
-| `bridge` | 问题→解决方案、跨越鸿沟 |
+| `linear-progression` | 时间线、流程、教程 |
+| `binary-comparison` | A/B 对比、前后对比、利弊分析 |
+| `comparison-matrix` | 多因素对比 |
+| `hierarchical-layers` | 金字塔、优先级层次 |
+| `tree-branching` | 分类、层级树 |
+| `hub-spoke` | 中心概念及其关联项 |
+| `structural-breakdown` | 爆炸图、剖面结构 |
+| `bento-grid` | 多主题概览（默认） |
+| `iceberg` | 表面与隐藏层面 |
+| `bridge` | 问题与解决方案 |
+| `funnel` | 转化、筛选 |
+| `isometric-map` | 空间关系 |
+| `dashboard` | 指标、KPI |
+| `periodic-table` | 分类集合 |
+| `comic-strip` | 叙事、序列 |
+| `story-mountain` | 情节结构、张力曲线 |
+| `jigsaw` | 相互关联的组成部分 |
+| `venn-diagram` | 重叠概念 |
+| `winding-roadmap` | 旅程、里程碑 |
 | `circular-flow` | 循环、周期性流程 |
-| `comparison-table` | 多因素对比 |
-| `do-dont` | 正确 vs 错误做法 |
-| `equation` | 公式分解、输入→输出 |
-| `feature-list` | 产品功能、要点列表 |
-| `fishbone` | 根因分析、鱼骨图 |
-| `funnel` | 转化漏斗、筛选过程 |
-| `grid-cards` | 多主题概览、卡片网格 |
-| `iceberg` | 表面 vs 隐藏层面 |
-| `journey-path` | 用户旅程、里程碑 |
-| `layers-stack` | 技术栈、分层结构 |
-| `mind-map` | 头脑风暴、思维导图 |
-| `nested-circles` | 影响层级、范围圈 |
-| `priority-quadrants` | 四象限矩阵、优先级 |
-| `pyramid` | 层级金字塔、马斯洛需求 |
-| `scale-balance` | 利弊权衡、天平对比 |
-| `timeline-horizontal` | 历史、时间线事件 |
-| `tree-hierarchy` | 组织架构、分类树 |
-| `venn` | 重叠概念、韦恩图 |
+| `dense-modules` | 高密度模块、数据丰富的指南 |
 
-**布局预览**：
+**旧版布局预览**：
+
+> **说明：** 以下图片沿用旧版布局名称，仅作为视觉参考，不代表上方当前可用的 `--layout` 参数。
+>
+> **TODO：** 按当前 21 种布局重新生成对应预览并替换此图库。
 
 | | | |
 |:---:|:---:|:---:|
@@ -303,8 +310,13 @@ npx skills add JimLiu/baoyu-design
 | `ikea-manual` | 极简线条、组装说明风 |
 | `knolling` | 整齐平铺、俯视图 |
 | `lego-brick` | 乐高积木、童趣拼搭 |
+| `pop-laboratory` | 蓝图网格、坐标标记、实验室精密感 |
+| `morandi-journal` | 手绘涂鸦、温暖莫兰迪色调 |
+| `retro-pop-grid` | 1970 年代波普艺术、瑞士网格、粗描边 |
+| `hand-drawn-edu` | 马卡龙粉彩、手绘抖动线条、火柴人 |
+| `retro-popup-pop` | 复古弹窗拼贴、怀旧 UI、扁平波普色彩 |
 
-**风格预览**：
+**部分风格预览**：
 
 | | | |
 |:---:|:---:|:---:|
