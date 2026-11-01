@@ -5,42 +5,11 @@ description: First-time setup flow for baoyu-danger-x-to-markdown preferences
 
 # First-Time Setup
 
-## Overview
-
-When no EXTEND.md is found, guide user through preference setup.
-
-**BLOCKING OPERATION**: This setup MUST complete before ANY other workflow steps. Do NOT:
-- Start converting tweets or articles
-- Ask about URLs or output paths
-- Proceed to any conversion
-
-ONLY ask the questions in this setup flow, save EXTEND.md, then continue.
-
-## Setup Flow
-
-```
-No EXTEND.md found
-        |
-        v
-+---------------------+
-| AskUserQuestion     |
-| (all questions)     |
-+---------------------+
-        |
-        v
-+---------------------+
-| Create EXTEND.md    |
-+---------------------+
-        |
-        v
-    Continue conversion
-```
+**BLOCKING**: runs when no EXTEND.md is found and must finish before any conversion. Ask only these questions (don't start converting or ask about URLs/output paths), save EXTEND.md, then continue.
 
 ## Questions
 
-**Language**: Use user's input language or saved language preference.
-
-Use AskUserQuestion with ALL questions in ONE call:
+Use the user's input language (or saved language preference). Ask all questions in ONE call:
 
 ### Question 1: Download Media
 
@@ -66,7 +35,7 @@ options:
     description: "Save to ./x-to-markdown/{username}/{tweet-id}.md"
 ```
 
-Note: User will likely choose "Other" to type a custom path.
+User may choose "Other" to type a custom path.
 
 ### Question 3: Save Location
 
@@ -89,10 +58,7 @@ options:
 
 ## After Setup
 
-1. Create directory if needed
-2. Write EXTEND.md
-3. Confirm: "Preferences saved to [path]"
-4. Continue with conversion using saved preferences
+Create the directory if needed, write EXTEND.md, confirm "Preferences saved to [path]", continue the conversion.
 
 ## EXTEND.md Template
 
@@ -101,6 +67,4 @@ download_media: [ask/1/0]
 default_output_dir: [path or empty]
 ```
 
-## Modifying Preferences Later
-
-Users can edit EXTEND.md directly or delete it to trigger setup again.
+Users can edit EXTEND.md later, or delete it to rerun setup.
