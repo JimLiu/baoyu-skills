@@ -28,6 +28,8 @@ metadata:
 | [references/output-formats.md](references/output-formats.md) | 两版摘要的 Section 顺序、格式与内容规范、输出骨架、自检清单 | Round 2 动笔前 |
 | [references/profiles.md](references/profiles.md) | 画像文件格式、更新规则、隐私红线、回溯流程 | Step 3.7 / 8.5 / Step 9 |
 | [references/group-memory.md](references/group-memory.md) | 群级事实记忆的写入门槛、防注入、格式 | Step 8.6 |
+| [references/preferences.md](references/preferences.md) | EXTEND.md 支持的键、首次配置流程 | 解析/写入 EXTEND.md，或未找到 EXTEND.md 时 |
+| [references/bot-requests.md](references/bot-requests.md) | @bot 请求的提取、误触过滤、答复来源约束 | Step 3.9 有命中时 |
 
 ## User Input Tools
 
@@ -58,46 +60,7 @@ Check EXTEND.md in priority order — the first one found wins:
 | Found | Read, parse, apply. On first use in session, briefly remind: "Using preferences from [path]. Edit it to change defaults." |
 | Not found | **MUST** run first-time setup (BLOCKING) before generating any digest — do NOT silently use defaults. |
 
-### Supported keys
-
-EXTEND.md is plain text with `key: value` or `key=value` lines, `#` for comments, case-insensitive keys.
-
-| Key | Type | Default | Purpose |
-|-----|------|---------|---------|
-| `self_wxid` | string | (required) | The owning account's wxid. Messages whose `from_wxid` matches this are attributed to the user. |
-| `self_display` | string | (required) | Display name to substitute for the user's own messages in digest text. |
-| `default_version` | `normal` / `roast` / `both` | `normal` | Which version(s) to generate when the user doesn't say otherwise. |
-| `default_time_range` | string (e.g. `7d`, `24h`, `1d`) | (none) | Default range when the user omits time and there's no incremental anchor. |
-| `data_root` | path | `{project_root}/wechat` | Override where digest folders live. |
-| `bot_aliases` | comma-separated strings | `bot, 精华bot` | Names that trigger the 「@bot 答疑」 section. A message containing `@<alias>` (case-insensitive) is treated as a question/request aimed at the digest bot. Pick names that do NOT match any real group member or existing bot, to avoid ambiguity. |
-
-A starter template lives at [EXTEND.md.example](EXTEND.md.example).
-
-### First-Time Setup (BLOCKING)
-
-If no EXTEND.md is found, do NOT silently proceed.
-
-**Step A — Try to auto-discover `self_wxid` and `self_display` first.** Run (in order, stop at the first that succeeds):
-
-```bash
-# 1. If wx-cli exposes a whoami, use it
-wx whoami --json 2>/dev/null
-
-# 2. Otherwise, find self-sent messages in recent sessions
-wx sessions --json --limit 20 2>/dev/null
-```
-
-For option 2, scan the sessions for any private/group thread the user has sent into and read one of their own `from_wxid` / `from_nickname` pairs. If you can confidently pre-fill both values, use them as defaults in the question below; otherwise leave the fields blank for the user to fill in.
-
-**Step B — Confirm with one `AskUserQuestion` call (batched), pre-filling whatever auto-discovery found:**
-
-- `self_wxid` (e.g., `wxid_abc123`) — fall-back hint: the user can find it with `wx contacts --query "<own nickname>"`, or by inspecting any of their own sent messages in `wx sessions --json`
-- `self_display` (e.g., `宝玉`) — how they want their messages attributed
-- `default_version` — pick one of `normal` / `roast` / `both`
-- `data_root` — where digest folders live. Default: `{project_root}/wechat`. Enter a custom absolute path (e.g. `~/Documents/wechat-digests`) or leave blank for default.
-- Save location — pick one of project / XDG / home
-
-Write EXTEND.md to the chosen path. If the user provided a non-default `data_root`, include it as an uncommented line; otherwise omit it (the default applies automatically). Confirm "Preferences saved to [path]. Edit it any time to change defaults.", then continue with the digest workflow.
+Supported keys (`self_wxid`, `self_display`, `default_version`, `default_time_range`, `data_root`, `bot_aliases`) and the first-time setup flow are in [references/preferences.md](references/preferences.md) — read it when parsing or writing EXTEND.md, and before running first-time setup.
 
 ## Workflow
 
@@ -267,15 +230,7 @@ Some group members address the digest bot directly — e.g. `@bot 帮我把昨�
 
 **Trigger**: a message whose text contains `@<alias>` for any alias in `bot_aliases` (from EXTEND.md; default `bot`, `精华bot`; case-insensitive). Aliases are stored as bare names — match the `@` prefix plus the alias.
 
-**Extract** into an internal worklist `== @bot 请求清单 ==` (working memory only — never written to the final digest):
-
-- Asker's real name — after Step 3.6 resolution; substitute `self_display` for the `self_wxid` user.
-- Request body — the text after stripping the `@<alias>` prefix. If the message is a reply (per Step 3.5's quote/reply fields), include the quoted message as context.
-- Anchor `local_id` for back-reference.
-
-**Misfire filtering**: if a real member's nickname happens to equal an alias, judge by context. Keep only messages genuinely aimed at the digest bot (a question or request for it); skip clear person-to-person talk — a reply to that real person, or banter teasing them. (Choosing a `bot_aliases` value no real member uses avoids this at the source; the filter is a backstop.) Pure greetings/banter (`@bot 在吗`) may be kept with a brief reply.
-
-**Answer-source constraint** (honored when rendering the section per [references/output-formats.md](references/output-formats.md)): answer from the group chat context plus your own knowledge only — **no web access**. For any request needing real-time or external information you can't verify, say so honestly (`这个我查不到实时数据，需要联网确认`) rather than fabricating.
+**On any hit** → read [references/bot-requests.md](references/bot-requests.md) for how to extract each request into the `== @bot 请求清单 ==` worklist, filter misfires, and the answer-source constraint (no web access).
 
 **No hits** → both versions omit the @bot 答疑 section entirely.
 
@@ -456,16 +411,7 @@ If any item is unchecked, finish it before declaring success. Don't ship a diges
 
 ### Step 9: Backfill (user-triggered)
 
-When the user says "回溯画像" / "初始化画像" / "backfill profiles":
-
-1. Confirm the target group (if not specified, ask which one).
-2. List all digest files in `{folder}/` and `history-digests.jsonl`.
-3. Read existing digests in batches of 10–15 to avoid context blowup.
-4. For users appearing in 3+ digests, seed profile files using their leaderboard counts, portrait paragraphs, and quoted lines from the historical digests.
-5. Write to `profiles/` (and `profiles-roast/` if any `-roast.md` files exist).
-6. Report back: how many profiles were created, how many users covered.
-
-Full procedure in [references/profiles.md](references/profiles.md).
+When the user says "回溯画像" / "初始化画像" / "backfill profiles", follow the backfill procedure in [references/profiles.md](references/profiles.md) §4.
 
 ## Storage layout
 
