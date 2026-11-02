@@ -111,7 +111,7 @@ Without an explicit profile dir, cookie refresh may reuse an already-running loc
 | `GEMINI_WEB_COOKIE_PATH` | Cookie file path |
 | `GEMINI_WEB_CHROME_PROFILE_DIR` | Chrome profile directory |
 | `GEMINI_WEB_CHROME_PATH` | Chrome executable path |
-| `HTTP_PROXY`, `HTTPS_PROXY` | Proxy for Google access (set inline with command) |
+| `HTTP_PROXY`, `HTTPS_PROXY` | Proxy for Google access (bash: set inline with command; PowerShell: `$env:HTTPS_PROXY = '...'` before running) |
 
 ## Sessions
 

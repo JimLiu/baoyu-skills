@@ -1376,6 +1376,16 @@ This skill uses the Gemini Web API (reverse-engineered).
 HTTP_PROXY=http://127.0.0.1:7890 HTTPS_PROXY=http://127.0.0.1:7890 /baoyu-danger-gemini-web "Hello"
 ```
 
+On Windows PowerShell, inline assignment doesn't work. Set the variables in the session first, then start your agent from that same session:
+
+```powershell
+$env:HTTP_PROXY = 'http://127.0.0.1:7890'
+$env:HTTPS_PROXY = 'http://127.0.0.1:7890'
+# Start your agent from this PowerShell session, then run the skill inside it
+```
+
+These variables apply to the current PowerShell session and processes started from it. An agent that is already running must be restarted to pick them up.
+
 ### baoyu-danger-x-to-markdown
 
 This skill uses a reverse-engineered X (Twitter) API.
