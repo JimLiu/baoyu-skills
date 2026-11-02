@@ -81,7 +81,7 @@ Respond in the user's language across questions, progress, errors, and completio
 | `--style <name>` | Visual style (see Styles below) |
 | `--layout <name>` | Information layout (see Layouts below) |
 | `--palette <name>` | Color override: macaron / warm / neon |
-| `--preset <name>` | Style + layout + optional palette shorthand (see Presets below; per-preset prompt fragments in `references/style-presets.md`) |
+| `--preset <name>` | Style + layout + optional palette shorthand (see `references/style-presets.md`) |
 | `--ref <files...>` | Reference images applied to image 1 as the series anchor |
 | `--batch-size <n>` | Temporary generation batch size for this run. Default: `generation_batch_size` from EXTEND.md, otherwise 4. Clamp to 1-8. |
 | `--yes` | Non-interactive: skip all confirmations, use EXTEND.md or built-in defaults, auto-confirm recommended plan (Path A) |
@@ -148,60 +148,7 @@ Palette specs: `references/palettes/<palette>.md`.
 
 ## Presets (style + layout shortcuts)
 
-Quick-start combos, grouped by scenario. Use `--preset <name>` or recommend during Step 2.
-
-**Knowledge & Learning**:
-
-| Preset | Style | Layout | Best For |
-|--------|-------|--------|----------|
-| `knowledge-card` | notion | dense | 干货知识卡、概念科普 |
-| `checklist` | notion | list | 清单、排行榜 |
-| `concept-map` | notion | mindmap | 概念图、知识脉络 |
-| `swot` | notion | quadrant | SWOT 分析、四象限 |
-| `tutorial` | chalkboard | flow | 教程步骤、操作流程 |
-| `classroom` | chalkboard | balanced | 课堂笔记、知识讲解 |
-| `study-guide` | study-notes | dense | 学习笔记、考试重点 |
-| `hand-drawn-edu` | sketch-notes | flow | 手绘教程、流程图解 |
-| `sketch-card` | sketch-notes | dense | 手绘知识卡 |
-| `sketch-summary` | sketch-notes | balanced | 手绘总结、图文笔记 |
-
-**Lifestyle & Sharing**:
-
-| Preset | Style | Layout | Best For |
-|--------|-------|--------|----------|
-| `cute-share` | cute | balanced | 少女风分享、日常种草 |
-| `girly` | cute | sparse | 甜美封面、氛围感 |
-| `cozy-story` | warm | balanced | 生活故事、情感分享 |
-| `product-review` | fresh | comparison | 产品对比、测评 |
-| `nature-flow` | fresh | flow | 健康流程、自然主题 |
-
-**Impact & Opinion**:
-
-| Preset | Style | Layout | Best For |
-|--------|-------|--------|----------|
-| `warning` | bold | list | 避坑指南、重要提醒 |
-| `versus` | bold | comparison | 正反对比 |
-| `clean-quote` | minimal | sparse | 金句、极简封面 |
-| `pro-summary` | minimal | balanced | 专业总结、商务内容 |
-
-**Trend & Entertainment**:
-
-| Preset | Style | Layout | Best For |
-|--------|-------|--------|----------|
-| `retro-ranking` | retro | list | 复古排行、经典盘点 |
-| `throwback` | retro | balanced | 怀旧分享 |
-| `pop-facts` | pop | list | 趣味冷知识 |
-| `hype` | pop | sparse | 炸裂封面、惊叹分享 |
-
-**Poster & Editorial**:
-
-| Preset | Style | Layout | Best For |
-|--------|-------|--------|----------|
-| `poster` | screen-print | sparse | 海报风封面、影评书评 |
-| `editorial` | screen-print | balanced | 观点文章、文化评论 |
-| `cinematic` | screen-print | comparison | 电影对比、戏剧张力 |
-
-Full prompt-fragment definitions: `references/style-presets.md`.
+26 presets grouped by scenario (knowledge, lifestyle, impact, trend, poster). Read `references/style-presets.md` when the user passes `--preset` or when recommending a preset in Step 2.
 
 ## Auto-Selection
 
@@ -224,22 +171,7 @@ Match content signals to the best combo. First row whose keywords appear wins; f
 
 ## Style × Layout Matrix
 
-Compatibility scores (✓✓ highly recommended, ✓ works well, ✗ avoid). Use when the user picks a non-default combo and you want to flag a poor match.
-
-|              | sparse | balanced | dense | list | comparison | flow | mindmap | quadrant |
-|--------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| cute         | ✓✓ | ✓✓ | ✓  | ✓✓ | ✓  | ✓  | ✓  | ✓  |
-| fresh        | ✓✓ | ✓✓ | ✓  | ✓  | ✓  | ✓✓ | ✓  | ✓  |
-| warm         | ✓✓ | ✓✓ | ✓  | ✓  | ✓✓ | ✓  | ✓  | ✓  |
-| bold         | ✓✓ | ✓  | ✓  | ✓✓ | ✓✓ | ✓  | ✓  | ✓✓ |
-| minimal      | ✓✓ | ✓✓ | ✓✓ | ✓  | ✓  | ✓  | ✓  | ✓  |
-| retro        | ✓✓ | ✓✓ | ✓  | ✓✓ | ✓  | ✓  | ✓  | ✓  |
-| pop          | ✓✓ | ✓✓ | ✓  | ✓✓ | ✓✓ | ✓  | ✓  | ✓  |
-| notion       | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓✓ |
-| chalkboard   | ✓✓ | ✓✓ | ✓✓ | ✓✓ | ✓  | ✓✓ | ✓✓ | ✓  |
-| study-notes  | ✗  | ✓  | ✓✓ | ✓✓ | ✓  | ✓  | ✓✓ | ✓  |
-| screen-print | ✓✓ | ✓✓ | ✗  | ✓  | ✓✓ | ✓  | ✗  | ✓✓ |
-| sketch-notes | ✓  | ✓✓ | ✓✓ | ✓✓ | ✓  | ✓✓ | ✓✓ | ✓  |
+When the user picks a non-default style + layout combo, check `references/style-layout-matrix.md` and flag poor matches (✗).
 
 ## Outline Strategies
 
@@ -253,30 +185,7 @@ Three differentiated approaches — each produces a structurally different outli
 
 ## Reference Images
 
-User-supplied refs are **separate from** the internal "image-1 as anchor" chain (Step 3) — they layer on top of it.
-
-**Intake**: via `--ref <files...>` or paths pasted in conversation.
-- File path → copy to `refs/NN-ref-{slug}.{ext}`
-- Pasted with no path → ask for the path, or extract style traits as a text fallback
-
-**Usage modes** (per reference):
-
-| Usage | Effect |
-|-------|--------|
-| `direct` | Pass the file to the backend (typically on image 1 only, so the anchor propagates through the chain) |
-| `style` | Extract style traits and append to every card's prompt body |
-| `palette` | Extract hex colors and append to every card's prompt body |
-
-Record refs in each affected card's prompt frontmatter:
-
-```yaml
-references:
-  - ref_id: 01
-    filename: 01-ref-brand.png
-    usage: direct
-```
-
-At generation time: verify files exist. Image 1 with `usage: direct` + backend that accepts refs → pass via the backend's ref parameter (becomes the chain anchor). Images 2+ keep using image-1 as `--ref` per Step 3 — do NOT re-stack user refs on top (avoids conflicting signals). For `style`/`palette`, embed extracted traits in every prompt.
+Only when the user supplies refs (`--ref <files...>` or pasted paths): read `references/reference-images.md` for intake, usage modes (`direct` / `style` / `palette`), prompt frontmatter, and how refs combine with the image-1 anchor chain.
 
 ## File Layout
 
@@ -423,30 +332,21 @@ Images: N total
 | Content (middle) | Core value per image | `balanced` / `dense` / `list` / `comparison` / `flow` |
 | Ending (last) | CTA / summary | `sparse` or `balanced` |
 
-For the style × layout compatibility matrix, see the **Style × Layout Matrix** above.
+For the style × layout compatibility matrix, see `references/style-layout-matrix.md`.
 
 ## Image Modification
 
-| Action | How |
-|--------|-----|
-| Edit | Update `prompts/NN-{type}-{slug}.md` **first**, then regenerate with the same session ID |
-| Add | Specify position, create prompt, generate, renumber subsequent files `NN+1`, update outline |
-| Delete | Remove files, renumber subsequent `NN-1`, update outline |
-
-Always update the prompt file before regenerating — it's the source of truth and makes changes reproducible.
-
-Text correction policy:
-
-- If a card's title, body copy, tags, or any other rendered text is misspelled, garbled, hard to read, or visually weak, do not patch the bitmap with code.
-- For text-correction regenerations, write a new prompt file and a new output path so the flawed candidate is preserved for comparison.
-- Post-processing is limited to crop, resize, compression, or format conversion that does not alter text or the main composition.
+When the user asks to edit, add, delete, or fix text on a card after generation, read `references/image-modification.md` first. Always update the prompt file before regenerating, and never patch bitmap text with code.
 
 ## References
 
 | File | Content |
 |------|---------|
 | `references/confirmation.md` | Verbatim AskUserQuestion copy for every confirmation path |
-| `references/style-presets.md` | Full preset shortcut definitions |
+| `references/style-presets.md` | Full preset shortcut definitions, presets grouped by scenario |
+| `references/style-layout-matrix.md` | Style × layout compatibility scores |
+| `references/reference-images.md` | User-supplied reference image intake and usage |
+| `references/image-modification.md` | Edit / add / delete cards, text correction policy |
 | `references/presets/<style>.md` | Per-style element definitions |
 | `references/palettes/<name>.md` | Per-palette color definitions |
 | `references/elements/canvas.md` | Aspect ratios, safe zones, grid layouts |
