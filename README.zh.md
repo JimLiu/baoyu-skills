@@ -1377,6 +1377,16 @@ mkdir -p .baoyu-skills/baoyu-cover-image
 HTTP_PROXY=http://127.0.0.1:7890 HTTPS_PROXY=http://127.0.0.1:7890 /baoyu-danger-gemini-web "你好"
 ```
 
+Windows PowerShell 不支持上面这种内联写法，需要先在当前会话中设置环境变量，再从同一个会话启动 Agent：
+
+```powershell
+$env:HTTP_PROXY = 'http://127.0.0.1:7890'
+$env:HTTPS_PROXY = 'http://127.0.0.1:7890'
+# 在这个 PowerShell 会话中启动 Agent，然后在 Agent 内调用技能
+```
+
+这些设置只对当前 PowerShell 会话及之后从它启动的子进程生效；已经在运行的 Agent 需要重新启动才能读到新值。
+
 ### baoyu-danger-x-to-markdown
 
 此技能使用逆向工程的 X (Twitter) API。
