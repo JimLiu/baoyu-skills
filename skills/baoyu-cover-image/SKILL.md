@@ -65,7 +65,7 @@ Default: **confirm before generation**.
 | `--aspect <ratio>` | 16:9 (default), 2.35:1, 4:3, 3:2, 1:1, 3:4 |
 | `--lang <code>` | Title language (en, zh, ja, etc.) |
 | `--no-title` | Alias for `--text none` |
-| `--quick` | Skip confirmation, use auto-selection |
+| `--quick` | Skip confirmation (and first-time setup when no EXTEND.md), use auto-selection |
 | `--ref <files...>` | Reference images for style/composition guidance |
 
 ## Five Dimensions
@@ -104,7 +104,7 @@ Output directory per `default_output_dir` preference:
 
 ```
 Cover Image Progress:
-- [ ] Step 0: Check preferences (EXTEND.md) ⛔ BLOCKING
+- [ ] Step 0: Check preferences (EXTEND.md) ⛔ BLOCKING unless --quick
 - [ ] Step 1: Analyze content + save refs + determine output dir
 - [ ] Step 2: Confirm options (6 dimensions) ⚠️ unless --quick
 - [ ] Step 3: Create prompt
@@ -122,7 +122,9 @@ First match wins:
 | 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-cover-image/EXTEND.md` | XDG |
 | 3 | `$HOME/.baoyu-skills/baoyu-cover-image/EXTEND.md` | User home |
 
-Found → load, display summary. Not found → ⛔ run [first-time-setup](references/config/first-time-setup.md) and save, BEFORE any other step or question.
+- **Found** → load, display summary.
+- **Not found** → ⛔ run [first-time-setup](references/config/first-time-setup.md) and save, BEFORE any other step or question.
+- **Not found + current request opts out of confirmation** (`--quick` or equivalent wording per the [Confirmation Policy](#confirmation-policy)) → skip setup and use built-in defaults: no watermark, dimensions auto-selected, `default_output_dir: independent`, language from content. Do not prompt, do not create EXTEND.md. For a run with no one to answer (cron, CI), also pass `--aspect` so Step 2 asks nothing.
 
 ### Step 1: Analyze Content
 
