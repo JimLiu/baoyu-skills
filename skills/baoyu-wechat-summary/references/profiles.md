@@ -186,6 +186,17 @@ Run after the digest file(s) are written. Iterate over every user with 3+ messag
 
 ## 4. Step 9 — Backfill procedure
 
+Overview (moved from SKILL.md Step 9):
+
+1. Confirm the target group (if not specified, ask which one).
+2. List all digest files in `{folder}/` and `history-digests.jsonl`.
+3. Read existing digests in batches of 10–15 to avoid context blowup.
+4. For users appearing in 3+ digests, seed profile files using their leaderboard counts, portrait paragraphs, and quoted lines from the historical digests.
+5. Write to `profiles/` (and `profiles-roast/` if any `-roast.md` files exist).
+6. Report back: how many profiles were created, how many users covered.
+
+Detailed procedure:
+
 Triggered when the user says `回溯画像`, `初始化画像`, `backfill profiles`, or similar. This builds initial profiles from already-written digest files without re-fetching from wx-cli.
 
 1. **List inputs.**
