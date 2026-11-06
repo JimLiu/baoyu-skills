@@ -86,6 +86,40 @@ test("normalizeInlineCss removes quoted custom property values without leaving f
   assert.doesNotMatch(normalizedHtml, /--md-font-family/);
 });
 
+test("normalizeCssText resolves srgb hex color-mix with transparent to rgba", () => {
+  const css = [
+    "a { background: color-mix(in srgb, #009874 8%, transparent); }",
+    "b { background: color-mix(in srgb, #c33 35%, transparent); }",
+    "c { background: color-mix(in srgb, #000000 12.5%, transparent); }",
+    "d { background: color-mix(in srgb, #ffffff 150%, transparent); }",
+    "e { background: color-mix( in srgb , #0F4C81 10% , transparent ); }",
+    "f { background: color-mix(in srgb, var(--md-primary-color) 10%, transparent); }",
+  ].join("\n");
+
+  const normalized = normalizeCssText(css, DEFAULT_STYLE);
+  assert.match(normalized, /a \{ background: rgba\(0, 152, 116, 0\.08\); \}/);
+  assert.match(normalized, /b \{ background: rgba\(204, 51, 51, 0\.35\); \}/);
+  assert.match(normalized, /c \{ background: rgba\(0, 0, 0, 0\.125\); \}/);
+  assert.match(normalized, /d \{ background: rgba\(255, 255, 255, 1\); \}/);
+  assert.match(normalized, /e \{ background: rgba\(15, 76, 129, 0\.1\); \}/);
+  assert.match(normalized, /f \{ background: rgba\(15, 76, 129, 0\.1\); \}/);
+  assert.doesNotMatch(normalized, /color-mix\(/);
+});
+
+test("normalizeCssText leaves color-mix forms it cannot resolve untouched", () => {
+  const unchanged = [
+    "color-mix(in srgb, red 10%, transparent)",
+    "color-mix(in srgb, #009874 10%, white)",
+    "color-mix(in oklch, #009874 10%, transparent)",
+    "color-mix(in srgb, #009874cc 10%, transparent)",
+  ];
+
+  for (const value of unchanged) {
+    const css = `x { background: ${value}; }`;
+    assert.equal(normalizeCssText(css, DEFAULT_STYLE), css);
+  }
+});
+
 test("HTML structure helpers hoist nested lists and remove the first heading", () => {
   const nestedList = `<ul><li>Parent<ul><li>Child</li></ul></li></ul>`;
   assert.equal(

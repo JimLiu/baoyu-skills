@@ -201,3 +201,14 @@ test("renderMarkdownDocument sets primary h3 color and resolves color-mix to rgb
   assert.doesNotMatch(hrMatch![1]!, /color-mix\(/);
   assert.match(hrMatch![1]!, /rgba\(0, 152, 116, 0\.35\)/);
 });
+
+test("renderMarkdownDocument resolves color-mix to rgba in modern theme table headers", async () => {
+  const { html } = await renderMarkdownDocument(
+    `| A | B |\n| --- | --- |\n| 1 | 2 |`,
+    { keepTitle: true, theme: "modern", primaryColor: "#336699" },
+  );
+
+  const thStyle = findInlineStyle(html, "th", "A");
+  assert.match(thStyle, /background: rgba\(51, 102, 153, 0\.1\)/);
+  assert.doesNotMatch(thStyle, /color-mix\(/);
+});
