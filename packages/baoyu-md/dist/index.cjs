@@ -49664,8 +49664,23 @@ async function inlineCss(html2) {
     throw new Error(`Missing dependency "juice" for CSS inlining. Install it first (e.g. "bun add juice" or "npm add juice"). Original error: ${detail}`);
   }
 }
+function resolveSrgbTransparentColorMix(cssText) {
+  return cssText.replace(/color-mix\(\s*in\s+srgb\s*,\s*#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s+(\d+(?:\.\d+)?)%\s*,\s*transparent\s*\)/gi, (match, rawHex, rawPct) => {
+    const hex = rawHex.length === 3 ? rawHex.split("").map((ch) => ch + ch).join("") : rawHex;
+    const r = Number.parseInt(hex.slice(0, 2), 16);
+    const g = Number.parseInt(hex.slice(2, 4), 16);
+    const b = Number.parseInt(hex.slice(4, 6), 16);
+    const pct = Number.parseFloat(rawPct);
+    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b) || Number.isNaN(pct)) {
+      return match;
+    }
+    const alpha = Number((Math.min(100, Math.max(0, pct)) / 100).toFixed(4));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  });
+}
 function normalizeCssText(cssText, style = DEFAULT_STYLE) {
-  return cssText.replace(/var\(--md-primary-color\)/g, style.primaryColor).replace(/var\(--md-font-family\)/g, style.fontFamily).replace(/var\(--md-font-size\)/g, style.fontSize).replace(/var\(--blockquote-background\)/g, style.blockquoteBackground).replace(/var\(--md-accent-color\)/g, style.accentColor).replace(/var\(--md-container-bg\)/g, style.containerBg).replace(/hsl\(var\(--foreground\)\)/g, "#3f3f3f").replace(/--md-primary-color:\s*[^;]+;?/g, "").replace(/--md-font-family:\s*[^;]+;?/g, "").replace(/--md-font-size:\s*[^;]+;?/g, "").replace(/--blockquote-background:\s*[^;]+;?/g, "").replace(/--md-accent-color:\s*[^;]+;?/g, "").replace(/--md-container-bg:\s*[^;]+;?/g, "").replace(/--foreground:\s*[^;]+;?/g, "");
+  const substituted = cssText.replace(/var\(--md-primary-color\)/g, style.primaryColor).replace(/var\(--md-font-family\)/g, style.fontFamily).replace(/var\(--md-font-size\)/g, style.fontSize).replace(/var\(--blockquote-background\)/g, style.blockquoteBackground).replace(/var\(--md-accent-color\)/g, style.accentColor).replace(/var\(--md-container-bg\)/g, style.containerBg).replace(/hsl\(var\(--foreground\)\)/g, "#3f3f3f").replace(/--md-primary-color:\s*[^;]+;?/g, "").replace(/--md-font-family:\s*[^;]+;?/g, "").replace(/--md-font-size:\s*[^;]+;?/g, "").replace(/--blockquote-background:\s*[^;]+;?/g, "").replace(/--md-accent-color:\s*[^;]+;?/g, "").replace(/--md-container-bg:\s*[^;]+;?/g, "").replace(/--foreground:\s*[^;]+;?/g, "");
+  return resolveSrgbTransparentColorMix(substituted);
 }
 function normalizeInlineCss(html2, style = DEFAULT_STYLE) {
   let output = html2;

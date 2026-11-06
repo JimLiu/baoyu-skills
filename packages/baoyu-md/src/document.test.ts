@@ -155,7 +155,7 @@ keep_title: true
 
 test("renderMarkdownDocument layers default rules into grace theme before CSS inlining", async () => {
   const { html } = await renderMarkdownDocument(
-    `## Section\n\nParagraph with **bold** text.`,
+    `## Section\n\nParagraph with **bold** text.\n\n---`,
     { keepTitle: true, theme: "grace" },
   );
 
@@ -171,4 +171,33 @@ test("renderMarkdownDocument layers default rules into grace theme before CSS in
   const strongMatch = html.match(strongPattern);
   assert.ok(strongMatch, "Expected inline style for <strong>bold</strong>");
   assert.match(strongMatch![1]!, /font-weight:/);
+
+  const hrMatch = html.match(/<hr[^>]*style="([^"]*)"[^>]*>/);
+  assert.ok(hrMatch, "Expected inline style on <hr> tag");
+  assert.match(hrMatch![1]!, /-webkit-transform: none/);
+  assert.match(hrMatch![1]!, /transform: none/);
+  assert.doesNotMatch(hrMatch![1]!, /scale\(1,\s*0\.5\)/);
+  assert.doesNotMatch(hrMatch![1]!, /color-mix\(/);
+  assert.match(hrMatch![1]!, /rgba\(146, 97, 126, 0\.35\)/);
+});
+
+test("renderMarkdownDocument sets primary h3 color and resolves color-mix to rgba in simple theme for WeChat compatibility", async () => {
+  const { html } = await renderMarkdownDocument(
+    `### Subheading\n\n---\n\nParagraph`,
+    { keepTitle: true, theme: "simple" },
+  );
+
+  const h3Style = findInlineStyle(html, "h3", "Subheading");
+  assert.match(h3Style, /color: #009874/);
+  assert.doesNotMatch(h3Style, /color: #3f3f3f/);
+  assert.doesNotMatch(h3Style, /color-mix\(/);
+  assert.match(h3Style, /background: rgba\(0, 152, 116, 0\.08\)/);
+
+  const hrMatch = html.match(/<hr[^>]*style="([^"]*)"[^>]*>/);
+  assert.ok(hrMatch, "Expected inline style on <hr> tag");
+  assert.match(hrMatch![1]!, /-webkit-transform: none/);
+  assert.match(hrMatch![1]!, /transform: none/);
+  assert.doesNotMatch(hrMatch![1]!, /scale\(1,\s*0\.5\)/);
+  assert.doesNotMatch(hrMatch![1]!, /color-mix\(/);
+  assert.match(hrMatch![1]!, /rgba\(0, 152, 116, 0\.35\)/);
 });

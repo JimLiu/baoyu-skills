@@ -101,7 +101,9 @@ hr {
   height: 1px;
   border: none;
   margin: 2em 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+  background: linear-gradient(to right, rgba(0, 0, 0, 0), color-mix(in srgb, var(--md-primary-color) 35%, transparent), rgba(0, 0, 0, 0));
+  -webkit-transform: none;
+  transform: none;
 }
 
 /* ==================== 表格 ==================== */
