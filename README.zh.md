@@ -943,6 +943,12 @@ AI 驱动的生成后端。
 /baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
 ```
 
+> **文本通道备注：** 当逆向 API 通道不再返回文本（协议漂移）时，可用
+> `scripts/gemini-webui.ts` 作为备选：它通过 CDP 驱动真实的 gemini.google.com
+> 页面，仅支持文本生成。未登录时应用以匿名模式运行（每次调用都是新会话）；
+> 加 `--show-window` 运行一次完成登录后即可用 `--sessionId` 多轮续话。详见
+> [SKILL.md](skills/baoyu-danger-gemini-web/SKILL.md#text-generation-via-web-ui)。
+
 ### 工具技能 (Utility Skills)
 
 内容处理工具。
