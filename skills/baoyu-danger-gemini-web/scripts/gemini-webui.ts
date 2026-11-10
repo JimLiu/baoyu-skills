@@ -24,6 +24,7 @@
 // the app drops the thread (deleted chat, anonymous mode), the driver
 // proceeds on a fresh chat and re-maps the session id.
 import { spawnSync, type ChildProcess } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -146,13 +147,76 @@ function legacySessionMapFile(dataDir: string): string {
 }
 
 function sessionUrlFile(dataDir: string, id: string): string {
-  const safe = id.replace(/[^A-Za-z0-9._-]/g, '_');
-  return path.join(dataDir, 'webui-sessions', `${safe}.json`);
+  // Hash instead of sanitize: character replacement is not injective (`a/b`
+  // and `a?b` both collapse to `a_b`), and case-only ids collide on the
+  // case-insensitive filesystems of macOS and Windows. A hex digest maps
+  // every distinct id to its own file, so one session can never resume and
+  // then overwrite another's conversation URL.
+  const digest = createHash('sha256').update(id, 'utf8').digest('hex');
+  return path.join(dataDir, 'webui-sessions', `${digest}.json`);
+}
+
+function processExists(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Serialize invocations on the same Chrome profile: a second run would
+// otherwise discover and attach to the browser the first run spawned, and the
+// first run's cleanup kills that browser out from under it. Invocations queue
+// on a lock file; a crashed run leaves a stale pid that the next run detects
+// and breaks.
+async function acquireInvokeLock(file: string, timeoutMs: number): Promise<void> {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    let fd: number | undefined;
+    try {
+      fd = fs.openSync(file, 'wx', 0o600);
+      fs.writeFileSync(fd, String(process.pid));
+      fs.closeSync(fd);
+      return;
+    } catch {
+      if (fd !== undefined) {
+        try {
+          fs.closeSync(fd);
+        } catch {}
+      }
+      try {
+        const holderPid = Number(fs.readFileSync(file, 'utf8').trim());
+        if (Number.isInteger(holderPid) && holderPid > 0 && !processExists(holderPid)) {
+          fs.rmSync(file, { force: true });
+          continue;
+        }
+      } catch {}
+      if (Date.now() > deadline) {
+        throw new Error(
+          `Another gemini-webui invocation is holding ${file}. Wait for it to finish, or remove the stale lock file.`,
+        );
+      }
+      await sleep(250);
+    }
+  }
 }
 
 function loadSessionUrl(dataDir: string, id: string): string | undefined {
   try {
     const parsed = JSON.parse(fs.readFileSync(sessionUrlFile(dataDir, id), 'utf8')) as { url?: unknown };
+    if (typeof parsed?.url === 'string' && parsed.url) return parsed.url;
+  } catch {}
+  // Migration: per-session files were briefly written under a sanitized name
+  // before the digest encoding; read that file, but never trust it for saves.
+  try {
+    const legacyPerSession = path.join(
+      dataDir,
+      'webui-sessions',
+      `${id.replace(/[^A-Za-z0-9._-]/g, '_')}.json`,
+    );
+    const parsed = JSON.parse(fs.readFileSync(legacyPerSession, 'utf8')) as { url?: unknown };
     if (typeof parsed?.url === 'string' && parsed.url) return parsed.url;
   } catch {}
   // Migration: fall back to the pre-per-session shared map file.
@@ -230,9 +294,18 @@ async function main(): Promise<void> {
   const { sessionId } = args;
 
   // The profile is single-instance: if a Chrome for this profile is already
+  // running, spawning another would just hand off and exit. Serialize whole
+  // invocations on a lock file so a later run never attaches to a browser
+  // the earlier run will shut down when it finishes.
+  const lockFile = path.join(dataDir, 'webui-invoke.lock');
+  await acquireInvokeLock(lockFile, 10 * 60_000);
+  let lockHeld = true;
+
+  // The profile is single-instance: if a Chrome for this profile is already
   // running, spawning another would just hand off and exit. Reuse its port.
   let chrome: ChildProcess | null = null;
   let port = await findExistingChromeDebugPort({ profileDir });
+  const reusedBrowser = port !== null;
   if (port === null) {
     port = await getFreePort();
     const chromePath = findChromeExecutable({ candidates: CHROME_CANDIDATES, envNames: ['GEMINI_WEB_CHROME_PATH'] });
@@ -248,16 +321,23 @@ async function main(): Promise<void> {
       extraArgs.push('--disable-gpu', '--window-position=-32000,-32000', `--user-agent=${headlessUserAgent(chromePath)}`);
     }
     chrome = await launchChrome({ chromePath, profileDir, port, headless, extraArgs });
-    // A headless Chrome holding the signed-in profile must not leak on Ctrl-C.
-    const killChromeAndExit = (code: number) => {
-      try {
-        chrome?.kill('SIGKILL');
-      } catch {}
-      process.exit(code);
-    };
-    process.on('SIGINT', () => killChromeAndExit(130));
-    process.on('SIGTERM', () => killChromeAndExit(143));
   }
+
+  // A headless Chrome holding the signed-in profile must not leak on Ctrl-C —
+  // including when this run attached to an already-running browser (the
+  // spawned-browser branch above is skipped there, so install the handlers
+  // unconditionally and close our own tab on the way out).
+  let cleanupDone = false;
+  const killChromeAndExit = (code: number) => {
+    if (cleanupDone) return;
+    cleanupDone = true;
+    try {
+      chrome?.kill('SIGKILL');
+    } catch {}
+    process.exit(code);
+  };
+  process.on('SIGINT', () => killChromeAndExit(130));
+  process.on('SIGTERM', () => killChromeAndExit(143));
 
   let cdp: CdpConnection | null = null;
   let targetId: string | null = null;
@@ -415,6 +495,21 @@ async function main(): Promise<void> {
       throw new Error('Cannot read the conversation state (the page structure may have changed).');
     }
 
+    // A resumed conversation renders its history lazily; sampling the baseline
+    // while `<user-query>` nodes are still being inserted would make the
+    // turn-index below land on a historical turn and return an old answer.
+    // Wait until the count stops changing before submitting.
+    let settledTurns = userTurnsBefore;
+    const settleDeadline = Date.now() + 15_000;
+    while (Date.now() < settleDeadline) {
+      await sleep(1000);
+      const n = await countElements('user-query');
+      if (n < 0) continue;
+      if (n === settledTurns) break;
+      settledTurns = n;
+    }
+    const historyBaseline = settledTurns;
+
     let sent = false;
     const sendDeadline = Date.now() + 5000;
     while (Date.now() < sendDeadline && !sent) {
@@ -445,21 +540,20 @@ async function main(): Promise<void> {
     }
 
     const turnsDeadline = Date.now() + 30_000;
-    let userTurns = userTurnsBefore;
+    let userTurns = historyBaseline;
     while (Date.now() < turnsDeadline) {
       userTurns = await countElements('user-query');
-      if (userTurns > userTurnsBefore) break;
+      if (userTurns > historyBaseline) break;
       await sleep(1000);
     }
-    if (userTurns <= userTurnsBefore) {
+    if (userTurns <= historyBaseline) {
       throw new Error('Prompt was not submitted (no new turn appeared).');
     }
 
     // Our answer is the response paired with our turn: the Nth user-query
-    // pairs with the Nth model-response. Indexing (instead of diffing a
-    // baseline count sampled here) survives a fast reply whose element
-    // already exists before this point, and cannot be shifted by history
-    // elements still rendering in a resumed conversation.
+    // pairs with the Nth model-response. The baseline above was sampled only
+    // after history settled, so userTurns - 1 is our submitted turn's index —
+    // not a historical node that merely arrived during lazy rendering.
     const ourResponseIndex = userTurns - 1;
     const hardDeadline = Date.now() + args.timeout * 1000;
     let lastText = '';
@@ -514,16 +608,23 @@ async function main(): Promise<void> {
       console.log(lastText);
     }
   } finally {
-    if (cdp && !chrome && targetId) {
-      // Attached to an existing browser: close just the tab we opened, while
-      // the connection is still alive — after cdp.close() this send fails
-      // silently and the tab leaks into the user's running browser.
+    cleanupDone = true;
+    if (cdp && targetId) {
+      // Close just the tab we opened, while the connection is still alive —
+      // after cdp.close() this send fails silently and the tab leaks into
+      // the browser (ours or the user's running one).
       await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
     }
     if (cdp) cdp.close();
     if (chrome) {
       // We spawned this browser: shut it down so the profile is released.
       await gracefulKillChrome(chrome, port);
+    }
+    if (lockHeld) {
+      try {
+        fs.rmSync(lockFile, { force: true });
+      } catch {}
+      lockHeld = false;
     }
   }
 }
