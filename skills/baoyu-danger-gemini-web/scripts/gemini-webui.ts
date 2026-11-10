@@ -41,6 +41,7 @@ import {
   type PlatformCandidates,
 } from 'baoyu-chrome-cdp';
 import { resolveGeminiWebChromeProfileDir, resolveGeminiWebDataDir } from './gemini-webapi/utils/index.js';
+import { acquireProfileInvokeLock } from './profile-lock.js';
 
 const GEMINI_APP_URL = 'https://gemini.google.com/app';
 const EDITOR_SELECTOR = 'rich-textarea .ql-editor, div[contenteditable="true"]';
@@ -82,9 +83,14 @@ Options:
   --sessionId <id>          Resume the conversation stored under this id
   --timeout <sec>           Max seconds to wait for the answer (default: 480)
   --json                    Emit JSON (same "text" field as main.ts --json)
-  --show-window             Show the Chrome window (default: headless)
+  --show-window             Show the Chrome window (default: headless); on a
+                            signed-out profile this waits for you to sign in
   --profile-dir <path>      Chrome profile directory (same as main.ts)
   --help, -h                Show this help
+
+Environment:
+  GEMINI_WEBUI_ANONYMOUS=1  With --show-window on a signed-out profile, skip
+                            the sign-in wait and submit anonymously
 `;
 
 type CliArgs = {
@@ -154,53 +160,6 @@ function sessionUrlFile(dataDir: string, id: string): string {
   // then overwrite another's conversation URL.
   const digest = createHash('sha256').update(id, 'utf8').digest('hex');
   return path.join(dataDir, 'webui-sessions', `${digest}.json`);
-}
-
-function processExists(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Serialize invocations on the same Chrome profile: a second run would
-// otherwise discover and attach to the browser the first run spawned, and the
-// first run's cleanup kills that browser out from under it. Invocations queue
-// on a lock file; a crashed run leaves a stale pid that the next run detects
-// and breaks.
-async function acquireInvokeLock(file: string, timeoutMs: number): Promise<void> {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    let fd: number | undefined;
-    try {
-      fd = fs.openSync(file, 'wx', 0o600);
-      fs.writeFileSync(fd, String(process.pid));
-      fs.closeSync(fd);
-      return;
-    } catch {
-      if (fd !== undefined) {
-        try {
-          fs.closeSync(fd);
-        } catch {}
-      }
-      try {
-        const holderPid = Number(fs.readFileSync(file, 'utf8').trim());
-        if (Number.isInteger(holderPid) && holderPid > 0 && !processExists(holderPid)) {
-          fs.rmSync(file, { force: true });
-          continue;
-        }
-      } catch {}
-      if (Date.now() > deadline) {
-        throw new Error(
-          `Another gemini-webui invocation is holding ${file}. Wait for it to finish, or remove the stale lock file.`,
-        );
-      }
-      await sleep(250);
-    }
-  }
 }
 
 function loadSessionUrl(dataDir: string, id: string): string | undefined {
@@ -295,10 +254,11 @@ async function main(): Promise<void> {
 
   // The profile is single-instance: if a Chrome for this profile is already
   // running, spawning another would just hand off and exit. Serialize whole
-  // invocations on a lock file so a later run never attaches to a browser
-  // the earlier run will shut down when it finishes.
-  const lockFile = path.join(dataDir, 'webui-invoke.lock');
-  await acquireInvokeLock(lockFile, 10 * 60_000);
+  // invocations on a profile-keyed lock (in the shared temp dir, so every
+  // user of this profile — including main.ts's cookie refresh — queues on
+  // the same file) so a later run never attaches to a browser the earlier
+  // run will shut down when it finishes.
+  const releaseProfileLock = await acquireProfileInvokeLock(profileDir, 10 * 60_000);
   let lockHeld = true;
 
   // The profile is single-instance: if a Chrome for this profile is already
@@ -388,6 +348,13 @@ async function main(): Promise<void> {
     const composerReady = async (): Promise<boolean> =>
       Boolean(await evalJs(`!!document.querySelector('${EDITOR_SELECTOR}')`).catch(() => false));
 
+    // The signed-out page renders a "Sign in" button that links to Google's
+    // account domain; a signed-in page shows the account avatar instead.
+    const signInLinkPresent = async (): Promise<boolean> =>
+      Boolean(
+        await evalJs(`!!document.querySelector('a[href^="https://accounts.google.com/"]')`).catch(() => false),
+      );
+
     const waitComposer = async (): Promise<void> => {
       // With --show-window the user may be signing in right now (that is the
       // documented recovery for a signed-out profile): give the login flow
@@ -414,6 +381,43 @@ async function main(): Promise<void> {
     };
 
     await waitComposer();
+
+    // A signed-out profile still renders a composer (anonymous mode), so
+    // everything above can pass with no Google session at all — including
+    // under --show-window, which is the documented one-time sign-in path.
+    // Before typing, give that path its moment: pause until the visitor
+    // signs in (link disappears) so the session persists. Anonymous
+    // submission stays available everywhere: headless runs continue with a
+    // warning, and GEMINI_WEBUI_ANONYMOUS=1 skips the pause in shown windows.
+    if (await signInLinkPresent()) {
+      const anonymousOptOut = /^1|true$/i.test(process.env.GEMINI_WEBUI_ANONYMOUS?.trim() ?? '');
+      if (args.showWindow && !anonymousOptOut) {
+        console.error(
+          'Signed-out profile: sign in to your Google account in the opened window to persist the session (waiting up to 5 minutes). Set GEMINI_WEBUI_ANONYMOUS=1 to submit anonymously instead.',
+        );
+        const signInDeadline = Date.now() + 300_000;
+        let signedIn = false;
+        while (Date.now() < signInDeadline) {
+          if (!(await signInLinkPresent())) {
+            signedIn = true;
+            break;
+          }
+          await sleep(2000);
+        }
+        if (!signedIn) {
+          console.error('Still signed out; continuing anonymously for this run.');
+        }
+        // After a sign-in the app navigates; let the fresh page settle
+        // before typing into it.
+        if (signedIn) await sleep(2000);
+      } else {
+        console.error(
+          args.showWindow
+            ? 'GEMINI_WEBUI_ANONYMOUS is set; submitting anonymously without waiting for sign-in.'
+            : 'Profile is not signed in; submitting anonymously. Run once with --show-window and sign in to persist the session.',
+        );
+      }
+    }
 
     // Resumed conversations: confirm the app is still on the saved thread and
     // give its history time to bind before typing. A redirect to the bare
@@ -621,9 +625,7 @@ async function main(): Promise<void> {
       await gracefulKillChrome(chrome, port);
     }
     if (lockHeld) {
-      try {
-        fs.rmSync(lockFile, { force: true });
-      } catch {}
+      releaseProfileLock();
       lockHeld = false;
     }
   }
