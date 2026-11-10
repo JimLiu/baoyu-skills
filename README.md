@@ -942,6 +942,13 @@ Interacts with Gemini Web to generate text and images.
 /baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
 ```
 
+> **Text channel note:** if the reverse-engineered API stops returning text (protocol
+> drift), `scripts/gemini-webui.ts` offers a fallback: it drives the real
+> gemini.google.com page over CDP and is text-only. Without a signed-in profile the
+> app runs anonymously (each call starts a new conversation); run once with
+> `--show-window` to sign in and enable multi-turn `--sessionId`. See
+> [SKILL.md](skills/baoyu-danger-gemini-web/SKILL.md#text-generation-via-web-ui).
+
 ### Utility Skills
 
 Utility tools for content processing.

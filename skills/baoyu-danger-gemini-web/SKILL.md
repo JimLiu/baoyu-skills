@@ -30,6 +30,7 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 | Script | Purpose |
 |--------|---------|
 | `scripts/main.ts` | CLI entry point for text/image generation |
+| `scripts/gemini-webui.ts` | Text generation via the real gemini.google.com page (CDP; no image input/output) |
 | `scripts/gemini-webapi/*` | TypeScript port of `gemini_webapi` (GeminiClient, types, utils) |
 
 ## Consent Check (REQUIRED)
@@ -96,6 +97,19 @@ ${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 | `gemini-3-flash` | Fast, lightweight 3.0 Flash |
 | `gemini-3-flash-thinking` | 3.0 Flash with thinking |
 | `gemini-3.1-pro-preview` | 3.1 Pro preview (empty header, auto-routed) |
+
+## Text Generation via Web UI
+
+The reverse-engineered API channel can break when Google changes its protocol (it did in Oct 2026). For TEXT generation, `scripts/gemini-webui.ts` drives the real gemini.google.com page over CDP instead, so it keeps working across protocol changes. It is text-only: no `--model` (uses whatever model the web page has selected — the account default when signed in), no `--image`, no `--reference`. It shares the same Chrome profile, consent gate and environment variables as the API channel — see **Consent Check** and **Authentication** above.
+
+```bash
+${BUN_X} {baseDir}/scripts/gemini-webui.ts --promptfiles prompt.md                          # text via the real page
+${BUN_X} {baseDir}/scripts/gemini-webui.ts --promptfiles a.md b.md --json                   # multi-file prompt, JSON output (same "text" field as main.ts --json)
+echo "prompt" | ${BUN_X} {baseDir}/scripts/gemini-webui.ts                                  # stdin also accepted
+${BUN_X} {baseDir}/scripts/gemini-webui.ts --promptfiles followup.md --sessionId task-1     # multi-turn (requires signed-in profile)
+```
+
+Headless by default — the `HeadlessChrome` UA token is bot-detected on gemini.google.com, so the driver presents the browser's own standard UA instead. Pass `--show-window` to log in to your Google account or to debug. Without a signed-in profile the app runs anonymously: chats work but are not saved, so each call starts a new conversation and `--sessionId` only records the chat URL. Very long answers may truncate; if so, re-run with a "continue" instruction.
 
 ## Authentication
 
