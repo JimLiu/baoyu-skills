@@ -136,27 +136,54 @@ function parseArgs(): CliArgs {
   return out;
 }
 
-// ---------- session map (conversation URL per --sessionId) ----------
+// ---------- session store (conversation URL per --sessionId) ----------
+// One file per session id: concurrent invocations with different ids cannot
+// clobber each other the way a single shared JSON map would (read-modify-
+// write races silently drop the other run's URL).
 
-function loadSessionMap(file: string): Record<string, string> {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as unknown;
-    return parsed && typeof parsed === 'object' ? (parsed as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
+function legacySessionMapFile(dataDir: string): string {
+  return path.join(dataDir, 'webui-sessions.json');
 }
 
-function writeSessionMap(file: string, map: Record<string, string>): void {
+function sessionUrlFile(dataDir: string, id: string): string {
+  const safe = id.replace(/[^A-Za-z0-9._-]/g, '_');
+  return path.join(dataDir, 'webui-sessions', `${safe}.json`);
+}
+
+function loadSessionUrl(dataDir: string, id: string): string | undefined {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(sessionUrlFile(dataDir, id), 'utf8')) as { url?: unknown };
+    if (typeof parsed?.url === 'string' && parsed.url) return parsed.url;
+  } catch {}
+  // Migration: fall back to the pre-per-session shared map file.
+  try {
+    const map = JSON.parse(fs.readFileSync(legacySessionMapFile(dataDir), 'utf8')) as Record<string, unknown>;
+    const url = map[id];
+    if (typeof url === 'string' && url) return url;
+  } catch {}
+  return undefined;
+}
+
+function saveSessionUrl(dataDir: string, id: string, url: string): void {
+  const file = sessionUrlFile(dataDir, id);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(map, null, 2), { mode: 0o600 });
+  fs.writeFileSync(tmp, JSON.stringify({ url }, null, 2), { mode: 0o600 });
   fs.chmodSync(tmp, 0o600);
   fs.renameSync(tmp, file);
 }
 
-function saveSessionMap(file: string, update: Record<string, string>): void {
-  writeSessionMap(file, { ...loadSessionMap(file), ...update });
+function deleteSessionUrl(dataDir: string, id: string): void {
+  fs.rmSync(sessionUrlFile(dataDir, id), { force: true });
+  // Best-effort scrub of the legacy shared map (migration window only).
+  try {
+    const file = legacySessionMapFile(dataDir);
+    const map = JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>;
+    if (id in map) {
+      delete map[id];
+      fs.writeFileSync(file, JSON.stringify(map, null, 2));
+    }
+  } catch {}
 }
 
 // ---------- headless user agent ----------
@@ -199,7 +226,8 @@ async function main(): Promise<void> {
   }
 
   const profileDir = resolveGeminiWebChromeProfileDir();
-  const sessionMapFile = path.join(resolveGeminiWebDataDir(), 'webui-sessions.json');
+  const dataDir = resolveGeminiWebDataDir();
+  const { sessionId } = args;
 
   // The profile is single-instance: if a Chrome for this profile is already
   // running, spawning another would just hand off and exit. Reuse its port.
@@ -250,8 +278,7 @@ async function main(): Promise<void> {
     ]);
     cdp = await CdpConnection.connect(wsUrl, 15_000, { defaultTimeoutMs: 60_000 });
 
-    const sessionMap = loadSessionMap(sessionMapFile);
-    const resumedUrl = args.sessionId ? sessionMap[args.sessionId] : undefined;
+    const resumedUrl = sessionId ? loadSessionUrl(dataDir, sessionId) : undefined;
 
     // Always open a fresh tab on the target URL (reusing: true), so a shared
     // browser never has a tab fight over the active conversation.
@@ -282,14 +309,24 @@ async function main(): Promise<void> {
       Boolean(await evalJs(`!!document.querySelector('${EDITOR_SELECTOR}')`).catch(() => false));
 
     const waitComposer = async (): Promise<void> => {
-      const deadline = Date.now() + 60_000;
+      // With --show-window the user may be signing in right now (that is the
+      // documented recovery for a signed-out profile): give the login flow
+      // time instead of tearing the window down while they type credentials.
+      const deadline = Date.now() + (args.showWindow ? 300_000 : 60_000);
+      let hintShown = false;
       while (Date.now() < deadline) {
         if (await composerReady()) return;
         const loc = String((await evalJs('location.href').catch(() => '')) ?? '');
         if (loc.includes('accounts.google') || loc.includes('ServiceLogin')) {
-          throw new Error(
-            'NEED_LOGIN: not signed in. Run once with --show-window and sign in to your Google account in the window that opens.',
-          );
+          if (!args.showWindow) {
+            throw new Error(
+              'NEED_LOGIN: not signed in. Run once with --show-window and sign in to your Google account in the window that opens.',
+            );
+          }
+          if (!hintShown) {
+            console.error('Waiting for sign-in: complete the Google login in the opened window (up to 5 minutes).');
+            hintShown = true;
+          }
         }
         await sleep(1500);
       }
@@ -322,9 +359,7 @@ async function main(): Promise<void> {
         // Stale conversation (deleted or redirected): drop the mapping and
         // continue on the fresh chat we are now on; the mapping re-saves with
         // the new URL after this run answers.
-        const map = loadSessionMap(sessionMapFile);
-        if (args.sessionId) delete map[args.sessionId];
-        writeSessionMap(sessionMapFile, map);
+        if (sessionId) deleteSessionUrl(dataDir, sessionId);
       }
     }
 
@@ -420,7 +455,12 @@ async function main(): Promise<void> {
       throw new Error('Prompt was not submitted (no new turn appeared).');
     }
 
-    const responsesBefore = await countElements('model-response');
+    // Our answer is the response paired with our turn: the Nth user-query
+    // pairs with the Nth model-response. Indexing (instead of diffing a
+    // baseline count sampled here) survives a fast reply whose element
+    // already exists before this point, and cannot be shifted by history
+    // elements still rendering in a resumed conversation.
+    const ourResponseIndex = userTurns - 1;
     const hardDeadline = Date.now() + args.timeout * 1000;
     let lastText = '';
     let stableCount = 0;
@@ -429,8 +469,8 @@ async function main(): Promise<void> {
       const state = await evalJs(`
         (() => {
           const all = document.querySelectorAll('model-response');
-          if (all.length <= ${responsesBefore}) return JSON.stringify({ n: all.length });
-          const t = all[all.length - 1].innerText || '';
+          if (all.length <= ${ourResponseIndex}) return JSON.stringify({ n: all.length });
+          const t = all[${ourResponseIndex}].innerText || '';
           return JSON.stringify({ n: all.length, t });
         })()
       `).catch(() => undefined);
@@ -453,10 +493,10 @@ async function main(): Promise<void> {
     }
 
     // Persist the conversation URL for multi-turn continuation.
-    if (args.sessionId) {
+    if (sessionId) {
       const loc = String((await evalJs('location.href').catch(() => '')) ?? '');
       if (/gemini\.google\.com\/app\/[0-9a-f]/.test(loc)) {
-        saveSessionMap(sessionMapFile, { [args.sessionId]: loc });
+        saveSessionUrl(dataDir, sessionId, loc);
       }
     }
 
@@ -474,13 +514,16 @@ async function main(): Promise<void> {
       console.log(lastText);
     }
   } finally {
+    if (cdp && !chrome && targetId) {
+      // Attached to an existing browser: close just the tab we opened, while
+      // the connection is still alive — after cdp.close() this send fails
+      // silently and the tab leaks into the user's running browser.
+      await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
+    }
     if (cdp) cdp.close();
     if (chrome) {
       // We spawned this browser: shut it down so the profile is released.
       await gracefulKillChrome(chrome, port);
-    } else if (cdp && targetId) {
-      // Attached to an existing browser: just close the tab we opened.
-      await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
     }
   }
 }
