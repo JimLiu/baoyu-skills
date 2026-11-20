@@ -1207,6 +1207,29 @@ AI 驱动的生成后端。
 - 正常版和毒舌版两种风格
 - 支持从历史摘要回溯初始化画像
 
+#### baoyu-podcast-summary
+
+把播客、访谈、圆桌对话写成一篇客观的总结，按你偏好的语言输出。不按节目顺序逐段复述，开头就点出最值得带走的两三件事，每个观点都写明是嘉宾还是主持人说的，不加作者自己的看法。
+
+```bash
+# YouTube 链接（通过 baoyu-youtube-transcript 获取转录稿）
+/baoyu-podcast-summary https://www.youtube.com/watch?v=VIDEO_ID
+
+# 转录稿文件
+/baoyu-podcast-summary transcript.md
+
+# 指定重点、读者或输出语言
+/baoyu-podcast-summary transcript.md 重点讲他们怎么改代码审查
+```
+
+**特性**：
+- 支持粘贴的转录稿、转录稿文件和 YouTube 链接
+- 转录稿没有标注说话人时，根据上下文推断嘉宾名字和每句话是谁说的
+- 联网核实人物、公司、产品，补上读者需要的背景
+- 输出语言可在请求里指定、在 EXTEND.md 里设置，默认跟随你对话用的语言
+- 有自己的 writing-style 技能或风格指南时按它来写（可选）
+- 给行外读者解释术语，可用 `audience` 指定读者
+
 #### baoyu-electron-extract
 
 从任意已安装的 Electron 应用的 `app.asar` 中提取资源和 JavaScript。当 `.js.map` 内嵌 `sourcesContent` 时，还原原始源码树（含 TypeScript/JSX）；否则用 Prettier 原地美化压缩后的 JS/CSS。始终跳过 `node_modules`。支持 macOS 和 Windows，其他平台请用 `--asar <path>` 指定 asar 文件。

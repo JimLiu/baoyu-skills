@@ -1206,6 +1206,29 @@ Summarize WeChat group chat highlights into a structured digest. Extracts topics
 - Normal and roast (毒舌) digest versions
 - Profile backfill from historical digests
 
+#### baoyu-podcast-summary
+
+Summarize a podcast, interview, or panel into an objective, reader-first summary in your preferred language. Leads with the two or three takeaways worth keeping instead of walking through the episode in order, attributes every point to the guest or host who made it, and adds no opinions of its own.
+
+```bash
+# YouTube link (transcript fetched via baoyu-youtube-transcript)
+/baoyu-podcast-summary https://www.youtube.com/watch?v=VIDEO_ID
+
+# Transcript file
+/baoyu-podcast-summary transcript.md
+
+# Name a focus, reader, or output language
+/baoyu-podcast-summary transcript.md focus on how they changed code review, in English
+```
+
+**Features**:
+- Accepts a pasted transcript, a transcript file, or a YouTube URL
+- Infers speaker names and who said what when the transcript has no labels
+- Verifies people, companies, and products with web search and supplies the background readers need
+- Writes in your language: named in the request, set in EXTEND.md, or the language you are chatting in
+- Follows your own writing-style skill or style guide when you have one (optional)
+- Explains jargon for readers outside the field; optional `audience` preference
+
 #### baoyu-electron-extract
 
 Extract resources and JavaScript from any installed Electron app's `app.asar`. When `.js.map` files embed `sourcesContent`, restores the original source tree (TypeScript/JSX included); otherwise formats the minified JS/CSS with Prettier in place. Always skips `node_modules`. Works on macOS and Windows; pass `--asar <path>` on other platforms.
