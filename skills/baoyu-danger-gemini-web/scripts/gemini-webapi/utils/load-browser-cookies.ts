@@ -19,6 +19,7 @@ import { logger } from './logger.js';
 import { cookie_header, fetch_with_timeout } from './http.js';
 import { read_cookie_file, type CookieMap, write_cookie_file } from './cookie-file.js';
 import { resolveGeminiWebChromeProfileDir, resolveGeminiWebCookiePath } from './paths.js';
+import { acquireProfileInvokeLock } from '../../profile-lock.js';
 
 const GEMINI_APP_URL = 'https://gemini.google.com/app';
 
@@ -184,6 +185,11 @@ async function fetch_google_cookies_via_cdp(
   timeoutMs: number,
   verbose: boolean,
 ): Promise<CookieMap> {
+  // Serialize with every other user of this profile (gemini-webui runs and
+  // concurrent main.ts invocations): we spawn or attach to the single-instance
+  // Chrome below and shut it down at the end, and an overlapping invocation
+  // would otherwise attach to a browser we are about to kill.
+  const release_profile_lock = await acquireProfileInvokeLock(profileDir, 10 * 60_000);
   const existingPort = await find_existing_chrome_debug_port(profileDir);
   const reusing = existingPort !== null;
   const port = existingPort ?? await get_free_port();
@@ -246,6 +252,8 @@ async function fetch_google_cookies_via_cdp(
     }
 
     if (chrome) await gracefulKillChrome(chrome, port);
+
+    release_profile_lock();
   }
 }
 

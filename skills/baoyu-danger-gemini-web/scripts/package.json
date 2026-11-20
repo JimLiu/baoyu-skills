@@ -4,5 +4,8 @@
   "type": "module",
   "dependencies": {
     "baoyu-chrome-cdp": "^0.1.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4"
   }
 }
