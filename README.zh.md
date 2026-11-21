@@ -1,6 +1,6 @@
 # baoyu-skills
 
-[English](./README.md) | 中文
+[English](./README.md) | 中文 | [日本語](./README.ja.md)
 
 宝玉分享的 AI Agent 技能集（适用于 Claude Code、Codex 等），提升日常工作效率。
 
