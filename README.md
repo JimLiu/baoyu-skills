@@ -1,6 +1,6 @@
 # baoyu-skills
 
-English | [中文](./README.zh.md)
+English | [中文](./README.zh.md) | [日本語](./README.ja.md)
 
 Skills shared by Baoyu for improving daily work efficiency with AI Agents (Claude Code, Codex, etc.).
 
