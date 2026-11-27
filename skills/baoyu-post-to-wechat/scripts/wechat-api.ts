@@ -14,7 +14,7 @@ import {
   prepareWechatBodyImageUpload,
   needsWechatBodyImageProcessing,
 } from "./wechat-image-processor.ts";
-import { loadUploadAsset } from "./wechat-image-loader.ts";
+import { getTagAttribute, loadUploadAsset } from "./wechat-image-loader.ts";
 import { wechatHttp, buildMultipart, type WechatClient } from "./wechat-http.ts";
 import {
   type RemotePublishConfig,
@@ -252,7 +252,8 @@ async function uploadImagesInHtml(
   const uploadedBySource = new Map<string, UploadResponse>();
 
   for (const match of matches) {
-    const [fullTag, src] = match;
+    const [fullTag] = match;
+    const src = getTagAttribute(fullTag, "src");
     if (!src) continue;
 
     if (src.startsWith("https://mmbiz.qpic.cn")) {
@@ -267,8 +268,7 @@ async function uploadImagesInHtml(
       continue;
     }
 
-    const localPathMatch = fullTag.match(/data-local-path=["']([^"']+)["']/);
-    const imagePath = localPathMatch ? localPathMatch[1]! : src;
+    const imagePath = getTagAttribute(fullTag, "data-local-path") || src;
 
     console.error(`[wechat-api] Uploading body image: ${imagePath}`);
     try {
@@ -278,8 +278,8 @@ async function uploadImagesInHtml(
         uploadedBySource.set(imagePath, resp);
       }
       const newTag = fullTag
-        .replace(/\ssrc=["'][^"']+["']/, ` src="${resp.url}"`)
-        .replace(/\sdata-local-path=["'][^"']+["']/, "");
+        .replace(/\ssrc\s*=\s*(?:"[^"]*"|'[^']*')/i, ` src="${resp.url}"`)
+        .replace(/\sdata-local-path\s*=\s*(?:"[^"]*"|'[^']*')/i, "");
       updatedHtml = updatedHtml.replace(fullTag, newTag);
       const shouldUploadMaterial = articleType === "newspic" || (collectNewsCoverFallback && !firstCoverMediaId);
       if (shouldUploadMaterial) {
