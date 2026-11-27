@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { launchChrome, tryConnectExisting, findExistingChromeDebugPort, getPageSession, waitForNewTab, clickElement, typeText, evaluate, sleep, getAccountProfileDir, type ChromeSession, type CdpConnection } from './cdp.ts';
 import { loadWechatExtendConfig, resolveAccount } from './wechat-extend-config.ts';
 import { prepareWechatBodyImageUpload } from './wechat-image-processor.ts';
+import { getTagAttribute } from './wechat-image-loader.ts';
 
 const WECHAT_URL = 'https://mp.weixin.qq.com/';
 const BODY_EDITOR_SELECTOR = '.rich_media_content .ProseMirror';
@@ -503,13 +504,14 @@ function parseHtmlMeta(htmlPath: string): { title: string; author: string; summa
   const imgRegex = /<img[^>]*\ssrc=["']([^"']+)["'][^>]*>/gi;
   const matches = [...content.matchAll(imgRegex)];
   for (const match of matches) {
-    const [fullTag, src] = match;
+    const [fullTag] = match;
+    const src = getTagAttribute(fullTag, 'src');
     if (!src || src.startsWith('http')) continue;
-    const localPathMatch = fullTag.match(/data-local-path=["']([^"']+)["']/);
-    if (localPathMatch) {
+    const localPath = getTagAttribute(fullTag, 'data-local-path');
+    if (localPath) {
       contentImages.push({
         placeholder: src,
-        localPath: localPathMatch[1]!,
+        localPath,
         originalPath: src,
       });
     }

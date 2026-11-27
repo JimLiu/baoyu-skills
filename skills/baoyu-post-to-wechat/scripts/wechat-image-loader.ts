@@ -20,6 +20,26 @@ const MIME_TYPES_BY_EXT: Record<string, string> = {
   ".ico": "image/x-icon",
 };
 
+const ATTRIBUTE_ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&quot;": '"',
+  "&#39;": "'",
+  "&apos;": "'",
+  "&lt;": "<",
+  "&gt;": ">",
+};
+
+/**
+ * Read one attribute of an HTML tag, decoding the entities HTML writers escape.
+ * A quote of the other kind belongs to the value: `src="it's.png"` is `it's.png`.
+ */
+export function getTagAttribute(tag: string, name: string): string | undefined {
+  const match = tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i"));
+  if (!match) return undefined;
+  const value = match[1] ?? match[2] ?? "";
+  return value.replace(/&(?:amp|quot|#39|apos|lt|gt);/g, (entity) => ATTRIBUTE_ENTITIES[entity]!);
+}
+
 export async function loadUploadAsset(
   imagePath: string,
   baseDir?: string,
